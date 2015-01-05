@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Notes - 3 - BioStatistics Boot Camp</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript"
+	    src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+    </script>
+  </head>
+  <body>
+    <h1>BioStatistics Boot Camp. Section 3</h1>
+    <h2>Confidence intervals - Student's t distribution, Chi-squared</h2>
+    Throughout these lectures we use the following general procedure for
+    creating CIs (Confidence Intervals)
+    <ol>
+      <li>Create a <b>Pivot</b> or statistic that does not depend on the
+	parameter of interest
+      <li>Solve the probability that the pivot lies between bounds for the
+	parameter
+	<h3>Chi-squared</h3>
+	<ul>
+	  <li>Suppose that \(S^2\) is the sample variance from a collection of
+	    iid \(N(\mu,\sigma^2)\) data: (Normally distributed with mean &mu;
+	    and variance &sigma;^2) then
+	    $$ \frac{(n-1)S^2}{\sigma^2} \sim \chi^2_{n-1} $$
+	    which reads: follows a Chi-squared distribution with n-1 degrees of
+	    freedom
+	  <li>The Chi-squared distribution is skewed and has support on 0 to
+	    &infty;
+	  <li>The mean of the Chi-squared is its degrees of freedom
+	  <li>The variance of the Chi-squared distribition is twice the degrees
+	    of freedom
+	</ul>
+	<h3>Chi-squared Confidene Interval</h3>
+	If \(\chi^2_{n-1,\alpha}\) is the &alpha; quantile of the Chi-squared
+	distribution then
+	$$ 1-\alpha = P(\chi^2_{n-1,\alpha/2} \le \frac{(n-1)S^2}{\sigma^2}
+	\le \chi^2_{n-1,1-\alpha/2}) $$
+	$$ = P(\frac{(n-1)S^2}{\chi^2_{n-1,1-\alpha/2}} \le \sigma^2 \le
+	\frac{(n-1)S^2}{\chi^2_{n-1,\alpha/2}} $$
+	So that
+	$$ \left[\frac{(n-1)S^2}{\chi^2_{n-1,1-\alpha/2}},
+	\frac{(n-1)S^2}{\chi^2_{n-1,\alpha/2}}\right] $$
+	is a 100(1-&alpha;)% confidence interval for \(\sigma^2\)
+    </ol>
+    <ul>
+      <li>This relies heavily on the assumed normality
+      <li>Square-rooting the endpoints yields a CI for &sigma;
+      <li>\((n-1)S^2\) follows a gamma distribution with shape \((n-1)/2\)
+	and scale \(2\sigma^2\)
+	$$ (n-1)S^2 \sim Gamma\{(n-1)/2,2\sigma^2\} $$
+      <li>This can be used to plot a likelihood function for \(\sigma^2\)
+    </ul>
+    <b>Example</b>
+    <pre>
+      A recent study of 513 organo-lead manufacturing workers reported an
+      average total brain volume of 1,150.315 cm^3 with a standard deiation
+      of 105.977. Assuming normality of the underlying measurements,
+      calculate a confidence interval for the population variation in total
+      brain volume.
+
+      s2 &lt;- 105.977 ^2
+      n &lt;- 513
+      alpha &lt;- 0.05
+      qtile &lt;- qchisq(c(alpha/2, 1- alpha/2), n-1)
+      ival &lt;- rev((n-1) * s2 / qtiles)
+      sqrt(ival)
+      [1] 99.96484 112.89216
+      ## Plotting
+      sigmaVals &lt;- seq(90, 120, length = 1000)
+      likeVals &lt;- dgamma((n-1) * s2, shape = (n-1)/2, scale = 2*sigmaVals^2)
+      likeVals &lt;- likeVals / max(likeVals)
+      plot(sigmaVals, likeVals, type = "l")
+      lines(range(sigmaVals[likeVals >= 1/8]), c(1/8, 1/8))
+      lines(range(sigmaVals[likeVals >= 1/16]), c(1/16, 1/16))
+    </pre>
+    <h3>Gosset's (Student's) t distribution</h3>
+    <ul>
+      <li>Invented by William Gosset (under the pseudonym "Student") in 1908
+      <li>Gosset, an extremely nice guy who worked for the Guiness
+      brewery in London, needed a statistic that could work with
+      smaller amounts of data.
+      <li>Has thicker tails than the normal distribtion, approaches
+      the standard normal as the degrees of freedom rises.
+      <li>Is indexed by degrees of freedom; gets more like a standard normal
+	as df gets larger
+      <li>Is obtained from Z (independent standard normal) and &chi;^2 the
+	Chi-squared distributions
+	$$ \frac{Z}{\sqrt{\frac{\chi^2}{df}}} $$
+      <li>Suppose that (X1,...,Xn) are iid N(&mu;,\(\sigma^2\)), then:
+	<ol>
+	  <li>\(\frac{\bar{X}-\mu}{\sigma/\sqrt{n}}\) is standard normal
+	  <li>\(\sqrt{\frac{(n-1)S^2}{\sigma^2(n-1)}} = S/\sigma\) is the square
+	    root of a Chi-squared divided by its df (distribution function)
+	  <li>Therefore
+	    $$ \frac{\frac{\bar{X}-\mu}{\sigma/\sqrt{n}}}{S/\sigma} =
+	    \frac{bar{X}-\mu}{S/\sqrt{n}} $$
+	    follows Gosset's t distribution with n-1 degrees of freedom
+	</ol>
+    </ul>
+    <h3>Confidence Interval for the mean of a Gosset t distribution</h3>
+    The t statistic is a pivot, so we can use it to create a confidence
+    interval for &mu;
+    <br>
+    Let \( t_{df,\alpha}\) be the \(\alpha^{th}\) quantile of the t
+    distribution with df degrees of freedom
+    $$ 1 - \alpha $$
+    $$ P\left(-t_{n-1,1-\alpha/2} \le \frac{\bar{X} - \mu}{S/\sqrt{n} \le t_{n-1,1-\alpha/2}}\right)$$
+    $$ P(\bar{X} -t_{n-1,1-\alpha/2} S/\sqrt{n} \le \mu \le \bar{X} +
+    t_{n-1,1-\alpha/2} S/\sqrt{n}) $$
+    Interval is \( \bar{X} \pm t_{n-1,1-\alpha/2} S/\sqrt{n}\)
+    <li>The t interval technically assumes that the data are iid normal,
+      though it is robust to this assumption
+    <li>It works well whenever the distribution of the data is rougly
+      symmetric and mound shaped
+    <li>Paired observations are often analyzed using the t interval by
+      taking differences
+    <li>For large degees of freedom, t quantiles become the same as
+      standard normal quantiles; therefore this interval converges to the
+      same interval as the Central Limit Theorem yielded
+    <li>For skewed distributions, the spirit of the t interval assumptions
+      are violated
+    <li>Also, for skewed distributions, it doesn't make a lot of sense to
+      center the interval at the mean
+    <li>In this case, consider taking logs or using a different summary
+      like the median
+    <li>For highly discrete data, like binary, other intervals are
+      available
+    <li><code>data(sleep)</code> in R brings up the sleep data originally
+      analyzed in Gosset's Biometrika paper.
+      <pre>
+	data(sleep)
+	g1 &lt;- sleep$extra[1 : 10]
+	g2 &lt;- sleep$extra[11 : 20]
+	difference &lt;- g2 - g1
+	mn &lt;- mean(difference) #1.67
+	s &lt;- sd(difference) # 1.13
+	n &lt;- 10
+	mn + c(-1, 1) * qt(.975, n-1) * s / sqrt(n)
+	[1] 0.7001142 2.4598858
+	t.test(difference)$conf.int
+	[1] 0.7001142 2.4598858
+	attr(,"conf.level")
+	[1] 0.95
+      </pre>
+</ul>
+<h3>Non-central t distribution</h3>
+If X is \(N(\mu, \sigma^2) \) and \(\chi^2\) is a Chi-squared random
+variable with df degrees of freedom then
+\(\frac{\chi/\sigma}{\sqrt{\frac{\chi^2}{df}}} \) is called
+a <b>non-central</b> t random variable with non-centrality paramter
+&mu;/&sigma;
+<br>
+Note that
+<ol>
+  <li>\(\bar{X}\) is \( N(\mu, \sigma^2/n)\)
+  <li>\((n-1)S^2/\sigma^2\) is Chi-squared with n-1 degrees of freedom
+</ol>
+<br>
+Then \(\sqrt{n}\bar{X}/S \) is non-central t with non-centrality
+parameter \( \sqrt{n}\mu/\sigma\)
+<br>
+We can use this to create a likelihood for &mu;/&sigma;, the <b>effect
+  size</b>
+<pre>
+  ## T-statistic
+  tStat &lt;- sqrt(n) * mn / s
+  ## Effect Size Values
+  esVals &lt;- seq(0, 1, length = 1000)
+  likVals &lt;- dt(tStat, n-1, ncp = sqrt(n) * esVals)
+  likVals &lt;- likVals / max(likVals)
+  plot(esVals, likVals, type = "l")
+  ## range picks out the min and max of a set of values, in this case
+  ## those values in esVals are 
+  ## So, draw a line that goes from [min esVal above 1/8, 1/8] to [max
+  ## esVal above 1/8, 1/8]
+  lines(range(esVals[likVals &gt; 1/8]), c(1/8, 1/8))
+  lines(range(esVals[likVals &gt; 1/16]), c(1/16, 1/16))
+</pre>
+<h3>Profile likelihood</h3>
+<b>Profiling</b> obtains a likelihood for &mu; alone. The profile in
+question is the shadow you would get by shining a light on the two-D
+likelihood for &mu;. It is obtained by repeatedly maximizing the joint
+likelihood of &sigma; and &mu; for a series of repeated values of
+&mu;0.
+<br>
+The joint likelihood with &mu; fixed at &mu;0 is
+$$ \varpropto \prod_{i=1}^n[(\sigma^2)^{-1/2}exp\{-(x_i -
+\mu_0)^2/2\sigma^2\}]$$
+$$ = (\sigma^2)^{-n/2}exp\{-\sum_{i=1}^n(x_i - \mu_0)^2/2\sigma^2\} $$
+With &mu;0 fixed, the maximum likelihood estimator for \(\sigma^2\)
+is \(\sum_{i=1}^n(e_i - \mu_0)^2/n.\) <br>
+Plugging this back into the likelihood we get
+$$\left(\sum_{i=1}^n(x_i - \mu_0)^2/n\right)^{-n/2} exp(-n/2)$$
+Which is proportional to
+$$ \left(\sum_{i-1}^n(x_i-\mu)^2\right)^{-n/2}$$
+Which is clearly maximized at \(\mu = \bar{X}\)
+<pre>
+  muVals &lt;- seq(0, 3, length = 1000)
+  likVals &lt;- sapply(muVals,
+  function(mu){
+  (sum((difference - mu)^2) /
+  (sum((difference - mu)^2))^(-n/2)
+  }
+  )
+  plot(muVals likVals, type = "l")
+  lines(range(muVals[likVals&gt;1/8]), c(1/8,1/8))
+  lines(range(muVals[likVals&gt;1/16]), c(1/16,1/16))
+</pre>
+Last comment, when do we switch from T-confidence to standard normal
+confidence intervals. Don't. Always use T-confidence because it
+approaches standard normal as the degrees of freedom increase anyway.
+<h2>Confidence Intervals</h2>
+<h3>Independent group t intervals</h3>
+<ul>
+  <li>Suppose we want to comapre the mean blood pressure between two
+    groups in a randomized trial; those who received the treatment to
+    those who received a placebo
+  <li>We cannot use the paired t test because the groups are independent
+    and my have different sample sizes
+  <li>Let X1,...,Xn, be iid \(N(\mu_x, \sigma^2)\)
+  <li>Let Y1,...,Yn, be iid \(N(\mu_x, \sigma^2)\)
+  <li>Let \(\bar{X}, \bar{Y}, S_x, S_y\) be the means and standard
+    deviations
+  <li>Using the fact that linear combinations of normals are normal, we
+    know that \(\bar{Y} - \bar{X}\) is also normal with mean \(\mu_y -
+    \mu_x\) and variance \(\sigma^2(\frac{1}{n_x}+\frac{1}{n_y})\)
+  <li>The pooled variance estimator is a good estimator of \(\sigma^2\)
+    $$ S_p^2 = \{ (n_x - 1)S^2_x + (n_y - 1)S^2_y\}/(n_x + n_y - 2) $$
+  <li>This places greater weight on the group with the larger sample
+    size
+  <li>The pooled estimator is unbiased
+    $$E[S^2_p] = \frac{(n_x - 1)E[S^2_x] + (n_y - 1)E[S^2_y]}{n_x +n_y -
+    2} $$
+    $$ = \frac{(n_x-1)\sigma^2 + (n_y - 1)\sigma^2}{n_x + n_y - 2}$$
+  <li>The pooled variance estimate is independent of \(\bar{Y} -
+    \bar{X}\) since \(S_x\) is independent of \(\bar{X}\), \(S_y\) is
+    independent of \(\bar{Y}\), and the groups are independent
+  <li>The sum of two independent Chi-squared random variables is
+    Chi-squared with degrees of freedom equal to the sum of the degrees
+    of freedom of the summands
+  <li>Therefore
+    $$ (n_x + n_y - 2)S^2_p/\sigma^2 = (n_x - 1)S^2_x/\sigma^2 + (n_y - 1)S^2_y/\sigma^2$$
+    $$ = \chi^2_{n_x - 1} + \chi^2_{n_y - 1}$$
+    $$ = \chi^2_{n_x+n_y - 2}$$
+  <li>This statistic is a standard normal divided by the sqaure root of
+    an independent Chi-squared divided by its degrees of freedom
+    $$ \frac{\frac{\bar{Y} - \bar{X} - (\mu_y - \mu_x)}{\sigma(\frac{1}{n_x} +
+    \frac{1}{n_y})^{1/2}}}{\sqrt{\frac{(n_x + n_y - 2)S^2_p}{(n_x + n_y
+    - 2)\sigma^2}}} = \frac{\bar{Y} - \bar{X} -
+    (\mu_y - \mu_x)}{S_p(\frac{1}{n_x} + \frac{1}{n_y})^{1/2}} $$
+  <li>This statistic follows Gosset's t distribution with \(n_x + n_y -
+    2\) degrees of freedom
+  <li>Notice the form is (estimator - true value) / SE
+  <li>Therefore a (1 - &alpha;)&times;100% confidence interval for \(
+    \mu_y - \mu_x\) is
+    $$ \bar{Y} - \bar{X} \pm t_{n_x + n_y - 2, 1-\alpha/2}
+    S_p(\frac{1}{n_x} + \frac{1}{n_y})^{1/2}$$
+  <li>This interval assumes a constant variance across the two groups
+</ul>
+<h3>Likelihood method</h3>
+<ul>
+  <li>As before \( \frac{\bar{Y} - \bar{X}}{S_p(\frac{1}{n_x} +
+    \frac{1}{n_y})^{1/2}}\) follows a non-central t distributions with
+    non-centrality parameter \( \frac{\mu_y - \mu_x}{\sigma
+    (\frac{1}{n_x} + \frac{1}{n_y})^{1/2}}\)
+  <li>Therefore we can use this statistic to create a likelihood for \(
+    (\mu_y - \mu_x)/\sigma \), a standardized measure of the change in
+    group means
+  <li><b>Example</b> from Rosner Fundamentals of Biostatistics
+    <ul>
+      <li>Comparing SBP (systolic blood pressure?) for 8 oral contraceptive
+	users versus 21 controls
+      <li>\( \bar{X}_{OC}\) = 132.86 mmHg with \(s_{OC}\) = 15.34 mmHg
+      <li>\( \bar{X}_{C}\) = 127.44 mmHg with \(s_{C}\) = 18.23 mmHg
+      <li>Pooled variance estimate
+	$$ s^2_p = \frac{(8-1)(15.34)^2 + (21 - 1)(18.23)^2}{8 + 21 - 2} =
+	307.8$$
+	\(t_{27,.975} = 2.052\) (in R, <code>qt(.975, df = 27)</code>)
+      <li>Interval
+	$$ 132.86 - 127.44 \pm 2.052\left\{ 307.8(\frac{1}{8} + \frac{1}{21})
+	^{1/2} \right\} = [-9.52,20.36] $$
+      <li>He then uses a plot to show the likelihood values, two of those lines
+	at -9.52 and 20.36, giving values for the effect size of [-.54,
+	1.16]
+      <li>There was a bit of a leap here, since I cannot find numbers on
+	his plot as large as -9 or 20, though he managed to draw a line on
+	the graph that matches that bound, at a likelihood of about .175,
+	whatever that means.
+    </ul>
+</ul>
+<h3>Unequal variances</h3>
+<ul>
+  <li>With unequal variances
+    $$ \bar{Y} - \bar{X} \tilde N(\mu_y - mu_x, 
+    \frac{\sigma^2_x}{n_x} + \frac{sigma^2_y}{n_y})$$
+  <li>The statistic
+    $$ \frac{\bar{Y} - \bar{X} - (\mu_y - \mu_x)}{(\frac{\sigma^2_x}{n_x}
+    + \frac{sigma^2_y}{n_y})^{1/2}} $$  approximately follows Gosset's t
+    distribution with degrees of freedom equal to
+    $$ \frac{(S^2_x/n_x + S^2_y/n_y)^2}{(\frac{S^2_x}{n_x})^2/(n_x-1) +
+    (\frac{S^2_y}{n_y})^2/(n_y-1)}$$ 
+  <li><b>Example</b>
+    <ul>
+      <li>Comaparing SBP for oral contraceptive users versus 21 controls
+      <li>\( \bar{X}_{OC}\) = 132.86 mmHg with \(s_{OC}\) = 15.34 mmHg
+      <li>\( \bar{X}_{C}\) = 127.44 mmHg with \(s_{C}\) = 18.23 mmHg
+      <li>df = 15.04, \(t_{15.04,.975}\) = 2.13
+      <li>Interval
+	$$ 1.32.86 - 127.44 \pm 2.13(\frac{15.32^2}{8} +
+	\frac{18.23^2}{21})^{1/2} = [-8.91, 19.75] $$
+    </ul>
+</ul>
+<h2>Plotting</h2>
+<h3>Histograms</h3>
+Display the sample estimate of the density of mass function by
+plotting a bar graph of the frequencey or proportion of times that a
+variable takes specific values, or a range of values for continuous
+data, within a sample
+<h4>Example</h4>
+The data set islands in the R package datasets contains tha areas of
+all land masses in thousands of square miles
+<pre>
+  data(islands)
+  islands
+  hist(islands)
+  ?hist
+</pre>
+<ul>
+  <li>Histograms are useful and easy, apply to continuous, discrete, and
+    even unordered data
+  <li>They use a lot of ink and space to display very little information
+  <li>It is difficult to display several at the same time for
+    comparisons
+  <li>You might want to consider plotting log histrograms when the bar
+    graphs are too different in size: <code>hist(log10(islands))</code>
+</ul>
+<h3>Stem and leaf</h3>
+<ul>
+  <li>Stem-and-leaf plots are extremely useful for getting distribution
+    information on the fly
+  <li>Created by John Tukey, a leading figure in the development of the
+    statistical sciences and signal processing. (One of the inventors
+    of the Fast-Forier-Transform
+  <li>They display the complete data set and so waste very little ink.
+  <li>It is basically an ascii graphics way of doing a histogram, though
+    since the heights are not quite the same, they are binning things
+    slightly differently.
+  <li>Take the value, and bin things by their first decimal and then
+  by the second
+  <li>
+    <pre>
+      stem(log10(islands))
+      1 | 11111122222233444  # 6 1og10(area) = 1.1, 6 @ 1.2, 2 @ 1.3, 3 @ 1.4
+      1 | 555555666666678999999 # 7 @ 1.5, etc
+      2 | 3344
+      2 | 59
+      3 |
+      3 | 5678
+      4 | 012
+    </pre>
+</ul>
+<h3>Dotcharts</h3>
+<ul>
+  <li>Dotcharts simply display a data set, one point per dot
+  <li>Ordering of the does and labeling of the axes can display
+    additional information
+  <li>Dotcharts show a complete data set and so have high data density
+  <li>It may be impossible to construct and difficult to interpret for
+    data sets with lots of points
+    <pre>
+      dotchart(log10(islands))
+    </pre>
+  <li>They recommend reordering the dotchart they give us, suggesting
+    grouping by continent, then nations by geography. We do not, of
+    course, have the mapping that would allow this within our data,
+    though I suppose someone could make a new column in the data frame
+    that gave the grouping, sort the data thay way, and then dotchart
+    the result.
+  <li>For data sets in groups, you often want to display density
+    information by group
+  <li>If the size of the data permits it, displaying the whole data set
+    if preferable
+  <li>Add horizontal lines to depict means, medians
+  <li>Add vertical lines to depict variation, show confidence intervals
+    and interqartile ranges
+  <li>jitter the points to avoid overplotting <code>jitter</code>
+<pre>
+  data(InsectSprays)
+  # make it easy to get the pieces of InsectSprays without typeing
+  # that so often
+  attach(InsectSprays)
+  # Make a basic plot and add stuff to it
+  plot(c(.5, 6.5), range(count))
+  sprayTypes &lt;- unique(spray)
+  # Plotting each spray separately
+  for (i in 1 : length(sprayTypes)) {
+    y &lt;- count[spray == sprayTypes[i]]
+    n &lt;- sum(spray == sprayTypes[i])
+    # Add a dot plot of just the data of this type
+    points(jitter(rep(i, n), amount = .1), y)
+    # add a horizontal line for the mean
+    lines(i + c(.12, .28), rep(mean(y), 2), lwd = 3)
+    # add a vertical line for the error
+    lines(rep(i + .2, 2), mean(y) + c(-1.96, 1.96) * sd(y) / sqrt(n))
+  }
+</pre>
+</ul>
+<h3>Boxplots</h3>
+<ul>
+  <li>Box plots are useful for the same sort of data as the dot chart,
+    but in instances where displaying the whole data set is not possible
+  <li>Centerline of the boxes represents the median while the box edges
+    correspond to the quartiles
+  <li>Whiskers extend out to a contant times the IQR or the max value
+  <li>Sometimes outliers are denoted by points beyond the whiskers
+  <li>Also invented by Tukey
+  <li>Skewness is indicated by the centerline being near one of the box
+    edges
+    <pre>
+      boxplot(count ~ spray, data = InsectSprays)
+    </pre>
+  <li>Do not use boxplots for small numbers of observations, a dotchart
+    will do.
+  <li>Try log10 if some boxes are too squished compared to the
+    others. You can convert the axes to unlogged units
+  <li>For data with lots of observations, omit plotting outliers
+</ul>
+<h3>Kernel Density Estimates - KDEs</h3>
+<ul>
+  <li>A more modern histogram providing density estimates for continuous
+    data
+  <li>Observations are weighted according to a "kernel", usually a
+    Gaussian density
+  <li>"Bandwidth" of the kernel effectively plays the role of the bin
+    size for the histogram.
+  <li>Too low a bandwidth yields too variable (jagged) a measure of the
+    density
+  <li>Too high a bandwidth oversmooths
+  <li>Example using waiting and eruption times in minutes between
+    eruptions of the Old Faithful Geyser in Yellowstone National park
+    <pre>
+data(faithful)
+d &lt;- density(faithful$eruptions, bw = "sj")
+plot(d)
+    </pre>
+</ul>
+<h3>Quantile-Quantile (QQ) plots</h3>
+<ul>
+  <li>QQ-plots are extremely useful for comparing data to a theoretical
+    distribution. That is have you got the theory right.
+  <li>Plot the emperical quantiles against theroetical quantiles
+  <li>Most useful for diagnosing normality
+  <li>Let \(x_p\) be the \(p^{th}\) quantile from a \(N(\mu,\sigma^2)\)
+  <li>Then \(P(X \le x_p) = p \)
+  <li>Clearly \(P(Z \le \frac{x_p - \mu}{\sigma}) = p\)
+  <li>Therefore \(x_p = \mu + z_p\sigma\)
+  <li>Result, quantiles from a \(N(\mu,\sigma^2\) population should be
+    linearly related to standard normal quantiles
+  <li>A normal qq-plot plots the emperical quantiles against the
+    theoretical standard normal quantiles
+  <li>In R <code>qqnorm</code> for a normal QQ-plot
+    and <code>qqplot</code> for a qqplot against an arbitrary
+    distribution
+  <li>He gave 3 examples, without telling us how to reproduce them, two
+    where the data matched except at the limits
+    <ol>
+      <li>A curve coming up to theory, matching theory, and then curving
+	above, which matched most of the time. Cubic?
+      <li>A curve that happened to cross theory, but clearly not a line
+      <li>A curve that matches with a little bobble at the bottom and the top
+    </ol>
+</ul>
+<h3>Mosaic plots</h3>
+<ul>
+  <li>Mosaic plots are useful for displaying contingency table data
+  <li>Consider Fisher's data regarding hair and eye color data from
+    people from Caithness
+    <pre>
+      library(MASS)
+      data(caith)
+      caith
+      mosaicplot(caith, color=topo.colors(4), main = "Mosaic plot")
+    </pre>
+</ul>
+<h2>Jackknife and Bootstrapping</h2>
+Resample data to generate multiple new data sets from the original
+data. Use these new data sets to estimate standard errors and the bias
+of estimators. Jackknifing is a "smaller" technique than bootstrapping.
+<h3>Jackknife</h3>
+<ul>
+  <li>Again, thanks to Tukey. Cool fellow.
+  <li>I would think of this as leave-one-out cross validation. This is
+    a technique in machine learning where you are more likely to be
+    estimating prediction error. Jackknife is usually used to estimate
+    bias or variance.
+  <li>Delete each observation and calculate an estimate based on the
+    rest (n-1)
+  <li>Use this collection of n estimates to estimate the bias and
+    standard error.
+  <li>You do not need to use jackknifing for unbiases estimates like
+    sample means which are already unbiased
+  <li>A jackknife for univariate data
+    <ul>
+      <li>Let \(X_1,...,X_n\) be a collection of data used to estimate a
+	parameter &theta;
+      <li>Let \(\hat{\theta}\) be the estimate based on the full data set
+      <li>Let \(\hat{\theta_i}\) be the estimate of &theta; obtained by
+	deleting observation i
+      <li>Let \(\bar{\theta} = \frac{1}{n}\sum_{i=1}^n \hat{\theta_i}\)
+      <li>Then the jackknife estimate of the bias is \((n-1)(\bar{\theta} -
+	\hat{\theta})\) (how far the average leave-one-out estimate is from
+	the actual estimate)
+      <li>The jackknife estimate of the standard error is
+	$$ \left[ \frac{n-1}{n} \sum_{i=1}^n (\hat{\theta_i} - \bar{\theta})^2
+	\right]^{1/2}$$
+	(the deviance of the delete-one estimates from the averge delete-one
+	estimate)
+    </ul>
+  <li>Consider the data set of 630 measurements of gray matter volume
+    for workers from a lead manufacturing plant
+  <li>The median gray matter volume is around 589 cm^3
+  <li>We want to estimate the bias and standard error of the median
+    <pre>
+      n &lt;- length(gmVol)
+      theta &lt;- median(gmVol)
+      jk &lt;- sapply(1:n, function(i) median(gmVol[-i]))
+      thetaBar &lt;- mean(jk)
+      biasEst &lt;- (n-1) * (thetaBar - theta)
+      seEst &lt;- sqrt((n-1) * mean((jk - thetaBar)^2))
+    </pre>
+    Using the boostrap package this is
+    <pre>
+      library(bootstrap)
+      out &lt;- jackknife(gmVol, median)
+      out$jack.bias # 9.94
+      out$jack.se
+    </pre>
+  <li>The jackknife estimate of the bias for the median is always 0 when
+    the number of observations is even
+  <li>The jackknife is a linear approximation of the bootstrap
+  <li>Do not use the jackknife for sample quantiles like the median; as
+    it has been shown to have some poor properties. Use bootstrapping
+    instead. 
+  <li>You can use pseudo-observations as a way to think about
+    jackknifing.
+    <ul>
+      <li>Let Pseudo Obs = \( n\hat{\theta} - (n-1)\hat{\theta_i}\)
+      <li>Think of these as "whatever obervation i contribues to the
+      estimate of &theta;"
+      <li>Note when \(\hat{\theta}\) is the sample mean, the pseudo
+      observations are the data themselves
+      <li>Then the sample standard error of these observations is the
+      previous jackknife estimated error.
+      <li>The mean of these observations is a bias-corrected estimate
+      of &theta;
+    </ul>
+</ul>
+<h3>The Bootstrap</h3>
+<ul>
+<li>Use the distribution defined by the data to approximate its
+  sampling distribution
+<li>The name comes from an incident that is part of the Baron Von
+  Munchausen stories.
+<li>Simulate the bootstrap by repeatedly building samples of the
+  original data with replacement. That is, draw n samples from the
+  orginal data with replacement, getting some of the samples multiple
+  times.
+<li>Calculate the statistic for each simulated data set
+<li>Use the simulated statistics to either define a confidence
+  interval or take the standard deviation to calculate a standard
+  error.
+<ol>
+<li>Sample n obervations with replacement from the observed data
+  resulting in one simulated complete data set
+<li>Take the median of the simulated data set
+<li>Repeate these two steps B times resulting in B simulated medians
+<li>These medians are approximately draws from the sampling
+  distributions of the meanian of n observations therefore we can 
+<ul>
+<li>Draw a histrogram of them
+<li>Calculate their standard deviation to estimate the standerd error
+  of the median
+<li>Take the 2.5th and 97.5th percentiles as a confidence interval for
+  the median
+</ul>
+</ol>
+<pre>
+B <- 1000
+n < length(gmVol)
+resamples <- matrix(sample(gmVol, n*B, replace = TRUE), B, n)
+medians <- apply(resamples, 1, median)
+sd(medians)
+[1] 3.148706
+quantile(medians, c(0.025, 0.975))
+  2.5%     97.5%
+582.6384 595.3553
+</pre>
+<li>The plot is cool, a nice line drawing of density vs volume with
+  dotted lines at the 2.5 and 97.5 marks generated by bootstrapping
+<li>The bootstrap is non-parametric
+<li>It does assume large samples
+<li>Better percentile bootstrap confidence intervals correct for bias
+<li>There are lots of variables on bootstrap procedures; the book "An
+  Introducton to the Bootstrap" by Efron and Tibshirani covers
+  bootstrap and jackknife information.
+<pre>
+library(boot>
+stat <- function(x, i) {median(x[i])}
+boot.out <- boot(data = gmVol, statistic = stat, R = 1000)
+boot.ci(boot.out)
+Level  Percentile       BCa
+95% (583.1, 595.2) (583.2, 595.3)
+</pre>
+</ul>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Notes - 1 - BioStatistics Boot Camp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+<body>
+<h1>BioStatistics Boot Camp</h1>
+<h1>Week 1</h1>
+<h2>Introduction</h2>
+<ul>
+<li> Two weeks to complete each of the modules, with only one week for
+  the 4th module. Take the quizzes, which is the basis of the
+  grade. Do the homework if you want, but it doesn't count. 
+<li> There is a Git repository with sample code to play with
+<li> Biostatistics is a theory and methodology for the acquisition and
+  use of quantitative eidence in biomedical research. Biostatisticians
+  devep innovative designs and analytic mehtods targeted at increasing
+  available information, improving the relevance and validity of
+  statistical analysis, making best use of availbale information and
+  communicating relevant uncertainties. 
+<ul><li/> Johns Hopkins Department of Biostatistics 2007 self study</ul>
+<li/> Existing clinical practice is occasionally changed based on
+emperical evidence. (hormone replacement theropy is a bad thing) There
+was a statistically based protocol where they decided whether to
+continue the study based on the excessive number of negative results. 
+<li/> Tricky if the trial is considered so beneficial that it would be
+unethical to deny the trial therapy, and then when you never give it
+your statistics are bad. 
+<li/> Johns Hopkins Bloomberg School of Public Health Philosophy
+<ul>
+<li/> Tight coupling of statitistical methods with ethical and scientific goals
+<li/> Ephasizing scientific interpretation of statistical evidence to
+impact policy 
+<li/> Acknowledging  assumptions and evaluation the robustness of
+conclusions to them 
+</ul>
+<li/> Experiment
+<ul>
+<li/> Collection of measurements from a sample population
+<li/> measurements from a laboratory experiment
+<li/> result of a clinical trial
+<li/> result of a computer simulation
+<li/> values from hospital records sampled retrospectively
+</ul>
+</ul>
+<h2>Set Notation</h2>
+<ul>
+<li/> <b>Sample Space</b> = \( \Omega \) is the collection of possible
+outcome of an experiment (die roll \( \Omega = {1, 2, 3, 4, 5, 6} \) ) 
+<li/> <b>event</b>, is a subset of \( \Omega \) (die roll is even \( E
+= {2,4,6} \) ) 
+<li/><b>elementary or simple event</b> is result of one experiment
+(die roll is a 4\( \omega = 4 \) 
+<li/>\( \emptyset \) is the <b>empty set</b> or <b>null event</b>
+<li/>\( \omega \in E \) Implies that E occurs when w occurs
+<li/>\( \omega \not\in E \) Implies that E does not occur when w occurs
+<li/>\( E \subset F \) occurrence of E implies the occurrece of F
+<li/>\( E \cap F \) implies the vent that both E and F occur
+<li/>\( E \cup F \) implies the event that at least one of E or F occur
+<li/>\( E \cap F = \emptyset\) E and F are <b>mutually exclusive</b>
+both cannot occur 
+<li/> \( E^c \) or \( \bar{E} \)is the event that E does not occur, E
+complement 
+<li/> \( (A \cap B)^c = A^c \cup B^c \)
+<ul>
+  <li/>DeMorgan's Law
+<li/>If you are not an alligator or a turtle, you are not and
+alligator AND you are not a turtle 
+</ul>
+<li/> \( (A \cup B)^c = A^c \cap B^c \) also DeMorgan's Law
+<li/> \( (A^c)^c = A\)
+<li/> \( (A \cup B) \cap C = (A \cap C) \cup (B \cap C) \)
+</ul>
+<h2>Probability</h2>
+Useful strategy used in much of science
+for a given experiment
+<ul>
+<li>attribute all that is known or theorized to a systematic model
+  (mathematical function 
+<li>attribute everything else to randomness, <i>even if the process
+    under study is known not to be "random" in any sense of the
+    word</i> 
+<li>use probability to quantify the uncertainty in your conclusions
+<li>Evaluate the sensitivity of your conclusions to the assumptions of
+  your model 
+<li>A useful excercise
+<ul>
+  <li>What is being modeled as random?
+<li>Where does this attributed randomness arise from?
+<li>Where did the systematic model components arise from?
+<li>How did observational units come to be in the study and is there
+  importance to the missing data points? 
+<li>Do the results generalize beyond the study in question?
+<li>Were important variables unaccounted for in the model?
+<li>How drastically would inferences change depending on the answers
+  to the previous questions? 
+</ul>
+</ul>
+<h2>Probability (lecture 2)</h2>
+Rules from Andrey Kolmogorov
+<ol>
+<li>For an event \( E \in \Omega, 0 \le P(E) \le 1 \) That is, the probability of an event is between 0 and 1
+<li>\( P(\Omega ) = 1 \) That is, the probability of all possible outcomes is 1
+<li> if \( E_1 \) and \( E_2 \) are mutually exclusive events \( P(E_2
+  \cup E_2) = P(E_1) + P(E_2) \). That is, probability of getting a
+  head or a tail is the sum of the probability of getting a head and
+  the probability of getting a tail.
+</ol>
+<ul>
+<li>\( P \) is defined on \( \mathcal{F} \) a collection of subsets of \( \Omega \)
+<li>Example \( \Omega = {1, 2, 3} \) then
+$$ \mathcal{F} = { \emptyset, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 3}, {1, 2, 3}}. $$
+<li>When \( \Omega \) is a continuous set, the definition gets much trickier. In this case we assume that \( \mathcal{F} \) is sufficiently rich so that any set that we're interested in will be in it.
+</ul>
+Properties of a probability function
+<ul>
+<li>\( P(\emptyset) = 0\) Probability of nothing happening given you actually flipped a coin is nothing
+<li>\( P(E) = 1 - P(E^c) \) Probability of getting a tail is One minus the probability of getting a head
+<li>\( P(A \cup B) = P(A) + P(B) - P(A \cap B) \) You added A intersect B twice, once in A and once in B, so subtract it out
+<li>\( if A \subset B \) then \( P(A) \le P(B) \) The probability of a part of B is less than the probaility of all of it
+<li>\( P(A \cup B) = 1 - P(A^c \cap B^c) \) Subtract B from A, so A and not B
+<li>\( P(A \cap B^c) = P(A) - P(A \cap B) \)
+<li>\( P(\cup ^n _{i=1} \le \sum ^n _{i=1} P(E_i) \) The biggest it can be is the sum, minus the probailities of the intersections, which are otherwise counted twice
+<li>\( P(\cup ^n _{i=1} \ge max_i P(E_i) \) Probability of getting a 1, 2, or 3 on a die has to be at least as big as the most likely of those outcomes.
+</ul>
+Then he does a proof for \( P(E) = 1 - P(E^c) \)
+We should be able to prove all of them for ourselves.
+<h2>Random Variables</h2>
+<b>Random variable</b> is a numerical outcome of an experiment. The random variables that we study will come in two varieties, <b>discrete</b> or <b>continuous</b>
+<h2>Probability Mass Functions and Probability Density Functions</h2>
+<b>Probility Mass Function</b> evaluated at a value corresponds to the
+probability that a random variable takes that value. To be a valid
+pmf, a function p must satisfy
+<ol>
+<li> \( p(x) \ge 0 \) for all \( x \)
+<li> \( \sum_x p(x) = 1 \)
+</ol>
+The sum is taken over all the possible values for x. This is the
+equivalent of a PDF for a discrete variable.
+
+Let X be the result of a coin flip where X = 0 represents tails and X = 1 represents heads.
+$$ p(x) = (1/2)^x(1/2)^{1-x} \mathrm{for}\, x = 0, 1 $$
+Or, if the coin is not fair, let \( \theta \) be the probability of head
+$$ p(x) = \theta ^x (1 - \theta)^{1-x} \mathrm{for}\, x = 0, 1 $$
+
+<b>Probability Density Function</b> is a function associated with a
+continuous random variable. Areas under pdfs correspond to probilities
+for that random variable. It must satisfy
+<ol>
+<li> \( f(x) \ge 0 \) for all \( x \)
+<li> \( \int^\infty_{-\infty} f(x)dx = 1 \)
+</ol>
+For example
+
+Assume that the time in years from diagnosis until death for a
+specific type of cancer is \( \frac{1}{5}e^{-x/5} \) for \(x \gt 0
+\).
+<ol>
+<li> \( e \) raised to any power is always positive
+<li> $$ \int_0^\infty f(x)dx = \int_0^\infty \frac{e^{-x/5}}{5} dx = -e^{-x/5}
+  \bigg|_0^\infty = 1 $$
+</ol>
+So, what is the probability that a person survives more than 6 years?
+  $$ P(X \ge 6) = \int_6^\infty f(t)dt = \int_6^\infty
+  \frac{e^{-t/5}}{5} dt = -e^{-t/5} \bigg|_6^\infty =
+  -e^{-6/5} \approx 0.301 $$
+In R this is
+<pre>
+pexp(6, 1/5, lower.tail = FALSE)
+</pre>
+<h2>CDFs</h2>
+<b>Cumulative Distribution Functions.</b> Probability that the patient has
+already died.
+$$ F(x) = P(X \le x) $$
+<b>Survival Function.</b> Probability that the patient is still alive.
+$$ S(x) = P(X \gt x) $$
+Notice that \(S(x) = 1 - F(x) \)
+From before, \( S(x) = e^{-x/5} \) and \( F(x) = 1 - e^{-x/5} \)
+<h3>Quantiles</h3>
+The \( \alpha^{th} \) <b>quantile</b> of a distribution with
+distribution function F is the point \( x_\alpha \) so that \(
+F(x_\alpha) = \alpha \). So the 25th percentile is the point where 25%
+of the patients have died. which turns out to be 1.44 years in the
+example above.
+
+in R
+<pre> qexp(.25, 1/5) </pre>
+dexp() is the density.
+
+Median is a population median. I have described a population with a
+distribution. 50% of the population falls below this value and 50%
+falls above. A sample median is for us an estimator (the value of the
+middle member of the population).
+
+<h2>Expectation Lecture 3</h2>
+<h3>Expected Values</h3>
+The Expected value is the mean value of a random variable.
+$$ E[X] = \sum_x xp(x) $$
+where the sum is taken over the possible values of x.
+<br>
+In the continuous case it is, given a density f the expected value is
+$$ E[X] = \int_{-\infty}^\infty t f(t) dt $$
+Which is the center of mass for the function, sort of.
+<h3>Rules about Expected Values</h3>
+<ul>
+<li>The expected value is a linear operator
+<li>if a and b are not random and X and Y are two random variables
+  then
+<ul>
+<li>\( E[aX + b] = aE[X] + b \)
+<li>\( E[X + Y] = E[X] + E[Y] \)
+</ul>
+<li> In general if g is a function that is not linear
+\( E[g(X)] \neq g(E[X]) \)
+<li> for example, in general \( E[X^2] \neq E[X]^2\)
+</ul>
+Went through a bunch of math to show that the exected value of the
+average of a collection of random variables is the expected value of
+those variables (N * E / N = E)
+<br>
+<ul>
+<li>The expected value of the <b>sample mean</b> is the <b>population
+    mean</b> that it's trying to estimate
+<li>When the expected value of an estimator is what it's trying to
+  estimate, we say that the estimator is <b>unbiased</b>.
+</ul>
+When a variable X is iid, independent and identically distributed, the
+expected distribution of n samples of that variable is:
+$$ E[X^n] = \sum_x^n xp(x) $$
+$$ E[X^n] = \int_{-\infty}^\infty t^n f(t) dt $$
+<h3>Variances</h3>
+The Spread of a random variable. The expected distance from the mean.
+$$ Var(x) = E[(X - \mu)^2] $$
+A convenient shortcut is
+$$ Var(x) = E[X^2] - E[X]^2 $$
+And the standard deviation is the square root of the variance
+<br>
+If a is constant then \( Var(aX) = a^2 Var(X) \)
+<br>
+Went through a calculation of an unfair coin,
+<pre>
+p(head) = p
+E(x) = p. (0 * (1-p) + 1*p)
+E(x^2) = p (0^2 * (1-p) + 1^2*p)
+</pre>
+So Variance is p(1-p) which is the Bernoulli variance. That is, a
+variable which can only take values 0 and 1. The largest variance for
+a random variable is that you shove the possible values to the edges
+of the domain. 
+<h3>Chebyshev's Inequality</h3>
+$$ P(|X - \mu | \ge k\sigma) \le \frac{1}{k^2} $$
+
+2 standard deviations = 25%. 3 sigma = 11%. 4 sigma = 6%.
+<p>
+He did a proof for this. It is based on recognizing the definition of
+the variance and letting it cancel itself out.
+
+Six-Sigma (Motorola's quality control standard) events are 10e-9,
+assuming a bell-curve. (they are probably lying to themselves...)
+<h2>Random Vectors and Independence. Lecture 4</h2>
+This is the core. Feel free to listen to this over and over.
+<h3>Random Vectors</h3>
+An ordinary vector with random variables as its entries. Trade
+densities and mass functions for joint densities and joint mass
+functions.
+<ul>
+<li>Joint density \( f(x,y) \) satisfies \(f > 0\) and \(\int \int
+  f(x,y)dxdy = 1\)
+<li>Sum over all variables is one, for discrete variables
+<li>If the variables are independent \( f(x,y) = f(x)g(y) \)
+<li>\( P(A \cap B) = P(A)P(B) \)
+<li>Two random variables are independent if for any two sets A and B
+$$ P([X \in A] \cap [Y \in B]) = P(X \in A)P(Y \in B) $$
+That is, the variables have to correlation, like their events.
+<li>probability of getting two heads in a row, so .5 * .5 = .25
+</ul>
+<h3>Independence</h3>
+<ul>
+<li>Independent and Identically distributed - iid
+<li>the default model for random samples
+<li>works fine for dice. Not so great for biology, but it makes the
+  math work so we still do it. We just need to remember that this is
+  an enormously simplifying assumption.
+</ul>
+Flipping a biased coin with success probability p n times, what is the  joint density of the collection of outcomes?
+<br>
+The random variables are iid with densities \( p^{x_i}(1-p)^{1-x_i} \)
+$$ f(x_1,...x_n) = \prod_{i=1}^n p^{x_i}(1-p)^{1-x_i} = p^{\sum x_i}(1-p)^{n - \sum x_i} $$
+For example, the probability of H H T H is \(p^3(1-p)^1 \)
+<h3>Correlation</h3>
+Covariance
+$$ Cov(X,Y) = E[(X-\mu_x)(Y-\mu_y)] = E[XY] - E[X]E[Y] $$
+<ol>
+<li>Cov(X, Y) = Cov(Y, X)
+<li>Cov(X, Y) can be negative or positive
+<li>\(|Cov(X,Y)| \le \sqrt{Var(X)Var(Y)} \)
+</ol>
+The <b>correlation</b> between X and Y is Covariance divided by the
+product of the standard deviations
+$$ Cor(X, Y) = Cov(X, Y)/\sqrt{Var(X)Var(Y)}$$
+<ol>
+<li>\( -1 \le Cor(x,Y) \le 1 \)
+<li>\( Cor(X, Y) = \pm 1 \) if and only if \( X = a + bY) \) for some
+  constants a and b
+<li>Cor(X, Y) is unitless
+<li>X and Y are <b>uncorrelated</b> if Cor(X, Y) = 0
+<li>X and Y are more positively correlated, the closer Cor(X,Y) is to
+  1
+<li> and more negatively correlated, the closer the correlation is to -1
+</ol>
+<h3>Variance and correlation properties</h3>
+Let \( { X_i }^n_{i=1} \) be a collection of random variables
+<ul>
+<li>When the \( {X_i} \) are uncorrelated
+$$ Var ( \sum_{i=1}^n a_iX_i + b) = \sum_{i=1}^n a^2_i Var(X_i) $$
+<li>Otherwise
+$$ Var ( \sum_{i=1}^n a_iX_i + b) = \sum_{i=1}^n a^2_i Var(X_i) + 2
+  \sum_{i=1}^{n-1}\sum_{j-i}^n a_ia_jCov(X_i,X_j) $$
+<li>if the \(X_i\) are iid with variance \(\sigma^2\) then 
+\(Var(\bar{X}) = \sigma^2 / n \) and \(E[S^2] = \sigma^2 \)
+</ul>
+Uncorrelated is not the same as independent. If the variables are
+independent, they are uncorrelated, but if they are uncorrelated, they
+might still be dependent.
+<p>
+A commonly used subcase from these properties is that if a collection
+of random variables are uncorrelated, then the variance of the sum is
+the sum of the variances (NOT THE SUM OF THE STDs)
+<h3>Variances properties of sample means</h3>
+<b>sample mean</b> = \( \bar{X} = \frac{1}{n}\sum_{i=1}^n X_i \)
+<br>
+Variance of the sample mean of a collection of independent and
+identically distributed (iid) variables with a variance of
+\(\sigma^2\) is \(\sigma^2 / n\)
+$$ Var(\bar{X}) = Var(\frac{1}{n}\sum_{i=1}^nX_i) $$
+$$ = \frac{1}{n^2}Var(\sum_{i=1}^nX_i) $$
+$$ = \frac{1}{n^2}\sum_{i=1}^n Var(X_i) $$
+$$ = \frac{1}{n^2}\times n\sigma^2 $$
+<p>
+If I want to know the variance of 10 averages from a sample, I only
+need to know the variance of the original distribution and divide by
+10.
+<p>For example, the variance of a die roll is about 2.92.
+Roll one die 10,000 times.
+<pre>
+var(sample(1:6, 10000, replace=TRUE))
+[1] 2.910495
+</pre>
+If instead I roll 10 dice 1000 times, I get
+<pre>
+n &lt;- 10
+nosim &lt;- 1000
+xbar &lt;- apply(matrix(sample(1:6, n*nosim, replace = TRUE), nosim), 1, mean)
+var(xbar)
+[1] 0.2730847
+</pre>
+That is, 2.9/10, the variance over the sample size
+<br>
+The <b>standard error</b> of a sample mean = \(
+\sigma/\sqrt{n}\). That is how variable is the average of n
+measurements.
+<h3>The sample variance</h3>
+$$ S^2 = \frac{\sum_{i=1}^n (X_i-\bar{X})^2}{n-1} $$
+The sample variance is an estimator of \(\sigma^2\)
+<br>
+There is a version of the numerator that works better for calculations
+$$ \sum_{i=1}^n(X_i-\bar{X})^2 = \sum_{i=1}^n X_i^2 - n\bar{X}^2 $$
+The sample variance is (nearly) the mean of the squared deviations
+from the mean. (The difference is the n-1 in the denomenator)
+<p>
+Why n-1 rather than n?
+$$ E\big[\sum_{i=1}^n(X_i - \bar{X})^2\big] = \sum_{i=1}^n E[X_i^2] -
+nE[\bar{X}^2] $$
+$$ = \sum_{i=1}^n {Var(X_i)+\mu^2} - n{Var(\bar{X}) + \mu^2} $$
+$$ = \sum_{i=1}^n {\sigma^2 + \mu^2} - n{\sigma^2/n + \mu^2} $$
+$$ = n \sigma^2 + n\mu^2 - \sigma^2 - n\mu^2 = (n-1)\sigma^2 $$
+An intuition for this is that we don't actually know the population mean, \(
+\mu \) and so we used \( \bar{X} \). The n-1 comes from using the
+sample mean and losing a degree of freedom that we would have had if
+we had used the population mean. By dividing by n-1, we get an
+unbiased result but our variance is slightly higher. Mind you, this
+n-1 (used to calculate S) is not the same as the n for the sample
+standard error of the mean.
+<br>
+So, for an actual example,
+<ul>
+<li>There was a study of 495 organo-lead workers, and the following
+  summaries were obtained for Total Brain Volume in cm^3
+<li>mean = 1151.281
+<li>sum of squared observations = 662361978
+<li>sample sd = sqrt((662361978 - 495 * 1151.281^2)/494) =
+  112.6215 <i>The deviation in the population</i>
+<li>estimated se of the mean = 112.6215/sqrt(495) = 5.062, the
+  estimate of the variation in averages of 495 samples. This seems to
+  get at confidence intervals, in my old vocabulary.
+</ul>
+</body>
+</html>

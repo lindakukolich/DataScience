@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Notes - 2 - BioStatistics Boot Camp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+<body>
+<h1>BioStatistics Boot Camp. Section 2</h1>
+<h2>Conditional Probability</h2>
+<h3>Definitions</h3>
+Motivation: Probability of rolling a 1, given the die roll is odd. The
+probability goes from 1/6 to 1/3.
+<br>
+Let B be an even so that P(B) &gt; 0
+<br>
+Then the conditional probability of an event A given that B has
+occurred is 
+$$ P(A | B) = \frac{P(A\cap B)}{P(B)} $$
+Notice that is A and B are independent then
+$$ P(A | B) = \frac{P(A)P(B)}{P(B)} = P(A) $$
+<h3>Conditional Densities</h3>
+Conditional densities or mass function of one variable conditional on
+the value of another.
+<p>
+Let f(x,y) be a bivariate density or mass function of random variables
+X and Y
+<p>
+Let f(x) and f(y) be the associated marginal mass function or
+densities disregarding the other variables
+$$ f(y) = \int f(x,y)dx\;\mathrm{or}\;f(y) = \sum_x f(x,y)dx $$
+Then the conditional density or mass function given that Y = y is
+given by
+$$ f(x | y) = f(x,y)/f(y) $$
+It is easy to see that, in the discrete case, the definition of
+conditional probability is exactly as in the definition for
+conditional events where A = the event that X = x and B = the event
+that Y = y
+<br>
+The continuous definithion is a little harder to motivate, since the
+events X = x and Y =  each have probability 0
+<br>
+However, a useful motivation by taking the appropriate limits as
+follows: Define A = {X &le; x} while \(B = {Y \in [y, y+\epsilon]}\)
+$$P(X \le x | Y \in [y, y+\epsilon] = P(A | B) =
+\frac{P(A\cap B)}{P(B)}$$
+$$=\frac{(P(X \le x, Y \in [y, y+\epsilon])}{P(Y \in [y,
+y+\epsilon])}$$
+$$ = \frac{\int_y^{y+\epsilon}\int_{-\infty}^x
+f(x,y)dxdy}{\int_y^{y+\epsilon}f(y)dy} $$
+$$ = \frac{\int_{-\infty}^{y+\epsilon}\int_{-\infty}^xf(x,y)dxdy -
+\int_{-\infty}^y\int_{-\infty}^xf(x,y)dxdy}{\int_{-\infty}^{y+\epsilon}f(y)dy-\int_{-\infty}^yf(y)dy}$$
+$$ = \frac{g_1(y+\epsilon) - g_1(y)}{g_2(y+\epsilon)-g_2(y)} $$
+where
+$$ g_1(y) = \int_{-\infty}^y\int_{-\infty}^x f(x,y) dxdy \;\mathrm{and}\; g_2(y) =
+\int_{-\infty}^yf(y)dy $$
+Notice that the limit of the numerator and denominator tends to
+\(g_1'\) and \(g_2'\) as \(\epsilon\) gets smaller and smaller
+<br>
+Hence we have that the conditional distribution function is
+$$ P(X \le x | Y = y) = \frac{\int_{-\infty}^x f(x,y)dx}{f(y)} $$
+And taking the derivative with respect to x yields the conditional
+density (To turn a distribution function into a density...)
+$$ f(x | y) = \frac{f(x,y)}{f(y)} $$
+<p>
+An example:
+<br>
+Let \(f(x,y) = ye^{-xy-y} \;\mathrm{for}\; 0 \le x \;\mathrm{and}\; 0 \le y \)
+<br>
+Then note
+$$ f(y) = \int_0^\infty f(x,y)dx = e^{-y}\int_-^\infty ye^{-xy}dx =
+e^{-y} $$
+Therefore
+$$ f(x|y) = f(x,y)/f(y) = \frac{ye^{-xy-y}}{e^{-y}} = ye^{-xy} $$
+<h3>Bayes Rule</h3>
+Let f(x|y) be the conditional density or mass function for X given
+that Y = y
+<br>
+Let f(y) be the marginal distribution for y
+<br>
+Then if y is continuous, the density function is
+$$ f(y|x) = \frac{f(x|y) f(y)}{\int f(x | t)f(t)dt} $$
+if y is discrete, the mass function is
+$$ f(y|x) = \frac{f(x|y)f(y)}{\sum_t f(x|t)f(t)} $$
+In probability notation, when dealing with events
+$$ P(B|A) = \frac{P(A|B)P(B)}{P(A|B)P(B) + P(A|B^c)P(B^c)} $$
+<h3>Diagnostic Tests</h3>
+<ul>
+<li/>Let + and - be the events that the result of a diagnostic test is
+positive or negative, respectively
+<li/>Let \(D\) and \(D^c\) be the event that the subject of the test
+has or does not have the disease respectively
+<li/>The <b>sensitivity</b> is the probability that the test is
+positive given that the subject actually has the disease,
+\(P(+|D)\) <i>True Hit</i>
+<li/>The <b>specificity</b> is the probability that the test is
+negative given that the subject does not have the disease, \(P(- |
+D^c)\) <i>False Alarm</i>. 
+<li/>The <b>positive predictive value</b> is the probability that the
+subject has the disease given that the test is positive, \(P(D | +)\)
+<li/>The <b>negatvie predictive value</b> is the probability that the
+subject does not have the disease given that the test is negative,
+\(P(D^c | -)\)
+<li/>The <b>prevalence of the disease</b> is the marginal probability
+of disease, P(D).
+<li/>the <b>diagnostice likelihood ratio of a positive test</b>,
+labeled \(DLR_+\) is \(P(+|D)/P(+|D^c)\), which is the
+sensitivity/(1-specificity)
+<li/>The <b>diagnostic likelihood ration of a negative test</b>,
+labeled \(DLR_-\) is \(P(-|D)/P(-|D^c)\), which is (1-sensitivity) /
+specificity
+</ul>
+He gives an example of an HIV test, with better than 98.5% specificity and
+better than 99.7% sensitivity, and yields a positive predictive value of
+only 6%.  This turns out to be because the prevalence of the disease
+is low. IF however, for this patient there were a bunch more risk
+factors, that would increase the initial prevalence and increase the
+positive predictive value.
+<p>
+<b>Odds</b> is a likelihood ratio:
+$$ \frac{P(D|+)}{P(D^c | +)} = \frac{P(+|D)}{P(+|D^c)} \times
+\frac{P(D)}{P(D^c)}$$
+that is, post-test odds of \(D = DLR_+ \times \) pre-test odds of D.
+Similary, \(DLR_-\) relates the decrease in the odds of the disease
+after a negative test result to the odds of disease prior to the test.
+<p>
+In the previous example, \(DLR_+ = .997/(1-.985) \approx 66\). The
+result of the positive test is that the odds of disease is now 66
+times more likely than it was pretest. Or the hypothesis of disease is
+now supported 66 times that of the hypothesis of no disease given the
+positive test result.
+<p>
+In the case of a negative test, \(DLR_- = (1 - .997)/.985 \approx
+0.003\).
+<p>
+The Bayesian way of thinking is that you have a prior belief, you
+multiply it by a ratio, and you now have a posterior belief, a
+postierior probability of the disease.  The alternative way of
+thinking is "frequentist" where the person is either sick or
+not. Kinda the Heisenberg Cat thing. The individual cat is either
+alive of dead, 1 or 0, but the probability of the cat being alive or
+dead is somewhere between.
+<h2>Likelihoods</h2>
+Assume that the data come from a family of
+distributions. The <b>likelihood</b> of a colletion of data is the
+joint density evaluated as a function of the parameters with the data
+fixed. <i>This makes no sense</i> Likelihood analysis of data uses the
+likelihood to perform inference regarding the unknown parameter.
+Right. Assume that there is an underlying distribution, like a normal
+distribution, and then use likelihood analysis to estimate the means
+and variances for the underlying distribution.
+<ol>
+<li/>Ratios of likelihood values measure the relative <b>evidence</b>
+of one value of the unknown parameter to another.
+<li/>Given a statistical model and observed data, all of the relavant
+information contained in the data regarding the unknown parameter is
+contained in the likelihood. <i>This is controversial, since it calls
+  into question various tests like the P-test that statisticians use
+  so often</i> 
+<li/>If \({X_i}\) are independent random variables, then their
+likelihoods multiply. That is, the likelihood of the parameters given
+all of the \(X_i\) is simply the product of the individual likelihoods.
+</ol>
+<h2>Interpreting likelihoods</h2>
+<h3>An example</h3>
+<ul>
+<li/>Suppose that we flip a coin with success probability \(\theta\)
+<li/>Recall the mass function for x is
+$$ f(x,\theta) = \theta^x(1-\theta)^{1-x} \;\mathrm{for}\; \theta \in
+[0,1] $$
+where x is either 0 (Tails) or 1 (Heads)
+<li/>Suppose that the result is a head
+<li/>The likelihood is
+$$ \mathcal{L} = \theta^1(1-\theta)1-1 = \theta \;\mathrm{for}\; \theta
+\in [0, 1]$$
+<li/>Therefore, \( \mathcal{L}(.5,1)/\mathcal{L}(.25,1) = 2 \)
+<li/>There is twice as much evidence supporting the hypothesis that
+\(\theta = .5\) to the hypothesis that \(\theta = .25\) <i>Given we
+  flipped a coin and the result was heads</i>
+</ul>
+Try this again for the sequence 1, 0, 1, 1
+<ul>
+<li/>The likelihood is
+$$ \mathcal{L}(\theta,1, 0, 1, 1) = \theta^3(1-\theta)1-1 $$
+<li/>Therefore, \(\mathcal{L}(.5,1,3)/\mathcal{L}(.25,1,3) = 5.33
+<li/>There is five times as much evidence supporting the hypothesis that
+\(\theta = .5\) to the hypothesis that \(\theta = .25\)
+</ul>
+The sum of the number of heads is a <b>Sufficient Statistic</b> since
+the order of the coin flips is not important, just the number is good enough.
+<h2>Plotting likelihoods</h2>
+Plot \( \theta \;\mathrm{vs.}\; \mathcal{L}(\theta,x) \) and usually
+divide by the maximum height to make it all fit between 0 and 1. On
+his plot, we have a curve and draw a line a various thresholds. One of
+his lines is at 1/8, which will later be his threshold for moderate
+evidence of a hypothesis.
+<h2>Maximum likelihoods</h2>
+<ul>
+<li>The value of &theta; where the curve reaches its maximum has a
+  special meaning
+<li>It is the value of &theta; that is most well supported by the data
+<li>This point is called the <b>maximum likelihood estimate</b> (or
+  MLE) of &theta;
+$$ MLE = \mathrm{argmax}^\theta\mathcal{L}(\theta,x) $$
+<li>Another interpretation of the MLE is that it is the value of
+  &theta; that would make the data that we observed most probable
+<li>Let x be the number of heads and n be the number of trials
+<li>\(\mathcal{L}(\theta,x) = \theta^x(1-\theta)^{n-x}
+<li>It is easier to maximize the <b>log-likelihood</b>
+$$ l(\theta,x) = x\mathrm{log}(\theta) + (n-x)\mathrm{log}(1-\theta)$$
+<li>Take the derivative:
+$$ \frac{d}{d\theta}l(\theta,x) = \frac{x}{\theta} -
+  \frac{n-x}{1-\theta} $$
+<li>Setting equal to zero implies
+$$ ( 1 - \frac{x}{n})\theta = (1-\theta)\frac{x}{n} $$
+<li>Which is clearly solved at \(\theta = \frac{x}{n} \)
+<li>Notice that the second derivative
+$$ \frac{d^2}{d\theta^2}l(\theta,x) = -\frac{x}{\theta^2} -
+  \frac{n-x}{(1-\theta)^2} \lt 0 $$
+provided that x is not 0 or n (all failures or all sucesses). The
+  point we found is a maximum.
+</ul>
+<h3>What constitutes strong evidence?</h3>
+Consider the three possibilities, &theta; = 0, <i>it has two tails</i>,
+&theta; = .5 <i>it is fair</i>, and &theta; = 1 <i>it has two
+  heads</i>.
+He then make a table for all outcomes of 1, 2, and 3 coin flips and
+their likelihood ratios. He has a coin with two heads which he uses
+for this test.
+If the likelihood ratio is
+<ul>
+<li>8 - 3 heads. Moderate evidence
+<li>16 - 4 heads. moderately strong evidence
+<li>32 - 5 heads. strong evidence
+</ul>
+Because of this, it is common to draw reference lines at these values
+on likelihood plots.
+<br>
+Parameter values above the 1/8 reference line, for example, are such
+that no other point is more than 8 times better supported given the
+data.
+<p>
+If you assume a probability model, then the likelihood ratio is
+central. In our work here, the likelihood ratio gives ratios of
+evidence. Much of "statistics" is based on hypothesis testing and P
+values, multiple corrections. Much of it involves potentially
+fictitious repetitions of the experiment (confidence intervals) which
+do not depend on the likelihood. It adds no additional evidence and so
+can add no value over what the likelihood already gave
+us. <i>Controversial since it throws out whole classes on statistics
+    that use all those fancy tests with REALLY strong underlying
+    assumptions that are then ignored while we play with our "statistics"</i>
+<h2>Bernoulli Distribution and Binomial Trials</h2>
+<ul>
+<li>Bernoulli random variables take only the values 1 and 0
+<li>PMF is \(P(X = x) = p^x(1-p)^{1-x}\)
+<li>mean is p
+<li>variance is p(1-p)
+<li>X = 1 is "success", X = 0 is "failure"
+<li>If several Bernoulli observations sax x1,...,xn are observed, the
+  likelihood is
+$$\prod_{i=1}^n p^{x_i}(1-p)^{1-x_i} = p^{\sum x_i}(1-p)^{n=\sum x_i}
+  $$
+<li>Notice that the likelihood depends only on the sum of the xi, not
+  the order
+<li>Because n is fixed and assumed known, this implies that the sample
+  proportion \(\sum_i x_i / n \) contains all of the relevant
+  information about p
+<li>We can maximize the Bernoulli likelihood over p to obtain that
+  \(\hat{p} = \sum_i x_i / n \) is the maximum likelihood estimator
+  for p
+</ul>
+<h3>Binomal Random Variables</h3>
+<ul>
+<li><b>binomial ranodm variables</b> are obtained as the sum of iid
+  Bernoulli trials
+<li>In specific, lit X1,...,Xn be iid Bernoulli(p); then \(X =
+  \sum{i=1}^n X_i\) is a binomial random variable
+<li>The mass function is
+$$ P(x = x) = {n \choose x} p^x(1-p)^{n-x} $$
+for x = 0,...,n.
+<li>Multiply the Bernoulli mass function for a result by the number of
+  ways you can obtain that result
+</ul>
+<b>Pvalue</b> is the probability under a null hypothesis of getting a
+result as extreme or more extreme than the one actually obtained
+<h2>The Normal (Gaussian) Distribution</h2>
+<ul>
+<li>A random variable is said to follow a <b>normal</b>
+  or <b>Gaussian</b> distribution with a mean &mu; and variance
+  \(\sigma^2\) is the associated density is
+$$ (2\pi \sigma^2)^{-1/2}e{1(x-\mu)^2/2\sigma^2}$$
+if X is a RV with this dendity then E[X] = &mu; and Var(X) =
+  \(\sigma^2\)
+<li>We write \(X \sim N(\mu, \sigma^2)\)
+<li><b>Standard Normal Distribution</b> has \(\mu = 0\) and \(\sigma =
+  1\). \(\phi\) is the standard normal density and. \(\Phi\) is
+  the standard normal distribution.
+<li>Standard normal RVs are often labeled Z
+<li>If \(X \sim N(\mu,\sigma^2)\) then \(Z = \frac{X=\mu}{\sigma}\)
+<li>If Z is standard normal
+$$ X = \mu + \sigma Z \sim N(\mu, \sigma^2) $$
+<li>The non-standard normal density is
+$$ \phi{(x-\mu)/\sigma}/\sigma $$
+</ul>
+<h3>Facts about normal densities</h3>
+<ol>
+<li>Approximately 68%, 95%, and 99% of the normal density lies within
+  1, 2, nd 3 standard deviations of the mean
+<li>-1.28, -1.645, -1.96, and -2.33 are the 10th, 5, 2.5th, and 1st
+  percentiles
+<li>By symetry 1.28, 1.645, 1.96, and 2.33 are the 90th, 95th, 97.5th,
+  and 99th percentiles of the standard normal distribution respectively
+<li>95% is the chance of being between 2.5th and 97.5th, 1.96 which is
+  pretty close to 2
+</ol>
+<h3>Examples</h3>
+<ol>
+<li>What is the 95th percentile of a \(N(\mu, \sigma^2)\) distribution?
+<ul>
+<li>We want the point \(x_0\) so that \(P(X \le x_0) = .95\)
+$$P(X \le x_0) = P\left(\frac{X-\mu}{\sigma} \le \frac{x_0 -
+  \mu}{\sigma}\right) $$
+$$= P\left(Z \le \frac{x_0-\mu}{\sigma}\right) = .95 $$
+<li>Therefore \(\frac{x_0 - \mu}{sigma} = 1.645 \) or \(x_0 = \mu +
+  \sigma 1.645\)
+</ul>
+<li>What is the probability that a \(N(\mu,\sigma^2) RV is 2 standard
+  deviations above the mean?
+<ul>
+<li>We want to know
+$$ P(X > \mu + 2\sigma) = P\left(\frac{X - \mu}{\sigma} \gt \frac{\mu +
+  2\sigma - \mu}{\sigma}\right)$$
+$$ = P(Z \ge 2)$$
+$$ \approx 2.5% $$
+</ul>
+<h3>Facts about normal distributions</h3>
+<ol>
+<li>The normal distribution is symmetric and peaked about its mean
+  (Therefore the mean, median, and mode are all equal)
+<li>A constant times a normally distributed random variable is also
+  normally distributed (What is the mean and variance?)
+<li>Sums of normally distributed random variables are again normal
+  distributed even if the variables are dependent (what is the mean
+  and variance?
+<li>Sample means of normally distributed random variables are again
+  normally distributed (with what mean and vairance?)
+<li>The quare of a standard noraml variables follows what is
+  call <b>chi-squared</b> distribution
+<li>The exponent of a normally distributed random variabables follow
+  what is calle the <b>log-normal</b> distribution
+<li>As we will see late, many random variables, properly normalized,
+  limit to a normal distribution. <b>Central limit theorem</b>
+</ol>
+<h3>Likelihood of normals</h3>
+If \(X_i \) are iid \(N(\mu, \sigma^2)\) with a known variance, what
+is the likelihood for &mu;? \( \varpropto \) means proportional to
+$$ \mathcal{L}(\mu) = \prod^{i=1}^n (2\pi\sigma^2)^{-1/2} exp{-(x_i -
+\mu)^2/2\sigma^2} $$
+$$\varpropto exp\left\{ -\sum_{i=1}^n(x_i - \mu)^2/2\sigma^2\right\} $$
+$$= exp\left\{ -\sum_{i=1}^n(x_i)^2/2\sigma^2 + \mu
+\sum_{i=1}^n(X_i/\sigma) - n\mu^2/2\sigma^2 \right\} $$
+$$ \varpropto exp\left\{\mu n \bar{x}/\sigma^2 - n\mu^2/2\sigma^2\right\} $$
+The likelihood here only care about the relationship with mu, we can
+eliminate factors that do not depend on mu.
+<br>
+The Maximum Likelihood <b>ML</b> estimate of &mu; for a normal
+distribution with known variance is, working with log likehoods.
+$$ \mu n \bar{x}/\sigma^2 - n\mu^2/2\sigma^2 $$
+The derivative with respect to &mu; is
+$$ n\bar{x}/\sigma^2 - n\mu/\sigma^2 = 0 $$
+\(\bar{x}\) is the ml estimate of &mu; and since it doesn't depend on
+&sigma; this is also the ML estimate given an unknown variance.
+<br>ML estimate for the variance is
+$$ \frac{\sum^{i=1}^n(X_i - \bar{X})^2}{n} $$
+Which is the biased version of the sample variance.
+<h2>Limits and LLN</h2>
+Law of Large Numbers: if X1,..,Xn are iid from a population iwth mean
+m and variance s2, then the population mean \(\bar{X}_n\) converges
+with the mean m.
+<p>
+There is a proof using Chebyshev's inequality.
+<h3>Facts about LLN</h3>
+<ul>
+<li>Functions of convergent random sequences converge to the funtion
+evaluated at the limit
+<li>This includes sums, products, differences, ...
+<li>Example \((\bar{X}_n)^2\( converges to \(\mu^2\)
+<li>Notice that this is difference than \((\sum X_i^2)/n \) which
+  converges to \(E[X_i^2] = \sigma^2 + \mu^2 \)
+<li>We can use this to prove that the sample variance converges to
+  \(\sigma^2\)
+</ul>
+<h2>CLT: Central Limit Theorem</h2>
+The distribution of averages of iid variables, properly normalized,
+becomes that of a standard normal as the sample size increases.
+<ul>
+<li>Let X1,...,Xn be a collection iid random variables with mean &mu;
+  and variance \(\sigma^2\)
+<li>Let \(\bar{X}_n\) be their sample avarage
+<li>Then
+$$ P\left(\frac{\bar{X}^n - \mu}{\sigma/\sqrt{n}} \le z \right) \lim
+  \Phi(z) $$
+<li>Notice the form of the normalized quantitiy
+$$ \frac{\bar{X}^n - \mu}{\sigma/\sqrt{n}} = \frac{\mathrm{Estimate -
+  Mean\,of\,estimate}}{\mathrm{Std.\,Err.\,of\,estimate}} $$
+</ul>
+<h3>Example: a 6 sided die</h3>
+<ul>
+<li>\(\mu = E[X_i] = 3.5
+<li>Var(Xi) = 2.92
+<li>SE = \(\sqrt{2.92/n} = 1.71/\sqrt{n} \)
+<li>Standardized mean
+$$ \frac{\bar{X_n} - 3.5}{1.71/\sqrt{n}} $$
+</ul>
+<h3>Example: a coin</h3>
+<ul>
+<li>Xi is the 0 or 1 result of the ith flip of a possibly unfair coin
+<li>The sample proportion, say \(\hat{p}\), is the avarage of the coin
+  flips
+<li>\(p = E[X_i]\)
+<li>Var(Xi) = p(1-p)
+<li>SE of the mean is = \(\sqrt{p(1-p)/n}\)
+<li>Then
+$$ \frac{\hat{p}-p}{\sqrt{p(1-p)/n}} $$
+will be approximately normally distributed
+</ul>
+BUT he shows us graphs avaraging 1, 10, and 20 fair and unfair
+coins. With the unfair coins, their estimate stinks for a lot larger
+numbers than with the fair coin (average of 20 flips versus average of
+40 or 80 flips)
+<h2>Confidence Intervals</h2>
+The probability that the true mean is within + and - 2 &sigma; of the
+estimated mean is 95%. So, we have 95% confidence that we know what
+the mean is, based on the sample mean. The 95% <b>confidence interval</b>
+$$ .95 \approx P\left(-1.96 \le \frac{\bar{X}_n - \mu}{\sigma/\sqrt{n}}
+\le 1.96 \right) $$
+$$ = P(\bar{X}_n + 1.96\sigma/\sqrt{n} \ge \mu \ge \bar{X}_n -
+1.96\sigma/\sqrt{n}) $$
+For a general quantile:
+$$ \bar{X}_n \pm z_{1-\alpha/2} \sigma/\sqrt{n} $$
+where \(z_{1-\alpha/2}\) is the \(1 - \alpha/2\) quantile of the
+standard normal distribution.
+<p>
+The confidence interval procedure creates intervals that, were we to
+repeat the procedure many many times, would contain the mean the given
+percent of times.
+<p>
+<b>Slutsky's theorem</b> allows us to replace the unknown &sigma; with
+s.
+<p>
+<b>Wald confidence interval<b> for p is
+$$ \hat{p} \pm z_{1-\alpha/2}
+    \sqrt{\frac{\hat{p}(1-\hat{p})}{n}} $$
+A quick Confidence Interval estimate (CI) for p is \(\hat{p} \pm
+    \frac{1}{\sqrt{n}} \)
+</body>
+</html>

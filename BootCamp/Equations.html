@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Equations - BioStatistics Boot Camp</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<script type="text/javascript"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+</head>
+<body>
+<h1>Biostatistics Equations</h1>
+<h1>Probabilities</h1>
+<ul>
+<li/> <b>Sample Space</b> = \( \Omega \) is the collection of possible
+outcome of an experiment (die roll \( \Omega = {1, 2, 3, 4, 5, 6} \) ) 
+<li/> <b>event</b>, is a subset of \( \Omega \) (die roll is even \( E
+= {2,4,6} \) ) 
+<li/><b>elementary or simple event</b> is result of one experiment
+(die roll is a 4\( \omega = 4 \) 
+<li/>\( \emptyset \) is the <b>empty set</b> or <b>null event</b>
+<li/>\( \omega \in E \) Implies that E occurs when w occurs
+<li/>\( \omega \not\in E \) Implies that E does not occur when w occurs
+<li/>\( E \subset F \) occurrence of E implies the occurrece of F
+<li/>\( E \cap F \) implies the vent that both E and F occur
+<li/>\( E \cup F \) implies the event that at least one of E or F occur
+<li/>\( E \cap F = \emptyset\) E and F are <b>mutually exclusive</b>
+both cannot occur 
+<li/> \( E^c \) or \( \bar{E} \)is the event that E does not occur, E
+complement 
+<li/> \( (A \cap B)^c = A^c \cup B^c \)
+<ul>
+  <li/>DeMorgan's Law
+<li/>If you are not an alligator or a turtle, you are not and
+alligator AND you are not a turtle 
+</ul>
+<li/> \( (A \cup B)^c = A^c \cap B^c \) also DeMorgan's Law
+<li/> \( (A^c)^c = A\)
+<li/> \( (A \cup B) \cap C = (A \cap C) \cup (B \cap C) \)
+</ul>
+Rules from Andrey Kolmogorov
+<ol>
+<li>For an event \( E \in \Omega, 0 \le P(E) \le 1 \) That is, the probability of an event is between 0 and 1
+<li>\( P(\Omega ) = 1 \) That is, the probability of all possible outcomes is 1
+<li> if \( E_1 \) and \( E_2 \) are mutually exclusive events \( P(E_2
+  \cup E_2) = P(E_1) + P(E_2) \). That is, probability of getting a
+  head or a tail is the sum of the probability of getting a head and
+  the probability of getting a tail.
+</ol>
+<ul>
+<li>\( P(\emptyset) = 0\) Probability of nothing happening given you actually flipped a coin is nothing
+<li>\( P(E) = 1 - P(E^c) \) Probability of getting a tail is One minus the probability of getting a head
+<li>\( P(A \cup B) = P(A) + P(B) - P(A \cap B) \) You added A intersect B twice, once in A and once in B, so subtract it out
+<li>\( if A \subset B \) then \( P(A) \le P(B) \) The probability of a part of B is less than the probaility of all of it
+<li>\( P(A \cup B) = 1 - P(A^c \cap B^c) \) Subtract B from A, so A and not B
+<li>\( P(A \cap B^c) = P(A) - P(A \cap B) \)
+<li>\( P(\cup ^n _{i=1} E_i)\le \sum ^n _{i=1} P(E_i) \) The biggest it can be is the sum, minus the probailities of the intersections, which are otherwise counted twice
+<li>\( P(\cup ^n _{i=1}E_i) \ge max_i P(E_i) \) Probability of getting a 1, 2, or 3 on a die has to be at least as big as the most likely of those outcomes.
+</ul>
+<h1>PMFs and PDFs</h1>
+<b>Probability Mass Function</b>, the discrete version of a
+probability density function.
+<ol>
+<li> \( p(x) \ge 0 \) for all \( x \)
+<li> \( \sum_x p(x) = 1 \)
+</ol>
+<b>Probability Density Function</b>
+<ol>
+<li> \( f(x) \ge 0 \) for all \( x \)
+<li> \( \int_{-\infty}^\infty f(x)dx = 1 \)
+</ol>
+Assume that the time in years from diagnosis until death for a
+specific type of cancer is \( \frac{1}{5}e^{-x/5} \) for \(x \gt 0
+\).
+<ol>
+<li> \( e \) raised to any power is always positive
+<li> $$ \int_0^\infty f(x)dx = \int_0^\infty \frac{e^{-x/5}}{5} dx = -e^{-x/5}
+  \bigg|_0^\infty = 1 $$
+</ol>
+So, what is the probability that a person survives more than 6 years?
+  $$ P(X \ge 6) = \int_6^\infty f(t)dt = \int_6^\infty
+  \frac{e^{-t/5}}{5} dt = -e^{-t/5} \bigg|_6^\infty =
+  -e^{-6/5} \approx 0.301 $$
+In R this is
+<pre>
+pexp(6, 1/5, lower.tail = FALSE)
+</pre>
+<h1>CDFs</h1>
+<b>Cumulative Distribution Functions.</b> Probability that the patient has
+already died.
+$$ F(x) = P(X \le x) $$
+<b>Survival Function.</b> Probability that the patient is still alive.
+$$ S(x) = P(X \gt x) $$
+<h1>Quantile</h1>
+The \( \alpha^{th} \) <b>quantile</b> of a distribution with
+distribution function F is the point \( x_\alpha \) so that \(
+F(x_\alpha) = \alpha \). So the 25th percentile is the point where 25%
+of the patients have died. which turns out to be 1.44 years in the
+example above.
+<br>
+in R
+<pre> qexp(.25, 1/5) </pre>
+dexp() is the density.
+<h1>Expected Values</h1>
+$$ E[X] = \sum_x xp(x) $$
+$$ E[X] = \int_{-\infty}^\infty t f(t) dt $$
+This is the mean, or population mean
+</b>
+If a and b are not random and X and Y are two random variables then
+$$E[aX + b] = aE[X] + b $$
+$$ E[X + Y] = E[X] + E[Y] $$
+In general if g is a function that is not linear
+\( E[g(X)] \neq g(E[X]) \)
+For example, in general \( E[X^2] \neq E[X]^2\)
+<br>
+The expected value of the <b>sample mean</b> is the <b>population
+mean</b> that it's trying to estimate.
+<br>
+An <b>unbiased</b> estimator is one where the expected value of the
+estimator is what it's trying to estimate.
+<p>
+Totally important equation that I missed in lecture but that we use
+over and over again in the homework.
+<br>
+For a variable X with a PDF of f(x), the expected distribution of n
+instances of X is
+$$ E[X^n] = \int_{-\infty}^\infty t^n f(t)dt $$
+OR
+$$ E[X^n] = \sum_x^n xp(x) $$
+<h1>Variances</h1>
+$$ Var(x) = E[(X - \mu)^2] $$
+$$ Var(x) = E[X^2] - E[X]^2 $$
+If a is constant then \( Var(aX) = a^2 Var(X) \)
+<p>
+<b>Bernoulli Variance</b> = p(1-p). Works for a binary variable with
+values between 0 and 1.
+<p>
+<b>Chebyshev's Inequality</b>
+$$ P(|X - \mu | \ge k\sigma) \le \frac{1}{k^2} $
+<p>
+<b>Variance and Correlation</b>
+Let \( { X_i }^n_{i=1} \) be a collection of n random variables
+<ul>
+<li>When the \( {X_i} \) are uncorrelated
+$$ Var ( \sum_{i=1}^n a_iX_i + b) = \sum_{i=1}^n a^2_i Var(X_i) $$
+<li>Otherwise
+$$ Var ( \sum_{i=1}^n a_iX_i + b) = \sum_{i=1}^n a^2_i Var(X_i) + 2
+  \sum_{i=1}^{n-1}\sum_{j-i}^n a_ia_jCov(X_i,X_j) $$
+<li>if the \(X_i\) are iid with variance \(\sigma^2\) then 
+\(Var(\bar{X}) = \sigma^2 / n \) and \(E[S^2] = \sigma^2 \)
+</ul>
+
+<h1>Joint Density</h1>
+<ul>
+<li>Joint density \( f(x,y) \) satisfies \(f > 0\) and \(\int \int
+  f(x,y)dxdy = 1\)
+<li>Sum over all variables is one, for discrete variables
+<li>If the variables are independent \( f(x,y) = f(x)g(y) \)
+<li>\( P(A \cap B) = P(A)P(B) \)
+<li>Two random variables are independent if for any two sets A and B
+$$ P([X \in A] \cap [Y \in B]) = P(X \in A)P(Y \in B) $$
+</ul>
+<h1>iid</h1>
+<b>Independent and Identically Distributed</b> is the default model
+for random samples.
+The Joint Density of n random iid variables with densities \(
+p^{x_i}(1-p)^{1-x_i} \) 
+$$ f(x_1,...x_n) = \prod_{i=1}^n p^{x_i}(1-p)^{1-x_i} = p^{\sum x_i}(1-p)^{n - \sum x_i} $$
+For example, the probability of H H T H is \(p^3(1-p)^1 \)
+<h1>Covariance</h1>
+$$ Cov(X,Y) = E[(X-\mu_x)(Y-\mu_y)] = E[XY] - E[X]E[Y] $$
+<ol>
+<li>Cov(X, Y) = Cov(Y, X)
+<li>Cov(X, Y) can be negative or positive
+<li>\(|Cov(X,Y)| \le \sqrt{Var(X)Var(Y)} \)
+</ol>
+<h1>Correlation</h1>
+$$ Cor(X, Y) = Cov(X, Y)/\sqrt{Var(X)Var(Y)}$$
+<ol>
+<li>\( -1 \le Cor(x,Y) \le 1 \)
+<li>\( Cor(X, Y) = \pm 1 \) if and only if \( X = a + bY) \) for some
+  constants a and b
+<li>Cor(X, Y) is unitless
+<li>X and Y are <b>uncorrelated</b> if Cor(X, Y) = 0
+<li>X and Y are more positively correlated, the closer Cor(X,Y) is to
+  1
+<li> and more negatively correlated, the closer the correlation is to -1
+</ol>
+<h1>Sample Mean</h1>
+<b>sample mean</b> = \( \bar{X} = \frac{1}{n}\sum_{i=1}^n X_i \)
+<br>
+The variance of the sample mean of a collection of iid variables with
+a variance of \(\sigma^2\) is \(\sigma^2 / n\)
+<h1>Sample Variance</h1>
+$$ S^2 = \frac{\sum_{i=1}^n (X_i-\bar{X})^2}{n-1} $$
+The sample variance is an estimator of the population variance,
+\(\sigma^2\)
+<h1>Standard Error</h1>
+The Standard error of a sample mean = \(\sigma/\sqrt{n}\), which is
+how variable is the average of n measurements.
+<h1>Conditional Probability</h1>
+$$ P(A | B) = \frac{P(A\cap B)}{P(B)} $$
+For a density function
+$$ f(x | y) = \frac{f(x,y)}{f(y)} $$
+<h1>Bayes Rule</h1>
+For a density function
+<br>
+Then if y is continuous
+$$ f(y|x) = \frac{f(x|y) f(y)}{\int f(x | t)f(t)dt} $$
+if y is discrete
+$$ f(y|x) = \frac{f(x|y)f(y)}{\sum_t f(x|t)f(t)} $$
+In probability notation:
+$$ P(B|A) = \frac{P(A|B)P(B)}{P(A|B)P(B) + P(A|B^c)P(B^c)} $$
+<h1>Diagnostic Tests</h1>
+<ul>
+<li/>Let + and - be the events that the result of a diagnostic test is
+positive or negative, respectively
+<li/>Let \(D\) and \(D^c\) be the event that the subject of the test
+has or does not have the disease respectively
+<li/>The <b>sensitivity</b> is the probability that the test is
+positive given that the subject actually has the disease,
+\(P(+|D)\) <i>True Hit</i>
+<li/>The <b>specificity</b> is the probability that the test is
+negative given that the subject does not have the disease, \(P(- |
+D^c)\) <i>False Alarm</i>. 
+<li/>The <b>positive predictive value</b> is the probability that the
+subject has the disease given that the test is positive, \(P(D | +)\)
+<li/>The <b>negatvie predictive value</b> is the probability that the
+subject does not have the disease given that the test is negative,
+\(P(D^c | -)\)
+<li/>The <b>prevalence of the disease</b> is the marginal probability
+of disease, P(D).
+<li/>the <b>diagnostice likelihood ratio of a positive test</b>,
+labeled \(DLR_+\) is \(P(+|D)/P(+|D^c)\), which is the
+sensitivity/(1-specificity)
+<li/>The <b>diagnostic likelihood ration of a negative test</b>,
+labeled \(DLR_-\) is \(P(-|D)/P(-|D^c)\), which is (1-sensitivity) /
+specificity
+</ul>
+<h1>Likelihoods</h1>
+Given a mass function or density function for x, f(x, &theta;), the
+likelihood is generated by evaluating the mass function for a
+particular x (like say the Mean value found during some
+experiment). To find the maximum likelihood, take dL/d&theta; and set
+it to zero.
+<h1>Bernoulli Distribution</h1>
+<ul>
+<li><b>Mass Function</b> \(P(X = x) = p^x(1-p)^{1-x} \)
+<li><b>mean</b> p(1-p)
+<li><b>likelihood</b> \(p^{\sum x_i}(1-p)^{n-\sum x_i}
+<li><b>ML estimator for p</b> \(\hat{p} = \sum_i x_i/n \)
+</ul>
+<h1>Binomial Random Varianbles</h1>
+<ul>
+<li>A collection of Bernoulli
+  trials: \(X = \sum_{i=1}^n X_i \), that is, the number of heads from
+  n coin flips
+<li><b>Mass Function</b> (Probability that the number of heads is x)
+\( P(X = x) = {n \choose x}p^x(1-p)^{n-x} \)
+</ul>
+<h1>Normal Distribution</h1>
+<ul>
+<li><b>Density Function</b> \(
+  (2\pi\sigma^2)^{-1/2}e^{-(x-\mu)^2)/2\sigma^2}
+<li><b>mean</b> &mu;
+<li><b>variance</b> = &sigma;^2
+<li><b>standard normal distribution</b> &Phi; has mean 0, variance = 1
+<li><b>ML estimator of &mu;</b> = \(\bar{x}\)
+<li><b>ML estimator of &sigma;^2</b> = \(\frac{\sum_1^n (X_i -
+  \bar{X})^2}{n}\)
+<li>Quartiles
+$$P(X \le x_0) = P(\frac{X-\mu}{\sigma} \le \frac{\x_0 - \mu}{\sigma}) $$
+$$ = P(Z \le \frac{x_0 - \mu}{\sigma}) = \mathrm{quartile} $$
+<li>\(x_0 = \mu + \sigma \mathrm{quartile}\)
+<li>The probability that X &le x0
+<li><code>prob &lt;- pnorm((X0 - mean)/std)</code>
+<li>The value of x0 that represents the p0th percentile
+<li><code> x0 &lt;- mean + std*qnorm(p0) </code>
+</ul>
+<table border="1">
+<tr><b><td>&pm; &sigma;</td><td>% normal density</td></b></tr>
+<tr><td>1</td><td>68</td></tr>
+<tr><td>2</td><td>95</td></tr>
+<tr><td>3</td><td>99</td></tr>
+</table>
+<table border="1">
+<tr><b><td>&sigma;</td><td>percentile</td></b></tr>
+<tr><td>-2.33</td><td>1</td></tr>
+<tr><td>-1.96</td><td>2.5</td></tr>
+<tr><td>-1.645</td><td>5</td></tr>
+<tr><td>-1.28</td><td>10</td></tr>
+<tr><td>1.28</td><td>90</td></tr>
+<tr><td>1.96</td><td>97.5</td></tr>
+<tr><td>1.645</td><td>95</td></tr>
+<tr><td>2.33</td><td>99</td></tr>
+</table>
+</body>
+</html>
