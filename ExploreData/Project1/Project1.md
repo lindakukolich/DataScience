@@ -51,14 +51,14 @@ We will only be using data from the dates 2007-02-01 and
 rather than reading in the entire dataset and subsetting to those
 dates.
 
-    DT <- read.table("household_power_consumption.txt",
-    na.strings="?", sep=";", skip=66637, nrows=48*60)
+    # DT <- read.table("household_power_consumption.txt",
+    # na.strings="?", sep=";", skip=66637, nrows=48*60)
 
 You may find it useful to convert the Date and Time variables to
 Date/Time classes in R using the strptime() and as.Date() functions.
 
-    datetime <- strptime(paste(DT[,1], DT[,2]), format="%d/%m/%Y %H:%M:%S")
-	DT <- cbind(DT, datetime)
+    # datetime <- strptime(paste(DT[,1], DT[,2]), format="%d/%m/%Y %H:%M:%S")
+    # DT <- cbind(DT, datetime)
 
 Note that in this dataset missing values are coded as ?.
 
@@ -75,14 +75,15 @@ First you will need to fork and clone the following GitHub repository:
 https://github.com/rdpeng/ExData_Plotting1
 
 *There seems to be no need to fork this. It only contains the README,
- which I have already copied here*
+ which I have already copied here* On the other hand, now that I know how to make a fork and then put the Clone into my regular tree, next time I'll do the clone like they ask me to.
 
 For each plot you should
 
-    hist(...)
-	dev.num <- dev.copy(device = png, "plot1.png", width = 480, height
-	= 480)
-	dev.off(dev.num)
+    # hist(...)
+    # dev.num <- dev.copy(device = png, "plot1.png", width = 480, height = 480)
+    # dev.off(dev.num)
+
+In the end, the plots looked better plotted directly to the png device rather than being copied from the screen version.
 	
 Construct the plot and save it to a PNG file with a width of 480
 pixels and a height of 480 pixels.
