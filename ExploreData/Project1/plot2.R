@@ -6,9 +6,12 @@ plot2 <- function(DT, save=FALSE) {
   if (save) {
     png(plot.name, width = 480, height = 480)
   }
+  old_bg = par("bg")
+  par(bg="transparent")
   with(DT, plot(Global_active_power ~ datetime, 
                 xlab = "", type="l", ylab="Global Active Power (kilowatts)"))
   if (save) {
     invisible(dev.off())
   }
+  par(bg=old_bg)
 }

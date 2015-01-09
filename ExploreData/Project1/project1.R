@@ -45,13 +45,16 @@ read.data <- function(file, skip, nrows) {
 # from February 1 and 2, 2007. There is one record per minute.
 prepare.to.plot <- function() {
   file <- "household_power_consumption.txt"
-  first.line <- find.first.line(file, "1/2/2007")
   # To download and decompress:
-  # temp <- tempfile()
-  # download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip", temp)
-  # downloadDate <- date()
-  # unz(temp, file)
-  # unlink(temp)
+  if (! file.exists(file)) {
+    temp <- tempfile()
+    download.file(url = "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip",
+                 destfile = temp, method="curl", quiet=TRUE)
+    downloadDate <- date()
+    unzip(temp)
+    unlink(temp)  
+  }
+  first.line <- find.first.line(file, "1/2/2007")
   read.data(file, first.line - 1, 48*60)
 }
 

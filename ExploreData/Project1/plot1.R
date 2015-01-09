@@ -7,11 +7,12 @@ plot1 <- function(DF, save = FALSE) {
     png(plot.name, width = 480, height = 480)
   }
   old_mar = par("mar")
-  par(mar = c(5, 4, 2, 2) + 0.1)
+  old_bg = par("bg")
+  par(mar = c(5, 4, 2, 2) + 0.1, bg="transparent")
   with(DF, hist(Global_active_power, main="Global Active Power", 
                 xlab = "Global Active Power (kilowatts)", col="red"))
   if (save) {
     invisible(dev.off())
   }
-  par(mar = old_mar)
+  par(mar = old_mar, bg=old_bg)
 }

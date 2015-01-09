@@ -5,6 +5,8 @@ plot3 <- function(DT, save=FALSE) {
   if (save) {
     png(plot.name, width = 480, height = 480)
   }
+  old_bg = par("bg")
+  par(bg="transparent")
   plot(c(DT$Sub_metering_1, DT$Sub_metering_2, DT$Sub_metering_3) ~ rep(DT$datetime, 3),
        type="n", xlab = "", ylab = "Energy sub metering")
   with(DT, lines(Sub_metering_1 ~ datetime, col = "black"))
@@ -16,4 +18,5 @@ plot3 <- function(DT, save=FALSE) {
   if (save) {
     invisible(dev.off())
   }
+  par(bg=old_bg)
 }

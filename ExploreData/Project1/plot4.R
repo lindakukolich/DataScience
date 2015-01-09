@@ -21,7 +21,8 @@ plot4 <- function(DT, save=FALSE) {
     png(plot.name, width = 480, height = 480)
   }
   old_mfrow = par("mfrow")
-  par(mfrow = c(2, 2))
+  old_bg = par("bg")
+  par(mfrow = c(2, 2), bg="transparent")
   with(DT, plot(Global_active_power ~ datetime, 
                 xlab = "", type="l", ylab="Global Active Power"))
   with(DT, plot(Voltage ~ datetime, type="l"))
@@ -37,5 +38,5 @@ plot4 <- function(DT, save=FALSE) {
   if (save) {
     invisible(dev.off())
   }
-  par(mfrow=old_mfrow)
+  par(mfrow=old_mfrow, bg=old_bg)
 }
