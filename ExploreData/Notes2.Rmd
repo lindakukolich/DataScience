@@ -1,0 +1,209 @@
+---
+title: "Notes2, Exploratory Data Analysis"
+author: "Linda Kukolich"
+date: "January 14, 2015"
+output: html_document
+---
+# Week 2, Exploratory Dat Analysis
+
+## Lattice Plots
+
+Lecturer: Roger Peng, PhD
+
+The lattice plotting system uses two packages, *lattice* and *grid*. Grid seems to be the overall layout system and we will not need to interact with it much.
+
+* Lattice uses functions like `xyplot`, `bwplot`, and `levelplot`
+* Lattice does plotting and annotation all in one call
+* Lattice is particularly well suited to panel plots which divide the data by factors
+
+Lattice Functions
+
+* `xyplot` - this is the main function for creating scatter plots (vs `plot`)
+    * `xyplot(y ~ x | f * g, data)`
+    * *y-axis* ~ *x-axis*
+    * f and g are optional conditioning variables
+    * The * indicates an interaction between two variables)
+```{r}
+library(lattice)
+library(datasets)
+xyplot(Ozone ~ Wind, data = airquality)
+# Convert Month to a factor variable
+airquality <- transform(airquality, Month = factor(Month))
+xyplot(Ozone ~ Wind | Month, data = airquality, layout = c(5, 1))
+```
+
+* `bwplot` - box and whiskers plots (vs `boxplot`)
+* `histogram` (vs `hist`)
+* `stripplot` - like a box plot but with actual points
+* `dotplot` - plot dots on "violin strings"
+* `splom` - ScatterPLOt Matrix (vs `pairs`)
+* `levelplot`, `contourplot` - for plotting "image" data
+
+Lattice Details
+* Lattice plots return a trellis object which will not display
+till the plot is printed
+```{r}
+p <- xyplot(Ozone ~ Wind, data = airquality) ## Nothing
+print(p) ## plot appears
+```
+
+* panel function lets you set what happens in each plot. It seems to be the part after the |
+```{r}
+# plot y vs x for Group 1 and Group 2
+set.seed(10)
+x <- rnorm(100)
+f <- rep(0:1, each = 50)
+y <- x + f - f * x + rnorm(100, sd = 0.5)
+f <- factor(f, labels = c("Group1", "Group2"))
+xyplot(y ~ x | f, panel = function(x, y, ...) {
+  panel.xyplot(x, y, ...) ## First call the default panel function for xyplot
+  panel.abline(h = median(y), lty = 2) ## Add a horizontal line at each median
+  panel.lmline(x, y, col = 2) ## overlay a simple linear regression line
+})
+```
+
+There can be many many plots. They give an example: How does indoor airborne mouse allergen vary over time and across subjects? Plotted visit number verses mouse allergen level plotted by subject, one Tiny plot per subject. Notice that some subjects are flat, some are missing data, some have variation.
+
+## ggplot2
+
+* ggplot2 is an implementation of Grammar of Graphics by Leland Wilkinson
+* Written by Hadley Wickham while he was at Iowa State (Iowa State again)
+
+> "In brief, the grammar tells us that a statistical graphic is a **mapping** from data to **aesthetic** attributes (colour, shape, size) of **geometric** objects (points, lines, bars). The plot may also contain statistical tranformations of the data and is drawn on a specific coordinate system" from *ggplot2* book
+
+### `qplot()` - Quick Plot
+
+* Works much like the `plot` function in the base graphics system
+* Looks for data in a data frame, similar to lattice, or in the parent environment
+* Data MUST be in a data.frame
+* Plots are made up of *aesthetics* (size, shape, color) and *geoms* (points, lines)
+* Factors are important for indicating subsets of the data (if they are to have different properties); they should be **labeled**
+* Think "verb", "noun", "adjective" for graphics
+* `qplot()` hides many details. Its defaults are okay for most operations
+* `ggplot()` is the core function and very flexible for doing things qplot() cannot do
+```{r}
+library(ggplot2)
+str(mpg) # a dataset included with ggplot2
+# scatter plot with colors and added line
+qplot(displ, hwy, data = mpg, color = drv, geom=c("point", "smooth"))
+# Histograms
+qplot(hwy, data=mpg, fill = drv)
+# Facets
+qplot(displ, hwy, data = mpg, facets = . ~ drv)
+qplot(hwy, data = mpg, facets = drv ~ ., binwidth = 2)
+```
+
+Some plots on the Mouse Allergen and Asthma Cohort Study data.
+```
+qplot(log(eno), data = maacs) # histogram of log of Exhaled nitric oxide
+qplot(log(eno), data = maacs, fill = mopos) # same, but data are colored based on whether there is sensitivity to mouse allergen
+qplot(log(eno), data = maacs, geom = "density") # smooth the histogram out to make a density plot
+qplot(log(eno), data = maacs, geom = density, color = mppos)
+# scatter plots eNO vs fine particulates
+qplot(log(pm25), log(eno), data = maacs, shape = mopos) # but the shapes do not show well here
+# switch to color points and add trend lines (linear regression)
+qplot(log(pm25), log(eno), data = maacs, color = mopos, geom=c("point", "smooth"), method = "lm")
+# make two separate plots
+qplot(log(pm25), log(eno), data = maacs, geom = c("point", "smooth"), method = "lm", facets = . ~ mopos)
+```
+
+### Basic Components
+
+* a **data frame**
+* **aesthetic mappings**: how data are mapped to color and size
+* **geoms**: geometric objects like points, lines, shapes
+* **facets**: for conditional plots
+* **stats**: statistical transformations like binning, quantiles, smoothing
+* **scales**: what scale an aesthetic map uses (example: male=red, female=blue)
+* **coordinate system**
+
+### Building plots in ggplot
+
+Plots are built up in layers.
+
+* plot the data
+* overlay a summary
+* metadata and annotation
+
+```
+qplot(logpm25, NocturnalSympt, data = maacs, facets = . ~ bmicat, geom = c("pint", "smooth"), method = "lm")
+# data
+head(maacs)
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+            Data   Aesthetics
+summary(g)
+data: logpm25, bmicat, NocturnalSympt [554x3]
+mapping: x = logpm25, y = NocturnalSympt
+faceting: facet_null()
+# another plot
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+print(g)
+Error: No layers in plot
+# save and print a plot
+p <- g + geom_point()
+print(p)
+# just print it
+g + geom_point()
+# add overlays
+g + geom_point() + geom_smooth()
+g + geom_point() + geom_smooth(method="lm")
+# Plus facets
+g + geom_point() + facet_grid(. ~ bmicat) + geom_smooth(method="lm")
+```
+
+### Annotation
+* Labels
+    * xlab()
+    * ylab()
+    * labs()
+    * ggtitle()
+* Each of the "geom" functions has options to modify
+* for global options, use theme `theme(legend.position = "non")`
+* two standard appearance themes are included
+    * theme_gray()
+    * theme_bw()
+
+### Modifying Aesthetics
+```
+# constant values
+g + geom_point(color = "steelblue", size = 4, alpha = 1/2_)
+# color based on data variable
+g + geom_point(aes(color = bmicat), size = 4, alpha = 1/2)
+# labels
+g + geom_point(aes(color = bmicat), size = 4, alpha = 1/2) + labs(title = "MAACS Cohort") + labs(x = expression( log * PM[2.5]), y = "Nocturnal Symptoms")
+# customizing the smooth
+g + geom_point(aes(color = bmicat), size = 4, alpha = 1/2) + geom_smooth(size = 4, linetype = 3, method = "lm", se = FALSE)
+# changing the Theme
+g + geom_point(aes(color = bmicat)) + theme_bw(base_family =  = "Times")
+# changing the axes
+```
+
+```{r}
+testdat <- data.frame(x = 1:100, y = rnorm(100))
+testdat[50,2] <- 100 ## Outlier!
+plot(testdat$x, testdat$y, type = "l", ylim = c(-3, 3))
+
+# regular data hard to see
+g <- ggplot(testdat, aes(x = x, y = y))
+# outlier missing
+g + geom_line() + ylim(-3, 3)
+# outlier included
+g + geom_line() + coord_cartesian(ylim = c(-3, 3))
+```
+
+Use cut to turn a continuous variable into a factor:
+```
+cutpoints <- quantile(maacs$logno2_new, seq(0, 1, length=11, na.rm=TRUE))
+maacs$no2dec <- cut(maacs$logno2_new, cutpoints)
+levels(maacs$no2dec)
+# Shows 8 plots, 4 x 2, 3 normal weight sections and NA on the first row
+# 3 overweight sections and NA on the second row,
+# nocturnal symptoms on the y, log PM2.5 on the X
+g <- ggplot(maacs, aes(logpm25, NocturnalSympt))
+g + geom_point(alpha = 1/3)
+  + facet_wrap(bmicat ~ no2dec, nrow = 2, ncol = 4)
+  + geom_smooth(method="lm", se=FALSE, col="steelblue")
+  + theme_bw(base_family = "Avenir", base_size = 10)
+  + labs(x = expression("log " * PM[2.5]))
+  + labs(y = "Nocturnal Symptoms")
+  + labs(title = "MAACS Cohort")
