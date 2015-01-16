@@ -1,0 +1,132 @@
+---
+title: "Notes2 - Reproducible Research"
+author: "Linda Kukolich"
+date: "January 15, 2015"
+output: html_document
+---
+# Coding Standards in R
+
+1. Use text files and a text editor
+2. Indent your code
+3. Limit the width of your code to 80 columns
+4. Limit the length of functions
+
+*Seriously? Nothing on "Do not repeat code" or "use variable names that help 
+explain the code"?*
+
+# Markdown
+
+> "Markdown is a text-to-HTML conversion tool for web writers. It allows you to
+write using an easy-to-read, easy-to-write plain text format, and then convert
+it to structurally valid XHTML (or HTML)."
+
+**John Gruber, creator of Markdown**
+
+Aaron Schwartz is also a creator of Markdown
+
+```
+# Level 1 header
+## Level 2
+### Level 3
+```
+# Level 1 header
+## Level 2
+### Level 3
+
+```
+* *italics*
+* **Bold**
+```
+
+* *italics*
+* **Bold**
+
+```
+- also a list
+- with stuff
+    a. this is also an ordered list
+    b. with lower-alpha as a type
+```
+- also a list
+- with stuff
+    a. this is also an ordered list
+    b. with lower-alpha as a type
+
+```
+[linkText](http://www.google.com)
+```
+
+# R Markdown
+
+Allows mixing in blocks of R code for documentation and to generate plots.
+
+Rmd becomes md becomes html
+
+# knitr
+
+## Literate Statistical Programming
+
+- original idea from Donald Knuth
+- An article is a stream of text and code.
+- Analysis code is divided into text and code chunks
+- Presentation code formats results (table, plots)
+- Article text explains what is going on
+- Literate programs are woven to produce human-readable documents and tangled
+to produce machine readable documents
+- Literate programming is a general concept with needs
+    - a documentation language
+    - a programming language
+- **Sweave** by Friedrich Leisch used LaTeX and R
+- **knitr** supports a variety of documentation languages (plot R)
+    - written by Yihui Xie (while at Iowa State)
+    - Supports RMarkdown, LaTeX, and HTML
+    - can export to PDF, HTML
+    - RStudio support
+
+## How do I make my work reproducible?
+
+- Decide to do it from (ideally from the beginning)
+- Keep track of things (use version control to save intermediate state)
+- Use software whose operation can be coded
+- Don't save output
+- Save data in non-proprietary formats
+
+## Pros and Cons
+
+- Pros
+    - Store text and code all in one place
+    - Data, results are automatically updated to reflect external changes
+    - Code is live, an automatic regression test while building a document
+- Cons
+    - Text and code all in one place
+    - If there is a lot of code, this can be hard to read
+    - Can substantially slow down process of documents
+- Things knitr is good for
+    - Manuals
+    - Short/medium-length technical documents
+    - Tutorials
+    - reports (especially if generated periodically)
+    - Data preprocessing documents/summaries
+- Things knitr is NOT good for
+    - Very long reserch articles
+    - complex time-consuming computations
+    - Documents that require precise formatting
+    
+```
+library(knitr)
+setwd(<working directory>)
+knit2html("document.Rmd")
+browseURL("document.html")
+```
+
+## Cool stuff
+{r simulation, echo = FALSE, results="hide"} to supress not just the source
+code, but also the prints. Not, however, the plots
+```{r simulation, echo = FALSE, results="hide"}
+x <- rnorm(100)
+mean(x)
+hist(x)
+```
+
+# Peer Assessment 1
+
