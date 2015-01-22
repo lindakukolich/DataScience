@@ -56,6 +56,29 @@ Aaron Schwartz is also a creator of Markdown
 [linkText](http://www.google.com)
 ```
 
+Links can also be something like footnotes, when you need to reference the
+same place multiple times.
+
+```
+I spend so much time reading [R bloggers][rb] and [Simply Statistics][ss]
+
+[rb]: http://www.r-bloggers.com/ "R bloggers"
+
+[ss]: http://simplystatistics.org/ "Simply Statistics"
+
+And here is a second refers to [R bloggers][rb]
+```
+
+I spend so much time reading [R bloggers][rb] and [Simply Statistics][ss]
+
+[rb]: http://www.r-bloggers.com/ "R bloggers"
+
+[ss]: http://simplystatistics.org/ "Simply Statistics"
+
+And here is a second refers to [R bloggers][rb]
+
+Further information on Markdown is found at [dairingfireball.net]
+
 # R Markdown
 
 Allows mixing in blocks of R code for documentation and to generate plots.
@@ -121,12 +144,49 @@ browseURL("document.html")
 
 ## Cool stuff
 {r simulation, echo = FALSE, results="hide"} to supress not just the source
-code, but also the prints. Not, however, the plots
+code, but also the prints. Not, however, the plots. The simulation part seems
+to be a code block label, though I do not know what use it has in either
+RMarkdown or in the final HTML. It is not in the HTML.
+
 ```{r simulation, echo = FALSE, results="hide"}
 x <- rnorm(100)
 mean(x)
 hist(x)
 ```
+
+Inline: The current time is `r date()`. My favorite random number is 
+`r sample(1:100, 1)`
+
+Tables:
+```{r fitmodel}
+library(datasets)
+data(airquality)
+fit <- lm(Ozone ~ Wind + Temp + Solar.R, data = airquality)
+```
+
+Here is a table of regression coefficients
+```{r showtable, results="asis"}
+library(xtable)
+xt <- xtable(summary(fit))
+print(xt, type = "html")
+```
+
+### Setting Global defaults
+
+```
+opts_chunk$set(echo = FALSE, results = "hide")
+```
+
+Settings
+
+- results: asis, hide
+- echo: TRUE, FALSE
+- fig.height, fig.width: numeric
+- cache - store results after first pass and then reload later
+    - if the data or code or anything external changes, will need to rerun
+    - dependencies are not checked
+    - chucks with side effects may not be cacheable
+    
 
 # Peer Assessment 1
 

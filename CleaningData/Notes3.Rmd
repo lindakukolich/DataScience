@@ -1,0 +1,503 @@
+---
+title: "Notes3 - Getting and Cleaning Data"
+author: "Linda Kukolich"
+date: "January 20, 2015"
+output: html_document
+---
+Lecturer: Jeffrey Leek, Johns Hopkins Bloomberg School of Public Health
+
+# Subsetting and Sorting
+
+## Subsetting Review
+
+```{r, label=subsetting}
+set.seed(13445)
+# Generate some data
+X <- data.frame("var1"=sample(1:5), "var2"=sample(6:10), "var3"=sample(11:15))
+# make some of the data be "missing"
+X <- X[sample(1:5),]; X$var2[c(1,3)] = NA
+# All the data
+X
+# All rows, Column 1
+X[,1]
+# All rows, column 1, addressed by column name
+X[,"var1"]
+# rows 1 and 2, var2 column
+X[1:2,"var2"]
+# rows where var1 is less than or equal to 3 AND var3 is greater than 11
+# Single & so it is the vectorized version
+X[(X$var1 <= 3 & X$var3 >11),]
+# rows where var1 is less than or equal to 3 OR var3 is greater than 15
+X[(X$var1 <= 3 | X$var3 > 15),]
+# testing on a NA entry gives NA as a result, we get output for all the NA rows
+# Plus the one we actually want
+X[X$var2 > 8,]
+# Using which gets around that, giving us just the good row
+X[which(X$var2 > 8),]
+```
+
+## Sorting Review
+```{r, label=sorting}
+sort(X$var1)
+sort(X$var1, decreasing=TRUE)
+sort(X$var2, na.last=TRUE)
+```
+
+## Ordering Review
+```{r, label=ordering}
+X[order(X$var1),]
+# 
+X[order(X$var2, X$var3, na.last = TRUE),]
+```
+
+## Ordering with plyr
+```{r, label=orderWithPlyr}
+library(plyr)
+arrange(X, var1)
+arrange(X, desc(var1))
+```
+
+## Adding rows and columns
+```{r, label=addColumns}
+X$var4 <- rnorm(5)
+X
+Y <- cbind(X, rnorm(5))
+Y
+```
+
+# Summarizing data
+
+Using Restaurant review data from [https://data.baltimorecity.gov/Community/Restaurants/k5y-ef3g]
+
+So the key process of data cleaning is
+looking at the
+data set that you've loaded into R, and
+identifying any sort
+of quirks or weird issues or missing
+values, or other problems
+that you need to address before you can do
+downstream analysis.
+
+```{r, label=readRestaurant}
+# read data
+if (!file.exists("./data")) { dir.create("./data")}
+if (!file.exists("./data/restaurants.csv")) {
+    fileUrl <- "https://data.baltimorecity.gov/api/views/k5ry-ef3g/rows.csv?accessType=DOWNLOAD"
+    download.file(fileUrl,destfile="./data/restaurants.csv", method="curl")
+}
+restData <- read.csv("./data/restaurants.csv")
+```
+
+So the first thing that you're want to
+going to be able
+to do is summarize the data that you have
+loaded in.
+
+Notice that one of the zipcodes is negative, which is probably a problem.
+```{r,label=summarize}
+# examine data
+head(restData,n=3)
+tail(restData,n=3)
+# summarize the data
+summary(restData)
+```
+
+Look at the classes of the variables, see if there is anything we need to
+change the classes of.
+```{r}
+# summarize the data, with more detail
+str(restData)
+```
+
+Look at the distribution of variables.
+
+```{r}
+# print multiple or selected points where quantiles fall
+quantile(restData$councilDistrict, na.rm=TRUE)
+quantile(restData$councilDistrict, probs=c(0.5, 0.75, 0.9))
+```
+
+Check the zip codes, see if anything is missing or is odd.
+
+```{r}
+# Kinda a table version of a histogram
+# useNA="ifany" adds a column for missing values
+table(restData$zipCode, useNA="ifany")
+head(table(restData$councilDistrict, restData$zipCode), 6)
+# check for missing values
+sum(is.na(restData$councilDistrict))
+any(is.na(restData$councilDistrict))
+all(restData$zipCode > 0)
+# row and column sums
+colSums(is.na(restData))
+all(colSums(is.na(restData)) == 0)
+```
+
+How many rows have these two zip codes? What are those rows?
+```{r}
+sum(restData$zipCode %in% c("21212", "21213"))
+# Values with specific characteristics
+head(restData[restData$zipCode %in% c("21212", "21213"),], 10)
+```
+
+Berkeley Admissions data is a classic data set in R
+
+```{r, label=crossTabs}
+# Cross tabs
+# Identify where there are relationships in this data set
+data(UCBAdmissions)
+DF = as.data.frame(UCBAdmissions)
+summary(DF)
+xt <- xtabs(Freq ~ Gender + Admit,data=DF)
+xt
+```
+
+women are rejected more often...
+
+warpbreaks is another classic data base
+
+```{r}
+# Flat tables
+warpbreaks$replicate <- rep(1:9, len=54)
+xt = xtabs(breaks ~.,data=warpbreaks)
+xt
+# a large table, shrink it down
+ftable(xt)
+```
+
+Look at the size of a data set, using units that we can understand
+
+```{r, label=tableSize}
+fakeData = rnorm(1e5)
+object.size(fakeData)
+print(object.size(fakeData), units="Mb")
+```
+
+# Creating new variables
+
+## Why?
+- Often the raw data will not have a value you are looking for
+- You will need to transform the data to get the values you would like
+- Usually you will add those values to the data frames you are working with
+- Common variables to create
+    - Missingness indicators
+    - "Cutting up" quantitative variables
+    - Applying transforms
+    
+## Creating sequences
+```{r, label=sequences}
+s1 <- seq(1, 10, by=2); s1
+s2 <- seq(1, 10, length=3); s2
+# make a sequence long enough to match this x
+x <- c(1, 3, 8, 25, 100); seq(along = x)
+```
+
+## Subsetting
+```{r, label=subsettingVariables}
+# Find restaurants near me
+restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
+table(restData$nearMe)
+# Find bad zip codes
+# zip codes bigger than 30000 would also be wrong in this data set
+restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
+table(restData$zipWrong, restData$zipCode < 0)
+```
+
+## Creating categorical variables
+```{r, label=cut}
+restData$zipGroups = cut(restData$zipCode, breaks=quantile(restData$zipCode))
+table(restData$zipGroups)
+table(restData$zipGroups, restData$zipCode)
+# Easier cutting
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode, g=4)
+table(restData$zipGroups)
+```
+
+## Creating factor variables
+```{r, label=factor}
+restData$zcf <- factor(restData$zipCode)
+restData$zcf[1:10]
+class(restData$zcf)
+# levels of factors
+yesno <- sample(c("yes", "no"), size=10, replace=TRUE)
+yesno
+# By default, factors are sorted alphabetically, switch the order
+yesnofac = factor(yesno, levels=c("yes", "no"))
+yesnofac
+relevel(yesnofac, ref="yes")
+as.numeric(yesnofac)
+```
+
+Cutting also produces factors, as we saw with cut2 from the Hmisc library
+
+## Using the mutate function
+
+Alters a variable and adds it to a data frame, from the plyr package.
+
+```{r, label=mutate}
+restData2 = mutate(restData, zipGroups = cut2(zipCode, g=4))
+table(restData2$zipGroups)
+```
+
+## Common transforms
+- abs(x) absolute value
+- sqrt(x) square root
+- ceiling(x) ceiling(3.475) is 4
+- floor(x) flot(3.475) is 3
+- round(x, digits=n) round(3.475, digits=2) is 3.48
+- signif(x, digits=n) signif(3.475, digits=2) is 3.5
+- cos(x), sin(x), etc.
+- log(x) natural logarithm
+- log2(x), log10(x), other common logs
+- exp(x) expnentiating x
+
+# Reshaping data
+
+The goal is tidy data
+
+1. Each variable forms a column
+2. Each observation forms a row
+3. Each table/file stores data about one kind of observation (e.g. people
+or hospitals).
+
+See [http://vita.had.co.nz/papers/tidy-data.pdf]
+
+## Start with reshaping
+```{r, label=reshape}
+library(reshape2)
+head(mtcars)
+# melting data frames
+mtcars$carname <- rownames(mtcars)
+carMelt <- melt(mtcars, id=c("carname", "gear", "cyl"), measure.vars=c("mpg", "hp"))
+head(carMelt, n=3)
+# This becomes a tall skinny data set with one row for every mpg and one
+# row for every hp
+```
+
+## Casting data frames
+```{r, label=casting}
+cylData <- dcast(carMelt, cyl ~ variable)
+# Rows are cylanders, columns are variables, mpg and hp
+cylData
+# For each number of cylanders, what are the means of the variables?
+cylData <- dcast(carMelt, cyl ~variable, mean)
+```
+
+## Averaging values
+```{r, label=averaging}
+# How many insects are affected by each spray?
+head(InsectSprays)
+tapply(InsectSprays$count, InsectSprays$spray, sum)
+# another way - SPLIT apply combine
+spIns = split(InsectSprays$count, InsectSprays$spray)
+spIns
+# another way - split APPLY combine
+sprCount = lapply(spIns, sum)
+sprCount
+# another way - split apply COMBINE
+unlist(sprCount)
+sapply(spIns, sum)
+# another way - This is done automatically by plyr
+```
+```
+## The dd stands for DataFrame in, DataFrame out
+## This call does not work for me within Rmd
+ddply(InsectSprays, .(spray), summarize, sum = sum(count))
+```
+```
+# creating a new variable
+spraySums <- ddply(InsectSprays, .(spray), summarize, sum=ave(count, FUN=sum))
+dim(spraySums)
+head(spraySums)
+```
+
+## More Information
+
+- A tutorial from the developer of plyer - [http://plyr.had.co.nz/09-user/]
+- a nice reshape tutorial [http://www.slideshare.net/jeffreybreen/reshaping-data-in-r]
+- a good plyr primer [http://www.r-bloggers.com/a-quick-primer-on-split-apply-combine-problems/]
+- see also
+    - acast - for casting multi-dimensional arrays
+    - arrange - for faster reordering without using order() commands
+    - mutate - adding new variables
+
+# dplyr
+
+- Works with data frames, the key data structure in R
+- Developed by Hadley Wickham or RStudio
+- An optimized and distilled version of plyr (also by Hadley)
+- provides a "grammar" for data manipulation
+    - select: return a subset of the columns of a data frame
+    - filter: extract a subset of rows from a data frame basedon logical conditions
+    - arrange: reorder rows of a data frame
+    - rename: rename varaibles in a data frame
+    - mutate: add new variables / columns or transform existing variables
+    - summarize: generate summary statistics or different variables in the data frame, possibly within strata
+    - print: do not print too much to the console...
+- DF <- dplyr(DATAFRAME, verbs, columns)
+```{r, label=dplyr}
+library(dplyr)
+library(ggplot2)
+# how many groups are there?
+str(diamonds)
+with(diamonds, length(levels(cut)) * length(levels(clarity)) * length(levels(color)))
+# Now, create a new data frame that takes the diamond data and calculates mean carat size by cut, clarity, and color combinations
+dcut <- ddply(diamonds, .(cut, clarity, color), summarize,
+              meancarat = mean(carat, na.rm = TRUE), # Don't need na.rm in this case, but often will
+              ndiamonds = length(carat)) # # diamonds in each calculation
+head(dcut, 10)
+```
+
+## dplyr select: subsetting columns
+```{r, label=dplyrSelect}
+# Select the first 5 columns
+head(select(diamonds, 1:5))
+# give first 3 column names
+names(diamonds)[1:4]
+# select first 4 columns, addressed by names
+head(select(diamonds, carat:clarity))
+# elimate a set of columns
+head(select(diamonds, -(color:table)))
+# Do that in R
+i <- match("color", names(diamonds))
+j <- match("table", names(diamonds))
+head(diamonds[,-(i:j)])
+
+```
+
+## dplyr filter: Subsetting rows
+```{r, label=dplyrFilter}
+diamonds.f <- filter(diamonds, price > 500)
+head(select(diamonds.f, 1:3, price), 10)
+diamonds.f <- filter(diamonds, price > 500 & depth > 62)
+head(select(diamonds.f, 1:3, price, depth), 10)
+```
+
+## Arrange
+
+Reorder rows based on values in a column. Used earlier in another lecture.
+
+```
+# Sort the rows by date
+chicago <- arrange(chicago, date)
+# Sor the rows by date with the newest stuff on top
+chicago <- arrange(chicago, desc(date))
+```
+
+## rename
+
+This is harder than you want it to be in R. With dplyr it is easy
+```
+chicago <- rename(chicago, pm25 = pm25tmean2, dewpoint = dptp)
+```
+
+## mutate
+
+Create a variable with is dewpoint, centered on the mean (detrend)
+```
+chicago <- mutate(chicago, pm25detrend = pm25-mean(pm25, na.rm = TRUE))
+```
+
+## group_by
+
+Split the data frame by certain categorical variables
+
+```
+chicago <- mutate(chicago, tempcat = factor(1 * (tmpd > 80), labels = c("cold", "hot")))
+hotcold <- group_by(chicago, tempcat)
+```
+
+## summarize
+
+Create a summary with selected summary statistics
+```
+summarize(hotcold, pm25 = mean(pm25), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+# summarize based on year
+chicago <- mutate(chicago, year = as.POSIXlt(date)$yaer + 1900)
+years <- group_by(chicago, year)
+summarize(years, pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(notmean2))
+```
+
+## Pipeline operation
+
+Chain operations together without using temporary variables to save results
+
+```
+chicago %>% mutate(month = as.POSIXlt)(date)$mon + 1) %>% group_by(month) %>% summarize(pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(no2tmean2))
+```
+# Merging data
+
+Data for article: Cooperation between Referees and Authors Increases Peer 
+Review Accuracy
+
+```{r, label=mergeData}
+if(!file.exists("./data")) {dir.create("./data")}
+reviewsFile <- "./data/reviews.csv"
+if (!file.exists(reviewsFile)) {
+    fileUrl = "https://dl.dropboxusercontent.com/u/7710864/data/reviews-apr29.csv"
+    download.file(fileUrl, destfile=reviewsFile, method="curl")
+}
+solutionsFile <- "./data/solutions.csv"
+if (!file.exists(solutionsFile)) {
+    fileUrl = "https://dl.dropboxusercontent.com/u/7710864/data/solutions-apr29.csv"
+    download.file(fileUrl, destfile=solutionsFile, method="curl")
+}
+reviews <- read.csv(reviewsFile)
+head(reviews,2)
+solutions <- read.csv(solutionsFile)
+head(solutions,2)
+```
+
+## Another cool thing about dplyr
+
+It works with other database formats, like SQL, once you have gotten the hang 
+of it for data.frame
+
+# merge()
+
+- merges data frames, matching the rows by a shared variable
+- adds multiple rows where more things match
+- important parameters: x, y, by, by.x, by.y, all
+
+```{r, label=merge}
+names(reviews)
+names(solutions)
+mergedData <- merge(reviews, solutions, by.x="solution_id", by.y="id", all=TRUE)
+head(mergedData)
+```
+
+Merge all common column names. If you tell merge() which columns to merge by,
+the other columns with matching names will get suscripts to say which original
+table they came from. If you do not give a by argument, merge will keep adding
+rows till all the data has been represented, making the table potentially
+larger.
+
+```{r}
+intersect(names(solutions), names(reviews))
+mergedData2 <- merge(reviews, solutions, all=TRUE)
+head(mergedData2)
+```
+
+## Using join from plyr
+
+merges based on common column names. Cannot identify differently named columns
+with matching data. However, with join_all you can add multiple tables together,
+not just two.
+
+```{r}
+df1 <- data.frame(id=sample(1:10), x=rnorm(10))
+df2 <- data.frame(id=sample(1:10), y = rnorm(10))
+arrange(join(df1, df2), id)
+df3 <- data.frame(id=sample(1:10), z=rnorm(10))
+join_all(list(df1, df2, df3))
+
+```
+
+There is some subtlety with Left joins and Right joins, which we are encouraged
+to read up on.
+
+- The quick R data merging page - [http://www.statmethods.net/management/merging.html]
+- plyr information [http://plyr.had.co.nz]
+- Types of joins [http://en.wikipedia.org/wiki/Join_(SQL)]

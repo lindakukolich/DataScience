@@ -1,0 +1,248 @@
+---
+title: "Getting and Cleaning Data Project Code Book"
+author: "Linda Kukolich"
+date: "January 21, 2015"
+output: html_document
+---
+
+## SubjectAve.txt
+
+This data set presents a set of average values derived from the "Human Activity
+Recognition Using Smartphones Dataset" (HAR) described briefly here and more
+fully below. The original dataset presents data collected from Cellphone
+accelerometers and gyroscopes while each of 30 people (experimental subjects)
+performed each of 6 actions: laying down, sitting, standing, walking, walking
+downstairs, and walking upstairs. This data was processed to generate 561
+features derived from the raw readings given by the embedded accelerometer and
+gyroscope in the cellphone. These features were created by processing 2.56
+seconds worth of raw samples at a time, allowing use of such functions as mean
+and standard deviation to present a smoothed version of the time varying data
+that was collected.
+
+The SubjectAve data set works with the 33 means and 33 standard deviation values
+from the HAR dataset. These HAR data columns were selected based on their
+data.frame column names, which included either "mean()" or "std()". For each of
+these columns, all the rows that share a subject and activity label are averaged
+to give an entry in the SubjectAve dataset, with all 66 columns plus the subect
+and activity label providing a full data.frame row. With 30 subjects and 6
+activity, this produces 180 rows in the SubjectAve dataset, with 68 columns for
+the 2 labels and 66 data variables.
+
+A word about units. The original HAR data set was normalized to bring all the
+measurements between -1 and 1. The connection to the original units, thus, has
+been lost for the purpose of the SubjectAve dataset. That said, Acc and Gravity
+measurements will be in terms of length/(time * time) and the Jerk measurements
+are in terms of length/(time * time * time)
+
+## Processing Notes
+
+The data was downloaded from ["https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"], where the HAR data has been mirrored by the professors teaching the Getting and Cleaning Data Course at Coursera.
+
+Subject labels were read from "UCI HAR Dataset/train/subject_train.txt" and
+"UCI HAR Dataset/test/subject_test.txt". Activity labels were read from
+"UCI HAR Dataset/train/y_train.txt" and "UCI HAR Dataset/test/y_test.txt".
+Feature names were read from "UCI HAR Dataset/features.txt". The HAR data was
+read from "UCI HAR Dataset/train/X_train.txt" and
+"UCI HAR Dataset/test/X_test.txt". The train and test data were combined into
+one data.frame, with subject and activity labels as well as the contents X_train
+and X_test data files.
+
+To generate SubjectAve from the HAR data, rows were selected based on subject
+and activity label. An average was found for each data column in that subset of
+the data, generating a row of SubjectAve table. The R plyr library was used to
+find these averages.
+
+## Data Dictionary
+
+- subject: Integer [1:30] indicating the subject who provided the data for this
+row.
+- activity: One of 6 activities engaged in for this row. One of "LAYING",
+"SITTING", "STANDING", "WALKING", "WALKING_DOWNSTAIRS", "WALKING_UPSTAIRS"
+
+The remaining variables are average values of the mean and standard deviations
+of each measurement taken for each subject and activity. That is, all of a
+single subject's data for a given activity are averaged, one average value for
+each sensor in each dimension (X, Y, Z) is calculated.
+
+### Values derived from tBodyAcc-mean()-{X,Y,Z} and tBodyAcc-std()-{X,Y,Z}
+- avg_tBodyAcc.mean.X
+- avg_tBodyAcc.mean.Y
+- avg_tBodyAcc.mean.Z
+- avg_tBodyAcc.std.X
+- avg_tBodyAcc.std.Y
+- avg_tBodyAcc.std.Z
+
+### Values derived from tGravityAcc-mean()-{X,Y,Z} and tGravityAcc-std()-{X,Y,Z}
+- avg_tGravityAcc.mean.X
+- avg_tGravityAcc.mean.Y
+- avg_tGravityAcc.mean.Z
+- avg_tGravityAcc.std.X
+- avg_tGravityAcc.std.Y
+- avg_tGravityAcc.std.Z
+
+### Values derived from tGravityAcc-mean()-{X,Y,Z} and tGravityAcc-std()-{X,Y,Z}
+- avg_tBodyAccJerk.mean.X
+- avg_tBodyAccJerk.mean.Y
+- avg_tBodyAccJerk.mean.Z
+- avg_tBodyAccJerk.std.X
+- avg_tBodyAccJerk.std.Y
+- avg_tBodyAccJerk.std.Z
+
+### Values derived from tBodyGyro-mean()-{X,Y,Z} and tBodyGyro-std()-{X,Y,Z}           
+- avg_tBodyGyro.mean.X
+- avg_tBodyGyro.mean.Y
+- avg_tBodyGyro.mean.Z
+- avg_tBodyGyro.std.X
+- avg_tBodyGyro.std.Y
+- avg_tBodyGyro.std.Z
+
+### Values derived from tBodyGyroJerk-mean()-{X,Y,Z} and tBodyGyroJerk-std()-{X,Y,Z}       
+- avg_tBodyGyroJerk.mean.X
+- avg_tBodyGyroJerk.mean.Y
+- avg_tBodyGyroJerk.mean.Z
+- avg_tBodyGyroJerk.std.X
+- avg_tBodyGyroJerk.std.Y
+- avg_tBodyGyroJerk.std.Z
+
+### Values derived from tBodyAccMag-mean() and tBodyAccMag-std()
+- avg_tBodyAccMag.mean
+- avg_tBodyAccMag.std
+
+### Values derived from tGravityAccMag-mean() and tGravityAccMag-std()   
+- avg_tGravityAccMag.mean
+- avg_tGravityAccMag.std
+
+### Values derived from tBodyAccJerkMag-mean() and tBodyAccJerkMag-std()
+- avg_tBodyAccJerkMag.mean
+- avg_tBodyAccJerkMag.std
+
+### Values derived from tBodyGyroMag-mean() and tBodyGyroMag-std() 
+- avg_tBodyGyroMag.mean
+- avg_tBodyGyroMag.std    
+ 
+### Values derived from tBodyGyroJerkMag-mean() and tBodyGyroJerkMag-std()
+- avg_tBodyGyroJerkMag.mean
+- avg_tBodyGyroJerkMag.std
+
+### Values derived from fBodyAcc-mean()-{X,Y,Z} and fBodyAcc-std()-{X,Y,Z}            
+- avg_fBodyAcc.mean.X
+- avg_fBodyAcc.mean.Y
+- avg_fBodyAcc.mean.Z
+- avg_fBodyAcc.std.X
+- avg_fBodyAcc.std.Y
+- avg_fBodyAcc.std.Z
+
+### Values derived from fBodyAccJerk-mean()-{X,Y,Z} and fBodyAccJerk-std()-{X,Y,Z}        
+- avg_fBodyAccJerk.mean.X
+- avg_fBodyAccJerk.mean.Y
+- avg_fBodyAccJerk.mean.Z
+- avg_fBodyAccJerk.std.X
+- avg_fBodyAccJerk.std.Y
+- avg_fBodyAccJerk.std.Z                      
+
+### Values derived from fBodyGyro-mean()-{X,Y,Z} and fBodyGyro-std()-{X,Y,Z}           
+- avg_fBodyGyro.mean.X
+- avg_fBodyGyro.mean.Y
+- avg_fBodyGyro.mean.Z
+- avg_fBodyGyro.std.X
+- avg_fBodyGyro.std.Y
+- avg_fBodyGyro.std.Z
+
+### Values derived from fBodyAccMag-mean() and fBodyAccMag-std()
+- avg_fBodyAccMag.mean
+- avg_fBodyAccMag.std
+
+### Values derived from fBodyBodyAccJerkMag-mean() and fBodyBodyAccJerkMag-std() 
+- avg_fBodyBodyAccJerkMag.mean
+- avg_fBodyBodyAccJerkMag.std
+
+### Values derived from fBodyBodyGyroMag-mean() and fBodyBodyGyroMag-std()
+- avg_fBodyBodyGyroMag.mean
+- avg_fBodyBodyGyroMag.std
+
+### Values derived from fBodyBodyGyroJerkMag-mean() and fBodyBodyGyroJerkMag-std()
+- avg_fBodyBodyGyroJerkMag.mean
+- avg_fBodyBodyGyroJerkMag.std
+              
+# Original Data Set Information:
+Taken from the README.txt file of the original data download:
+[https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip]
+
+There is more information on the original web site:
+[http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones]
+```
+==================================================================
+Human Activity Recognition Using Smartphones Dataset
+Version 1.0
+==================================================================
+Jorge L. Reyes-Ortiz, Davide Anguita, Alessandro Ghio, Luca Oneto.
+Smartlab - Non Linear Complex Systems Laboratory
+DITEN - Università degli Studi di Genova.
+Via Opera Pia 11A, I-16145, Genoa, Italy.
+activityrecognition@smartlab.ws
+www.smartlab.ws
+==================================================================
+```
+
+The experiments have been carried out with a group of 30 volunteers within an age bracket of 19-48 years. Each person performed six activities (WALKING, WALKING_UPSTAIRS, WALKING_DOWNSTAIRS, SITTING, STANDING, LAYING) wearing a smartphone (Samsung Galaxy S II) on the waist. Using its embedded accelerometer and gyroscope, we captured 3-axial linear acceleration and 3-axial angular velocity at a constant rate of 50Hz. The experiments have been video-recorded to label the data manually. The obtained dataset has been randomly partitioned into two sets, where 70% of the volunteers was selected for generating the training data and 30% the test data. 
+
+The sensor signals (accelerometer and gyroscope) were pre-processed by applying noise filters and then sampled in fixed-width sliding windows of 2.56 sec and 50% overlap (128 readings/window). The sensor acceleration signal, which has gravitational and body motion components, was separated using a Butterworth low-pass filter into body acceleration and gravity. The gravitational force is assumed to have only low frequency components, therefore a filter with 0.3 Hz cutoff frequency was used. From each window, a vector of features was obtained by calculating variables from the time and frequency domain. See 'features_info.txt' for more details. 
+
+## For each record it is provided:
+
+======================================
+
+- Triaxial acceleration from the accelerometer (total acceleration) and the estimated body acceleration.
+- Triaxial Angular velocity from the gyroscope. 
+- A 561-feature vector with time and frequency domain variables. 
+- Its activity label. 
+- An identifier of the subject who carried out the experiment.
+
+The dataset includes the following files:
+
+=========================================
+
+- 'README.txt'
+
+- 'features_info.txt': Shows information about the variables used on the feature vector.
+
+- 'features.txt': List of all features.
+
+- 'activity_labels.txt': Links the class labels with their activity name.
+
+- 'train/X_train.txt': Training set.
+
+- 'train/y_train.txt': Training labels.
+
+- 'test/X_test.txt': Test set.
+
+- 'test/y_test.txt': Test labels.
+
+The following files are available for the train and test data. Their descriptions are equivalent. 
+
+- 'train/subject_train.txt': Each row identifies the subject who performed the activity for each window sample. Its range is from 1 to 30. 
+
+- 'train/Inertial Signals/total_acc_x_train.txt': The acceleration signal from the smartphone accelerometer X axis in standard gravity units 'g'. Every row shows a 128 element vector. The same description applies for the 'total_acc_x_train.txt' and 'total_acc_z_train.txt' files for the Y and Z axis. 
+
+- 'train/Inertial Signals/body_acc_x_train.txt': The body acceleration signal obtained by subtracting the gravity from the total acceleration. 
+
+- 'train/Inertial Signals/body_gyro_x_train.txt': The angular velocity vector measured by the gyroscope for each window sample. The units are radians/second. 
+
+Notes: 
+
+======
+- Features are normalized and bounded within [-1,1].
+- Each feature vector is a row on the text file.
+
+For more information about this dataset contact: activityrecognition@smartlab.ws
+
+License:
+
+========
+Use of this dataset in publications must be acknowledged by referencing the following publication [1] 
+
+[1] Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
+
+This dataset is distributed AS-IS and no responsibility implied or explicit can be addressed to the authors or their institutions for its use or misuse. Any commercial use is prohibited.
+
+Jorge L. Reyes-Ortiz, Alessandro Ghio, Luca Oneto, Davide Anguita. November 2012.

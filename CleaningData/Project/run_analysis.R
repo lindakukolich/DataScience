@@ -1,28 +1,31 @@
-# Routines created for the programming Project required by 
+# Routines created for the programming Project required by
 # Getting and Cleaning Data (due Jan 25, 2012)
 # a Coursera Course taught by
 # by Jeff Leek, PhD, Roger D. Peng, PhD, Brian Caffo, PhD, all of Johns Hopkins
 # Bloomberg School of Public Health.
 #
-# There is a description of the assignment found in README.md
+# There is a description of the assignment found in the original README.md
 
 # Download and unpack the data, a zip file with multiple directories
 downloadData <- function() {
-  if (!file.exists("data")) {
-    dir.create("data")
+  if (!file.exists("./data")) {
+    dir.create("./data")
   }
-  dataDir <- "./data/UIC HAR Dataset"
+  dataDir <- "./data/UCI HAR Dataset"
   if (!file.exists(dataDir)) {
-    zipFile <- "./data/getdata-projectfiles UCI HAR Dataset.zip"
+    zipFile <- "./data/getdata-projectfiles-UCI HAR Dataset.zip"
     if (!file.exists(zipFile)) {
+        print("downloading data")
       fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
-      download.file(fileUrl, destfile = acsFile, method="curl")
+      download.file(fileUrl, destfile = zipFile, method="curl")
       dateDownloaded <- date()
       print(paste("Data downloaded:", dateDownloaded))
     }
+    print("unpacking data")
     unzip(zipFile)
   }
 }
+
 # Read the data downloaded in downloadData()
 # Build a data frame holding the mean and std values
 readData <- function() {
@@ -72,7 +75,9 @@ readData <- function() {
   # extract just the wanted columns
   wantedData <- allData[, wantedColumns]
   # make sure we name the columns
-  colnames(wantedData) <- allColumnNames[wantedColumns, 2]
+  ourColNames <- sub("\\(\\)", "", allColumnNames[wantedColumns, 2])
+  ourColNames <- sub("^", "avg_", ourColNames)
+  colnames(wantedData) <- ourColNames
   # build a data frame with everything
   finalData <- cbind(subject=allSubjects, activity=allActivities, wantedData)
   finalData
@@ -80,8 +85,8 @@ readData <- function() {
 
 # For each subject and activity, find the average of the means and standard
 # deviations of each measurement
-# Build a tidy data set with these numbers
 averageData <- function(harMeansStds) {
+    library(plyr)
   # foreach subject, foreach activity, foreach data field, find the mean of that
   # subset of the data
   # build a table out of the subject, activity, and all the means
@@ -89,6 +94,22 @@ averageData <- function(harMeansStds) {
   ddply(.data=harMeansStds, .variables = c("subject", "activity"),
         .fun=function(x)sapply(x[3:dim(x)[2]], mean))
 }
+
+# Perform all steps required for this Project:
+# Download data
+# read in training and testing data and make a single data.frame containing
+# the data columns that are means and standard deviations
+# generate a tidy data set with the average of each variable for each activity
+# and each subject
+# save the tidy data set
+# Separately, write a CodeBook.md file with code book for the tidy data set
+run_analysis <- function() {
+    downloadData()
+    harData <- readData()
+    subjectData <- averageData(harData)
+    write.table(subjectData, "./data/subjectAve.txt", sep = ",")
+}
+###### Tests #######
 
 # Build a data frame with the two columns being "subject" and "activity", and
 # with a bunch of data columns distinguishable by their means
@@ -100,23 +121,23 @@ test_averageData <- function() {
   subjectNames <- c("a", "b", "c", "d")
   activityNames <- c("sleep", "walk")
   sensors <- c("s1", "s2", "s3", "s4", "s5", "s6")
-  
+
   activityRepeat = 50
   nSensors = length(sensors)
   nsubjects = length(subjectNames)
   nactivities = length(activityNames)
-  
+
   subjects <- unlist(lapply(subjectNames, rep, nactivities * activityRepeat))
   activity <- rep(unlist(lapply(activityNames, rep, activityRepeat)), nsubjects)
   nrecords <- nactivities * nsubjects * activityRepeat
 
   # mean = subject + activity + sensor
   dataBySensor <- lapply(c(1:nSensors),
-                         function(x) 
+                         function(x)
                          lapply(c(1:nsubjects),
-                                function(y) 
-                                lapply(c(1:nactivities), 
-                                       function(z) 
+                                function(y)
+                                lapply(c(1:nactivities),
+                                       function(z)
                                        rnorm(activityRepeat, mean=x+y+z, sd=.25))))
   raw <- matrix(unlist(dataBySensor),
                 nrow = nrecords, byrow=FALSE)
@@ -134,13 +155,13 @@ test_averageData <- function() {
   #  6       c     walk 5.948575 7.069653 8.011619 9.061028  9.981131 10.995332
   #  7       d    sleep 6.035564 6.993645 8.052071 8.982864 10.052732 10.972022
   #  8       d     walk 6.938645 8.017384 8.943985 9.965863 11.007095 11.908760
-  
+
   testBySensor <- lapply(c(1:nSensors),
-                         function(x) 
+                         function(x)
                          lapply(c(1:nsubjects),
-                                function(y) 
-                                lapply(c(1:nactivities), 
-                                       function(z) 
+                                function(y)
+                                lapply(c(1:nactivities),
+                                       function(z)
                                        mean(dataBySensor[[x]][[y]][[z]]))))
   testData <- matrix(unlist(testBySensor), nrow = nsubjects*nactivities, byrow=FALSE)
   colnames(testData) <- sensors
