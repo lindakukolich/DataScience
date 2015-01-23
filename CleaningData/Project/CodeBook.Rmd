@@ -34,24 +34,6 @@ been lost for the purpose of the SubjectAve dataset. That said, Acc and Gravity
 measurements will be in terms of length/(time * time) and the Jerk measurements
 are in terms of length/(time * time * time)
 
-## Processing Notes
-
-The data was downloaded from ["https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"], where the HAR data has been mirrored by the professors teaching the Getting and Cleaning Data Course at Coursera.
-
-Subject labels were read from "UCI HAR Dataset/train/subject_train.txt" and
-"UCI HAR Dataset/test/subject_test.txt". Activity labels were read from
-"UCI HAR Dataset/train/y_train.txt" and "UCI HAR Dataset/test/y_test.txt".
-Feature names were read from "UCI HAR Dataset/features.txt". The HAR data was
-read from "UCI HAR Dataset/train/X_train.txt" and
-"UCI HAR Dataset/test/X_test.txt". The train and test data were combined into
-one data.frame, with subject and activity labels as well as the contents X_train
-and X_test data files.
-
-To generate SubjectAve from the HAR data, rows were selected based on subject
-and activity label. An average was found for each data column in that subset of
-the data, generating a row of SubjectAve table. The R plyr library was used to
-find these averages.
-
 ## Data Dictionary
 
 - subject: Integer [1:30] indicating the subject who provided the data for this

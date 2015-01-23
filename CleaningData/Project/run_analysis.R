@@ -28,7 +28,7 @@ downloadData <- function() {
 
 # Read the data downloaded in downloadData()
 # Build a data frame holding the mean and std values
-readData <- function() {
+buildHarData <- function() {
   #                   Read Subjects who provided each record
   # train/subject.txt: 7352 records, 1 field per record: subject, factor with 21 levels
   # test/subject.txt: 2947 records, 1 field per record: subject, factor with 9 levels
@@ -75,9 +75,7 @@ readData <- function() {
   # extract just the wanted columns
   wantedData <- allData[, wantedColumns]
   # make sure we name the columns
-  ourColNames <- sub("\\(\\)", "", allColumnNames[wantedColumns, 2])
-  ourColNames <- sub("^", "avg_", ourColNames)
-  colnames(wantedData) <- ourColNames
+  colnames(wantedData) <- allColumnNames[wantedColumns, 2]
   # build a data frame with everything
   finalData <- cbind(subject=allSubjects, activity=allActivities, wantedData)
   finalData
@@ -87,12 +85,21 @@ readData <- function() {
 # deviations of each measurement
 averageData <- function(harMeansStds) {
     library(plyr)
-  # foreach subject, foreach activity, foreach data field, find the mean of that
-  # subset of the data
-  # build a table out of the subject, activity, and all the means
-  # This would be hard with lapply and tapply. It is actually pretty easy with plyr
-  ddply(.data=harMeansStds, .variables = c("subject", "activity"),
-        .fun=function(x)sapply(x[3:dim(x)[2]], mean))
+    # foreach subject, foreach activity, foreach data field, find the mean of that
+    # subset of the data
+    # build a table out of the subject, activity, and all the means
+    # This would be hard with lapply and tapply. It is actually pretty easy with plyr
+    nCols <- dim(harMeansStds)[2]
+    avg.frame <- ddply(.data=harMeansStds, .variables = c("subject", "activity"),
+                       .fun=function(x)sapply(x[3:nCols], mean))
+    # update column names, removing the () which doesn't play nice with
+    # write.table, and adding avg_ to indicate the change that has been made
+    # from the original data
+    ourColNames <- sub("\\(\\)", "", colnames(avg.frame[,3:nCols]))
+    ourColNames <- sub("^", "avg_", ourColNames)
+    colnames(avg.frame) <- c("subject", "activity", ourColNames)
+    # Return the completed data.frame
+    avg.frame
 }
 
 # Perform all steps required for this Project:
@@ -105,7 +112,7 @@ averageData <- function(harMeansStds) {
 # Separately, write a CodeBook.md file with code book for the tidy data set
 run_analysis <- function() {
     downloadData()
-    harData <- readData()
+    harData <- buildHarData()
     subjectData <- averageData(harData)
     write.table(subjectData, "./data/subjectAve.txt", sep = ",")
 }
