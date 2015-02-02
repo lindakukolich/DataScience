@@ -1,0 +1,413 @@
+---
+title: "Notes 4 - Getting and Cleaning Data"
+author: "Linda Kukolich"
+date: "January 27, 2015"
+output: html_document
+---
+# Editing Text Variables
+
+- toupper(), tolower()
+- strsplit(x, sep)
+    - like split in some other scripting language I have known
+- sub(pattern, replacement, x)
+    - replace the first instance of pattern in x with replacement
+    - like x ~= s/pattern/replacement/ in perl
+- gsub(pattern, replacement, x)
+    - replace all instances of pattern in x with replacement
+    - like x ~= s/pattern/replacement/g in perl
+- grep(pattern, vector)
+    - returns entry numbers in vector that contain pattern
+    - value=TRUE makes it return the Values that match, not the entry numbers.
+- grepl(pattern, vector)
+    - returns logical, length(ret) == length(vector), saying where pattern is in vector
+- stringr::nchar
+    - strlen
+- substr(string, start, finish)
+- paste(s1, s2)
+    - sep = " "
+- paste0(s1, s2)
+    - sep = ""
+- str_trim(s)
+    - remove leading and trailing whitespace
+
+## dataset variable name style guide
+- all lower case when possible
+- descriptive
+- not duplicated
+- no underscores, or dots, or white space
+- factors
+    - character values should probably be converted to factors
+    - factors need good names too
+        - able to be interpretted without reading the code book to figure out what you meant (MA, VT vs 1, 2) (Male, Female vs M, F)
+
+# Regular Expressions
+
+```{r}
+textToMatch <- c("George W. Bush was the president.",
+                 "george bush is now a painter",
+                 "Laozi says nuclear weapons are mas macho",
+                 "Are we sure Chelsea didn't vote for Obama?",
+                 "i think this will be fun!",
+                 "I think I need to go to work.",
+                 "This is the 2nd time I have tried this!",
+                 "Are there 3 of us tonight?",
+                 "The post 9/11 rules are stupid",
+                 "Start Time 9:11:01",
+                 "That was a fine, fine day",
+                 "It was only so so",
+                 "This is (surely) not important",
+                 "grep() is an important function",
+                 "The at 7 the 9th battalion will receive honors",
+                 "The 9th battalion has 12 honors already",
+                 "The Obama-Bush debate was interesting",
+                 "The Bush-Obama debate was interesting",
+                 "The bush obama debate was interesting",
+                 "bush has very very very very very many words before debate")
+```
+
+- Literals
+    - words of a language
+```{r}
+textToMatch[grep("nuclear", textToMatch)]
+textToMatch[grepl("Obama", textToMatch)]
+```
+
+- Metacharacters
+    - grammar of a language
+    - `^` - beginning of a line
+```{r}
+textToMatch[grep ("^i think", textToMatch)]
+```
+
+- `$` - end of a line
+```{r}
+textToMatch[grep("o$", textToMatch)]
+```
+    
+- `[]` - the set of characters inside.
+    - `[0-9][a-zA-Z]` - numbers followed by letters
+```{r}
+textToMatch[grep("[0-9][a-zA-Z]", textToMatch)]
+textToMatch[grep("^[Ii] think", textToMatch)]
+```
+
+- `[^?.]$` - NOT question mark or period at the end of the line
+```{r}
+textToMatch[grep("[^?.]$", textToMatch)]
+```
+
+- `.` - any character (except when within [])
+```{r}
+textToMatch[grep("9.11", textToMatch)]
+```
+
+- `\.` - a dot (period, full stop)
+```{r}
+textToMatch[grep("\\.", textToMatch)]
+```
+
+- `|` - Or
+```{r}
+textToMatch[grep("[Bb]ush|[Oo]bama", textToMatch)]
+```
+
+- `()` - mark limits of a set of alternatives
+    - ^([Gg]ood|[Bb]ad) - line starts with Good, good, Bad, or bad.
+    - puts text inside () in a variable, refered to by `/1`, `\2` etc.
+        - +([a-zA-Z]+) +\1 + matches a word, repeated, separated by a space
+        - What's this extra pair of +s on the outside for?
+```{r}
+textToMatch[grep("+([a-zA-Z]+) +\\1", textToMatch)]
+textToMatch[grep("([a-zA-Z]+) \\1", textToMatch)]
+```
+
+- `()?` - expression is optional
+```{r}
+textToMatch[grep("[Gg]eorge( [Ww]\\.)? [Bb]ush", textToMatch)]
+```
+
+- `*` - zero or more repeats of the previous expression
+```{r}
+textToMatch[grep("\\(.*\\)", textToMatch)]
+```
+
+- `+` - one or more repeats of the previous expression
+    - at least one number, a space, a run of 0 or more other things, at least one other number
+```{r}
+textToMatch[grep("[0-9]+ (.*)[0-9]+", textToMatch)]
+```
+
+- `{}` interval quantifiers - the minimum and mamimum number of times the expression is matched.
+    - [Bb]ush( +[^ ]+ +){1, 5} debate - Bush, plus between 1, 2, 3, 4, or 5 words delimited by spaces ` ` = space, `[^ ]` = not space, followed by debate. *Isn't there an extra space at the end?*
+```{r}
+textToMatch[grep("[Bb]ush( +[^ ]+ +){1,5}debate", textToMatch)]
+```
+
+- m,n - at least m but not more than n matches
+- m - exactly m matches
+- m, - at least m matches
+
+- `*` - again
+    - Greedy. matches the longest possible string that satisfies the regular expression
+    - `^s(.*)s vs "sitting at starbucks"
+        - \1 = "itting at starbucks"
+- `*?` is not greedy
+    - `^s(.*?)s vs "sitting at starbucks"
+        - \1 = "itting at "
+- grep, grepl, sub, gsub work with Regular Expressions
+    
+# Working with Dates
+
+```{r}
+d1 <- date()
+d1
+class(d1)
+d2 <- Sys.Date()
+d2
+class(d2)
+```
+
+- %d day as number
+- %a abbreviated weekday
+- %A unabbreviated weekday
+- %m month number
+- %b abbreviated months
+- %B unabbreviated month
+- %y 2 digit year
+- %Y 4 digit year
+```{r}
+format(d2, "%a %b %d")
+```
+
+- creating dates
+```{r}
+x <- c("1jan1960", "2jan1960", "31mar1960", "30jul1960")
+z <- as.Date(x, "%d%b%Y")
+z
+z[1] - z[2]
+as.numeric(z[1] - z[2])
+```
+
+- converting to Julian (days since jan 1, 1970)
+```{r}
+weekdays(d2)
+months(d2)
+julian(d2)
+```
+
+- lubridate
+```{r}
+library(lubridate)
+ymd("20140108")
+mdy("08/04/2013")
+dmy("08-04-2013")
+```
+
+- dealing with times in lubridate
+```{r}
+ymd_hms("2011-08-03 10:15:03")
+ymd_hms("2011/08/03 10:15:03", tz="Pacific/Auckland")
+?Sys.timezone
+```
+
+```{r}
+x = dmy(c("1jan2013", "2jan2013", "31mar2013", "30jul2013"))
+wday(x[1])
+wday(x[1], label=TRUE)
+```
+
+- [lubridate tutorial](http://www.r-statistics.com/2012/03/do-more-with-dates-and-times-in-r-with-lubridate-1-1-0/)
+- You still want to use the standard date classes
+    - Date
+    - POSIXct
+    - POSIXlt
+
+# Data Resources
+
+## Open Government Sites
+- United Nations [http://data.un.org/]
+- U.S. [http://www.data.gov/]
+    - A blog post
+    - [List of cities/states with open data]()
+- United Kingdom [http://data.gov.uk/]
+- France [http://www.data.gouv.fr/]
+- Ghana [http://data.gov.gh/]
+- Australia [http://data.gov.au/]
+- Germany [https://www.govdata.de/]
+- Hong Kong [http://www.gov.hk/en/theme/psi/datasets/]
+- Japan [http://www.data.go.jp/]
+- Many more [http://www.data.gov/opendatasites]
+
+## Gapminder
+- [http://www.gapminder.org]
+
+## Survey data from the United States
+- [http://www.asdfree.com/]
+
+## Infochimps Marketplace
+- [http://www.infochimps.com/marketplace]
+
+## Kaggle
+- [http://www.kaggle.com]
+
+## Collections by data scientists
+- Hilary Mason [http://bitly.com/bundles/hmason/1]
+- Peter Skomoroch [https://delicious.com/pskomoroch/dataset]
+- Jeff Hammerbacher [http://www.quora.com/Jeff-Hammerbacher/Introduction-to-Data-Science-Data-Sets]
+- Gregory Piatestsky-Shapiro [http://www.kdnuggets.com/gps.html]
+- [http://blog.mortardata.com/post/67652898761/6-dataset-lists-curated-by-data-scientists]
+
+## More specialized collections
+- [Stanford Large Network Data]
+- [UCI Machine Learning]
+- [KDD Nugets Datasets]
+- [CMU Statlib]
+- [Gene expression omnibus]
+- [ArXiv Data]
+- [Public Data Sets on Amazon Web Services]
+
+## Some API's with R interfaces
+- twitter, twitteR
+- figshare, rfigshare
+- PLoS and rplos
+- rOpenSci
+- Facebook and RFacebook
+- Goggle maps and RGoogleMaps
+
+# Cool things from the swirl homework
+
+```
+library(dplyr)
+# load a database called cran, which has download stats from cran
+by_package <- group_by(cran, package)
+pack_sum <- summarize(by_package,
+                      count = n(),
+                      unique = n_distinct(ip_id),
+                      countries = n_distinct(country),
+                      avg_bytes = mean(size))
+
+# Here's the new bit, but using the same approach we've
+# been using this whole time.
+
+top_countries <- filter(pack_sum, countries > 60)
+result1 <- arrange(top_countries, desc(countries), avg_bytes)
+
+# Print the results to the console.
+print(result1)
+
+cran %>%
+    group_by(package) %>%
+    summarize(count = n(),
+              unique = n_distinct(ip_id),
+              countries = n_distinct(country),
+              avg_bytes = mean(size)) %>%
+    filter(countries > 60) %>%
+    arrange(desc(countries, avg_bytes) %>%
+    print()
+
+cran %>%
+  select(ip_id, country, package, size) %>%
+  mutate(size_mb = size / 2^20) %>%
+  filter(size_mb <= 0.5) %>%
+  arrange(desc(size_mb))
+  print()
+  
+```
+
+### tidyr
+```{r}
+library(dplyr)
+library(tidyr)
+students <- data.frame(grade = factor(c("A", "B", "C", "D", "E"), ordered = TRUE),
+                       male = c(1, 5, 5, 5, 7),
+                       female = c(5, 0, 2, 5, 4))
+students %>% gather(sex, count, -grade)
+```
+```{r}
+students2 <- data.frame(grade = factor(c("A", "B", "C", "D", "E"), ordered = TRUE),
+                        male_1 = c(3, 6, 7, 4, 1),
+                        female_1 = c(4, 4, 4, 0, 1),
+                        male_2 = c(3, 3, 3, 8, 3),
+                        female_2 = c(4, 5, 8, 1, 7))
+students2 %>% gather(sex_class, count, -grade) %>% separate(col = sex_class, into = c("sex", "class"))
+
+possibleGrades = c("A", "B", "C", "D", "E")
+students3 <- data.frame(name = rep(c("Sally", "Jeff", "Roger", "Karen", "Brian"), each=2),
+                        test = rep(c("midterm", "final"), 5),
+                        class1 = c("A", "C", NA, NA, NA, NA, NA, NA, "B", "B"),
+                        class2 = c(NA, NA, "D", "E", "C", "A", NA, NA, NA, NA),
+                        class3 = c("B", "C", NA, NA, NA, NA, "C", "C", NA, NA),
+                        class4 = c(NA, NA, "A", "C", NA, NA, "B", "A", NA, NA),
+                        class5 = c(NA, NA, NA, NA, "B", "A", NA, NA, "A", "C"),
+                        stringsAsFactors = FALSE)
+# Make a single column, class, with grades labeled by each of their source columns
+students3 %>%
+  gather( class, grade, class1:class5, na.rm = TRUE) %>%
+  print
+
+# Take the midterm and final grades and make them their own columns
+students3 %>%
+    gather (class, grade, class1:class5, na.rm = TRUE) %>%
+    spread(test, test) %>%
+    print
+
+# Change the class names to numbers
+students4 <- students3 %>%
+  gather(class, grade, class1:class5, na.rm = TRUE) %>%
+  spread(test, grade) %>%
+    mutate(class = extract_numeric(class)) %>%
+  print
+
+students4$sex <- rep(c("M", "M", "F", "M", "F"), each=2)
+students4$id <- rep(c(1, 2, 3, 4, 5), each=2)
+
+student_info <- students4 %>%
+  select(id, name, sex) %>%
+  unique() %>%
+  print
+
+gradebook <- students4 %>%
+  select(id, class, midterm, final) %>%
+  print
+
+passed <- data.frame(name=c("Brian", "Roger", "Roger", "Karen"),
+                    class=c(1, 2, 5, 4),
+                    final=c("B", "A", "A", "A"),
+                    stringsAsFactors = FALSE)
+failed <- data.frame(name=c("Brian", "Sally", "Sally", "Jeff", "Jeff", "Karen"),
+                     class=c(5, 1, 3, 2, 4, 3),
+                     final=c("C", "C", "C", "E", "C", "C"),
+                     stringsAsFactors = FALSE)
+failed <- failed %>% mutate(status="failed")
+passed <- passed %>% mutate(status="passed")
+
+bind_rows(passed, failed)
+```
+
+## Lubridate
+```{r}
+library(lubridate)
+this_day <- today()
+year(this_day)
+month(this_day)
+day(this_day)
+wday(this_day, label=TRUE)
+this_moment <- now()
+hour(this_moment)
+minute(this_moment)
+second(this_moment)
+my_date <- ymd("1964 May 18")
+# mdy, dmy, etc
+# ymd_hms
+depart <- now("America/New_York") + days(2)
+depart <- update(depart, hours = 17, minutes = 34)
+depart
+arrive <- with_tz(depart + hours(15) + minutes(50), "HongKong")
+arrive
+last_time <- mdy("June 17, 2008", tz = "Singapore")
+last_time
+how_long <- new_interval(last_time, arrive)
+as.period(how_long)
+
+arrive 
+```

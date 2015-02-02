@@ -783,8 +783,8 @@ head(dcut, 10)</code></pre>
 ## 8  Fair     SI2     D 1.0169643        56
 ## 9  Fair     SI2     E 1.0156410        78
 ## 10 Fair     SI2     F 1.0801124        89</code></pre>
-<div id="dplyr-select" class="section level2">
-<h2>dplyr select</h2>
+<div id="dplyr-select-subsetting-columns" class="section level2">
+<h2>dplyr select: subsetting columns</h2>
 <pre class="r"><code># Select the first 5 columns
 head(select(diamonds, 1:5))</code></pre>
 <pre><code>##   carat       cut color clarity depth
@@ -827,8 +827,8 @@ head(diamonds[,-(i:j)])</code></pre>
 ## 5  0.31      Good   335 4.34 4.35 2.75
 ## 6  0.24 Very Good   336 3.94 3.96 2.48</code></pre>
 </div>
-<div id="dplyr-filter" class="section level2">
-<h2>dplyr filter</h2>
+<div id="dplyr-filter-subsetting-rows" class="section level2">
+<h2>dplyr filter: Subsetting rows</h2>
 <pre class="r"><code>diamonds.f &lt;- filter(diamonds, price &gt; 500)
 head(select(diamonds.f, 1:3, price), 10)</code></pre>
 <pre><code>##    carat       cut color price
@@ -856,6 +856,45 @@ head(select(diamonds.f, 1:3, price, depth), 10)</code></pre>
 ## 9   0.26 Very Good     D   554  62.4
 ## 10  0.26 Very Good     D   554  62.8</code></pre>
 </div>
+<div id="arrange" class="section level2">
+<h2>Arrange</h2>
+<p>Reorder rows based on values in a column. Used earlier in another lecture.</p>
+<pre><code># Sort the rows by date
+chicago &lt;- arrange(chicago, date)
+# Sor the rows by date with the newest stuff on top
+chicago &lt;- arrange(chicago, desc(date))</code></pre>
+</div>
+<div id="rename" class="section level2">
+<h2>rename</h2>
+<p>This is harder than you want it to be in R. With dplyr it is easy</p>
+<pre><code>chicago &lt;- rename(chicago, pm25 = pm25tmean2, dewpoint = dptp)</code></pre>
+</div>
+<div id="mutate" class="section level2">
+<h2>mutate</h2>
+<p>Create a variable with is dewpoint, centered on the mean (detrend)</p>
+<pre><code>chicago &lt;- mutate(chicago, pm25detrend = pm25-mean(pm25, na.rm = TRUE))</code></pre>
+</div>
+<div id="group_by" class="section level2">
+<h2>group_by</h2>
+<p>Split the data frame by certain categorical variables</p>
+<pre><code>chicago &lt;- mutate(chicago, tempcat = factor(1 * (tmpd &gt; 80), labels = c(&quot;cold&quot;, &quot;hot&quot;)))
+hotcold &lt;- group_by(chicago, tempcat)</code></pre>
+</div>
+<div id="summarize" class="section level2">
+<h2>summarize</h2>
+<p>Create a summary with selected summary statistics</p>
+<pre><code>summarize(hotcold, pm25 = mean(pm25), o3 = max(o3tmean2), no2 = median(no2tmean2))
+
+# summarize based on year
+chicago &lt;- mutate(chicago, year = as.POSIXlt(date)$yaer + 1900)
+years &lt;- group_by(chicago, year)
+summarize(years, pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(notmean2))</code></pre>
+</div>
+<div id="pipeline-operation" class="section level2">
+<h2>Pipeline operation</h2>
+<p>Chain operations together without using temporary variables to save results</p>
+<pre><code>chicago %&gt;% mutate(month = as.POSIXlt)(date)$mon + 1) %&gt;% group_by(month) %&gt;% summarize(pm25 = mean(pm25, na.rm = TRUE), o3 = max(o3tmean2), no2 = median(no2tmean2))</code></pre>
+</div>
 </div>
 <div id="merging-data" class="section level1">
 <h1>Merging data</h1>
@@ -881,10 +920,16 @@ head(solutions,2)</code></pre>
 <pre><code>##   id problem_id subject_id      start       stop time_left answer
 ## 1  1        156         29 1304095119 1304095169      2343      B
 ## 2  2        269         25 1304095119 1304095183      2329      C</code></pre>
-<div id="merge" class="section level2">
-<h2>merge()</h2>
+<div id="another-cool-thing-about-dplyr" class="section level2">
+<h2>Another cool thing about dplyr</h2>
+<p>It works with other database formats, like SQL, once you have gotten the hang of it for data.frame</p>
+</div>
+</div>
+<div id="merge" class="section level1">
+<h1>merge()</h1>
 <ul>
-<li>merges data frames</li>
+<li>merges data frames, matching the rows by a shared variable</li>
+<li>adds multiple rows where more things match</li>
 <li>important parameters: x, y, by, by.x, by.y, all</li>
 </ul>
 <pre class="r"><code>names(reviews)</code></pre>
@@ -909,7 +954,7 @@ head(mergedData)</code></pre>
 ## 4         19         23 1304095127 1304095150        2362      D
 ## 5        605         26 1304095127 1304095167        2345      A
 ## 6        384         27 1304095131 1304095270        2242      C</code></pre>
-<p>Merge all common column names</p>
+<p>Merge all common column names. If you tell merge() which columns to merge by, the other columns with matching names will get suscripts to say which original table they came from. If you do not give a by argument, merge will keep adding rows till all the data has been represented, making the table potentially larger.</p>
 <pre class="r"><code>intersect(names(solutions), names(reviews))</code></pre>
 <pre><code>## [1] &quot;id&quot;        &quot;start&quot;     &quot;stop&quot;      &quot;time_left&quot;</code></pre>
 <pre class="r"><code>mergedData2 &lt;- merge(reviews, solutions, all=TRUE)
@@ -928,7 +973,9 @@ head(mergedData2)</code></pre>
 ## 4         NA         NA   &lt;NA&gt;
 ## 5         34         22      C
 ## 6         NA         NA   &lt;NA&gt;</code></pre>
-<p>Using join from plyr</p>
+<div id="using-join-from-plyr" class="section level2">
+<h2>Using join from plyr</h2>
+<p>merges based on common column names. Cannot identify differently named columns with matching data. However, with join_all you can add multiple tables together, not just two.</p>
 <pre class="r"><code>df1 &lt;- data.frame(id=sample(1:10), x=rnorm(10))
 df2 &lt;- data.frame(id=sample(1:10), y = rnorm(10))
 arrange(join(df1, df2), id)</code></pre>
@@ -959,6 +1006,12 @@ join_all(list(df1, df2, df3))</code></pre>
 ## 8   9  1.70100479 -1.88351566  0.74916695
 ## 9   3 -0.09058368  0.94715551 -0.11024858
 ## 10  7  0.04149016  0.65722474  0.94975746</code></pre>
+<p>There is some subtlety with Left joins and Right joins, which we are encouraged to read up on.</p>
+<ul>
+<li>The quick R data merging page - [<a href="http://www.statmethods.net/management/merging.html">http://www.statmethods.net/management/merging.html</a>]</li>
+<li>plyr information [<a href="http://plyr.had.co.nz">http://plyr.had.co.nz</a>]</li>
+<li>Types of joins [<a href="http://en.wikipedia.org/wiki/Join_(SQL)">http://en.wikipedia.org/wiki/Join_(SQL)</a>]</li>
+</ul>
 </div>
 </div>
 

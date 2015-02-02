@@ -1,0 +1,285 @@
+---
+title: "R-Equations"
+author: "Linda Kukolich"
+date: "January 31, 2015"
+output: html_document
+---
+
+# error types
+- Type 1 error - take $H_a$ when $H_0$ was the truth, false alarm
+- Type 2 error - take $H_0$ when $H_a$ was the truth, miss
+
+# Z-test - high number of samples, so Central Limit Theorem applies (100 or more)
+
+How many standard deviations from the population mean is our sample mean?
+
+- Test statistic $TS = \frac{\bar{X} - \mu_0}{S/\sqrt{n}}$
+- Reject the null hypothesis when
+    - $H_1 : TS \le - Z_{1-\alpha}$
+    - $H_2 : |TS| \ge Z_{1-\alpha/2}$
+    - $H_3 : TS \ge Z_{1-\alpha}$
+
+## One sided z-test
+
+```{r}
+mu <- 30
+xbar <- 32
+sd <- 10
+n <- 100
+ts <- (xbar - mu)/(sd/sqrt(n))
+z95 <- qnorm(1-0.05)
+if(ts >= z95) {
+    print(paste(ts, ">=", z95))
+    print("reject null hypothesis (accept Ha)")
+} else if (ts <= -z95) {
+    print(paste(ts, "<=", -z95))
+    print("reject null hypothesis (accept Ha)")
+} else {
+    print(paste(ts, "<", z95))
+    print("fail to reject null hypothesis")
+}
+```
+
+## two sided z-test
+
+```{r}
+mu <- 30
+xbar <- 32
+sd <- 10
+n <- 100
+ts <- (xbar - mu)/(sd/sqrt(n))
+z975 <- qnorm(1-0.025)
+if(abs(ts) >= z975) {
+    print(paste(abs(ts), ">=", z975))
+    print("reject null hypothesis (accept Ha)")
+} else {
+    print(paste(ts, "<", z975))
+    print("fail to reject null hypothesis")
+}
+```
+
+## Z-test Confidence interval
+```{r}
+mu0 <- 30
+xbar <- 32
+sd <- 10
+n <- 100
+ts <- (xbar - mu0)/(sd/sqrt(n))
+# we are 95% sure that mu0 lies within this confidence interval
+conf <- xbar + c(-1, 1) * qnorm(1-0.05) * sd/sqrt(n)
+if ((mu0 >= conf[1]) && (mu0 <= conf[2])) {
+    print(paste("mu0 (", mu0, ") lies within this confidence interval: (", conf[1], ",", conf[2], ")"))
+} else {
+    print(paste("We find that mu0 (", mu0, ") lies outside this 95% confidence interval: (", conf[1], ",", conf[2], ")"))
+}
+```
+
+## Z-test power
+
+```{r}
+mu0 <- 30
+xbar <- 32
+n <- 100
+sd <- 10
+z95 <- qnorm(1-0.05)
+ts <- (xbar-mu0)/(sd/sqrt(n))
+power <- 1- pnorm(z95-ts)
+power
+```
+
+## Sample size calculation (power 80%)
+*works for mua or larger, mua or smaller is similar*
+```{r}
+mua = 32
+mu0 = 30
+sigma = 10
+z95 = qnorm(1-0.05)
+z20 = qnorm(1-.80)
+((z95 - z20) * sigma / (mua - mu))^2
+```
+
+## two sided sample size calculation
+```{r}
+mua = 32
+mu0 = 30
+sigma = 10
+z975 = qnorm(1-0.025)
+z20 = qnorm(1-.80)
+((z975 - z20) * sigma / (mua - mu))^2
+```
+
+# T-test - low number of samples
+
+## One sided t test
+
+```{r}
+mu <- 30
+xbar <- 32
+sd <- 10
+n <- 16 # Too small for Z-test
+ts <- (xbar - mu)/(sd/sqrt(n))
+t95 <- qt(1-0.05, n-1)
+if(ts >= t95) {
+    print(paste(ts, ">=", t95))
+    print("reject null hypothesis (accept Ha)")
+} else if (ts <= -t95) {
+    print(paste(ts, "<=", -t95))
+    print("reject null hypothesis (accept Ha)")
+} else {
+    print(paste(ts, "<", t95))
+    print("fail to reject null hypothesis")
+}
+```
+
+## Two sided t test
+```{r}
+mu <- 30
+xbar <- 32
+sd <- 10
+n <- 16 # Too small for Z-test
+ts <- (xbar - mu)/(sd/sqrt(n))
+t975 <- qt(1-0.025, n-1)
+if(abs(ts) >= t975) {
+    print(paste(abs(ts), ">=", t975))
+    print("reject null hypothesis")
+} else {
+    print(paste(ts, "<", t975))
+    print("fail to reject null hypothesis (accept Ha)")
+}
+```
+
+## Student's T confidence interval
+A sample of 9 men yielded a sample average brain volume of 1,100cc and a standard deviation of 30cc. For what values of μ0 would a test of H0:μ=μ0 fail to reject the null hypothesis in a two sided 5% Students t-test?
+
+```{r}
+mu <- 1100
+df <- 8
+sd <- 30
+t975 <- qt(1-.025, n-1)
+mu + c(-1, 1) * t975 * sd/sqrt(n)
+```
+
+##  T-test Power
+
+Probability of seeing evidence as or more extreme than actually obtained is
+
+```{r}
+mu0 <- 30
+mua <- 32
+sd <- 4
+n <- 16 # Too small for Z-test
+power.t.test(n = n, delta = (mua - mu0)/sigma, type = "one.sample", alt = "one.sided")
+power.t.test(n = n, delta = (mua - mu0), sd = sd, type = "one.sample", alt = "one.sided")
+```
+
+# Two sample tests - two independent groups
+
+### With raw data
+A pharmaceutical company is interested in testing a potential blood pressure lowering medication. Their first examination considers only subjects that received the medication at baseline then two weeks later. The data are as follows (SBP in mmHg)
+
+| Subject |   Baseline |    Week 2 |
+|---------|------------|-----------|
+| 1	| 140	| 132 | 
+| 2	| 138 | 	135 | 
+| 3	| 150 | 	151 | 
+| 4	| 148	| 146 | 
+| 5	| 135	| 130 | 
+
+```{r}
+bl <- c(140, 138, 150, 148, 135)
+fu <- c(132, 135, 151, 146, 130)
+t.test(fu, bl, alternative = "two.sided", paired=TRUE)
+```
+
+```{r}
+diff <- fu - bl
+n <- length(fu)
+m <- mean(diff)
+s <- sd(diff)
+ts <- sqrt(n) * m / s
+t975 <- qt(.975, n - 1)
+if (abs(ts) >= t975) {
+    print(paste(abs(ts), ">=", t975))
+    print("reject null hypothesis (accept means are not equal)")
+} else {
+    print(paste(abs(ts), "<", t975))
+    print("fail to reject null hypothesis (means are the same)")
+}
+# confidence interval, matched data
+conf <- m + c(-1, 1) * t975 * s * sqrt(1/n)
+if ((conf[1] < 0) && (conf[2] > 0)) {
+    print(paste("0 lies within this confidence interval: (", conf[1], ",", conf[2], "), so means are the same"))
+} else {
+    print(paste("0 lies outside this 95% confidence interval: (", conf[1], ",", conf[2], "), so means are different"))
+}
+# power - matched data
+2*pt(abs(ts), n - 1, lower.tail = FALSE)
+```
+
+```{r}
+# Shared variance
+# H0: mu1 = mu2, versus Ha: mu1 <> mu2
+xbar <- mean(fu)
+nx <- length(fu)
+sx <- sd(fu)
+c(xbar, sx)
+
+ybar <- mean(bl)
+ny <- length(bl)
+sy <- sd(bl)
+c(ybar, sy)
+
+sp <- sqrt(((nx-1)*sx^2 + (ny-1)*sy^2)/(nx + ny - 2))
+sp
+# pooled (shared) variance
+ts <- (xbar - ybar)/(sp * sqrt(1/nx + 1/nx))
+df <- nx + ny - 2
+t975 <- qt(.975, df)
+if (abs(ts) >= t975) {
+    print(paste(abs(ts), ">=", t975))
+    print("reject null hypothesis (accept means are not equal)")
+} else {
+    print(paste(abs(ts), "<", t975))
+    print("fail to reject null hypothesis (means are the same)")
+}
+```
+```{r}
+# confidence interval, pooled variance
+conf <- (xbar - ybar) + c(-1, 1) * t975 * sp * sqrt(1/nx + 1/ny)
+if ((conf[1] < 0) && (conf[2] > 0)) {
+    print(paste("0 lies within this confidence interval: (", conf[1], ",", conf[2], "), so means are the same"))
+} else {
+    print(paste("0 lies outside this 95% confidence interval: (", conf[1], ",", conf[2], "), so means are different"))
+}
+# Power, pooled variance
+2*pt(abs(ts), df, lower.tail = FALSE)
+```
+```{r}
+t.test(fu, bl, alternative = "two.sided", paired=FALSE)
+```
+```{r}
+# not pooled (shared) variance
+ts <- (xbar - ybar)/sqrt(sx^2/nx + sy^2/ny)
+ts
+df <- (sx^2/nx + sy^2/ny)^2/((sx^2/nx)^2/(nx-1) + (sy^2/ny)^2/(ny-1))
+df
+t975 <- qt(.975, df)
+if (abs(ts) >= t975) {
+    print(paste(abs(ts), ">=", t975))
+    print("reject null hypothesis (accept means are not equal")
+} else {
+    print(paste(abs(ts), "<", t975))
+    print("fail to reject null hypothesis (means are the same)")
+}
+```
+```{r}
+# Confidence interval, not pooled variance
+conf <- xbar - ybar + c(-1, 1) * t975 * sqrt(sx^2/nx + sy^2/ny)
+if ((conf[1] < 0) && (conf[2] > 0)) {
+    print(paste("0 lies within this confidence interval: (", conf[1], ",", conf[2], "), so means are the same"))
+} else {
+    print(paste("0 lies outside this 95% confidence interval: (", conf[1], ",", conf[2], "), so means are different"))
+}
+# power, not pooled variance
+2*pt(abs(ts), df, lower.tail = FALSE)
+```

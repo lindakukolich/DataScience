@@ -1,0 +1,316 @@
+---
+title: "Notes 3 - Reproducible Research"
+author: "Linda Kukolich"
+date: "January 22, 2015"
+output: html_document
+---
+
+# Communicating Results
+
+Set level of detail based on the medium and the audience
+
+## Getting email responses from important people
+
+[http://simplystatistics.org/2011/09/23/getting-email-responses-from-busy-people/]
+
+I’ve had the good fortune of working with some really smart and successful people during my career. As a young person, one problem with working with really successful people is that they get a ton of email. Some only see the subject lines on their phone before deleting them. 
+
+I’ve picked up a few tricks for getting email responses from important/successful people:  
+
+The SI Rules
+
+1. Try to send no more than one email a day. 
+2. Emails should be 3 sentences or less. Better if you can get the whole email in the subject line. 
+3. If you need information, ask yes or no questions whenever possible. Never ask a question that requires a full sentence response.
+4. When something is time sensitive, state the action you will take if you don’t get a response by a time you specify. 
+5. Be as specific as you can while conforming to the length requirements. 
+6. Bonus: include obvious keywords people can use to search for your email. 
+
+Anecdotally, SI emails have a 10-fold higher response probability. The rules are designed around the fact that busy people who get lots of email love checking things off their list. SI emails are easy to check off! That will make them happy and get you a response. 
+
+It takes more work on your end when writing an SI email. You often need to think more carefully about what to ask, how to phrase it succinctly, and how to minimize the number of emails you write. A surprising side effect of applying SI principles is that I often figure out answers to my questions on my own. I have to decide which questions to include in my SI emails and they have to be yes/no answers, so I end up taking care of simple questions on my own. 
+
+Here are examples of SI emails just to get you started: 
+
+Example 1
+
+Subject: Is my response to reviewer 2 ok with you?
+
+Body: I’ve attached the paper/responses to referees.
+
+Example 2
+
+Subject: Can you send my letter of recommendation to john.doe@someplace.com?
+
+Body:
+
+Keywords = recommendation, Jeff, John Doe.
+
+Example 3
+
+Subject: I revised the draft to include your suggestions about simulations and language
+
+Revisions attached. Let me know if you have any problems, otherwise I’ll submit Monday at 2pm. 
+
+## Hierarchy of Information: Research Paper
+
+- Title / Author list
+- Abstract
+- Body / Results
+- Supplementary Materials / the gory details
+- Code / Data / really gory details
+
+## Hierarchy of Information: Email Presentation
+
+- Subject line / Sender info
+    - Can you summarize findings in one sentence?
+- Email body
+    - a brief description of the problem / context; recall what was proposed and executed; summarize findings / results; 1-2 paragraphs
+    - if action needs to be taken as a result of this  presentation, suggest some options and make them as concrete as possible
+    - if questions need to be addressed, try to make them yes / no
+    - Attachments
+        - R markdown file
+        - knitr report
+        - stay concise; don't spit out pages of code (because you used knitr we know it's available)
+    - links to supplementary materials
+        - code / software / data
+        - github repository / project web site
+
+## RPubs
+
+"Easy web publishing from R"
+
+Allows easy publishing of knitr documents and tables.
+
+## Reproducible Research Checklist
+
+- DO: Start with Good Science
+    - Garbage In, garbage out
+    - Coherent, focused question simplifies many problems
+    - Working with good collaborators reinforces good practices
+    - Something that's interesting to you will motivate good habits
+- DON'T: Do things by hand
+    - Editing spreadsheets of data to "clean it up"
+        - Removing outliers
+        - QA / QC
+        - Validating
+    - Editing tables or figures (e.g. rounding, formatting)
+    - Downloading data from a web site (clicking links in a web browser)
+    - Moving data around your computer; splitting / reformatting data files
+    - "We're just going to do this once"
+- DON'T Point and Click
+    - GUIs are convenient, but without a log you cannot reproduce their results
+- DO: Teach a computer
+- DO: Use Version Control
+- DO: Keep track of your software environment
+    - Computer Architecture: CPU (Intel, AMD, ARM), GPUs
+    - Operating System
+    - Software toolchain: Compilers, interpreters, command shell, programming language, database backends, data analysis software
+    - Supporting software / infrastructure: Libraries, R packages, dependencies
+    - External dependencies: Web sites, data repositories, remote databases, software repositories
+    - Version numbers: Ideally for everything
+```{r sessioninfo}
+sessionInfo()
+```
+
+- DON'T save output
+    - avoid saving data analysis output (tables, figures, summaries, processed data, etc.) except perhaps temporarily for efficiency purposes
+    - If a stray output file cannot be easily connected with the means by which is was created, then it is not reproducible
+    - save the data + code that generated the output, rather than the output itself
+    - Intermediate files are okay as long as there is clear documentaiton of how they were created
+- DO Set your seed
+    - Random number generators generate pseudo-random numbers based on an initial seed
+    - set the seed so the sequence of random numbers is the same when you re-run.
+    - Whenever you generate random numbers for a non-trivial purpose, **always set the seed**
+- DO think about the entire pipeline
+    - Data analysis is a lengthy process; it is not just tables / figures / reports
+    - raw data -> processed data -> analysis -> report
+    - how you got to the end is just as important as the end itself
+    - the more of the data analysis pipeline you can make reproducible, the better for everyone
+
+## Reproducible Research Checklist
+
+1. Are we doing good science?
+2. Was any part of this analysis done by hand?
+    - if so, are those parts *precisely* documented?
+    - does the documentation match reality?
+3. Have we taught a computer to do as much as possible?
+4. Are we using a vesion control system?
+5. Have we documented our softwre environment?
+6. Have we save any output that we cannot reconstruct from original data + code?
+7. How far back in the analysis pipeline can we go beore our results are not longer (automatically) reproducible?
+
+## Reproducible Research with Evidence based Data Analysis
+
+### Replication versus Reproducibility
+
+- Replication
+    - Focuses on the validity of the scientific claim
+    - "Is the claim true?"
+    - The ultimate standard for strenghthening scientific evidence
+    - New investigators, data, analytical methods, laboratories, instruments, etc.
+    - Particularly important in studies that can impact broad policy or regulatory decisions
+- Reproducibility
+    - Focuses on the validity of the data analysis
+    - "Can we trust this analysis?"
+    - Arguably a minimum standard for any scientific study
+    - New investigators, same data, same methods
+    - Important when replication is impossible
+
+## Trends
+
+- Some studies cannot be replicated: No time, No money, Original done during unique opportunity
+- Technology is increasing data collection throughput; data are more complex and high-dimensional
+- Existing databases can be merged to become bigger databases (but data are used off-label)
+- Computing power allows more sophisticated analyses, even on "small" data
+- For every field "X" there is a speciality "Computational X"
+
+## Current Status
+
+- Even basic analyses are difficult to describe
+- Heavy computational requirements are thrust upon people without adequate training in statistics and computing
+- Errors are more easily introduced into long analysis pipelines
+- Knowledge transfer is inhibited
+- Results are difficult to replicate or reproduce
+- Complicated analyses cannot be trusted
+
+Gives a picture of "reproducible research chain", which we have seen before.
+
+```
+Author
+------------------------------------------------------------------>
+                                 Presentation Code
+Processing code    Analytic Code            \    +---------+ 
+            |                |               \   | Figures |
++---------+ \/ +----------+ \/ +-------------+ / +---------+\   +----------+
+|Measured |--->| Analytic |--->|Computational|/  +---------+ \  | Published|
+|Data     |    |  Data    |    | Results     |-->| Tables  |--->| Article  |
+=---------+    +----------+    +-------------+\  +---------+ /  +----------+
+    ^                                           \+---------+/        ^
+    |                                            |Numerical|         |
++---------+                                      |Summaries|       +----+
+| Nature  |                                      +---------+       |Text|
++---------+                                                        +----+
+    ^
+    |
++---------+
+|Protocol |
++---------+
+    ^
+    |
++-----------+
+|Scientific |
+| Question  |
++-----------+
+                            <-----------------------------------------------
+                                                                     Reader
+```
+Reproducible Research focuses on the Processing code taking Measured Data and generating Analytic Data, and the Analytic Code, producing Computational Results, and presumably the Presentation Code which produces the results seen in the final article
+
+### What problem does reproducibility solve?
+
+- We get transparency
+- We get Data Availability
+- We get software / methods availability
+- We get improved transfer of knowledge
+- We do NOT get validity / correctness of the analysis
+- However - by revealing our analysis, it makes it possible for others to verify it, to question it, which allows self-correction of the system, if not of the individual paper
+- He then goes through a picture that likens reproducibility to treatment of disease. The paper is improved by the editor, the reviewer, and later by people working with the data themselves in Post-publication review
+
+## Who reproduces research?
+
+For reproducibility to be effective as a means to check validity, someone need to
+- re-run the analysis; check results match
+- check the code for bugs / errors
+- try alternate approaches; check sensitivity
+The need for someone to do somethings is inherited from the traditional notion of replication
+
+The WHO is either the public, who doesn't actually care, scientists, who are deciding between alternatives, and deniers, who just think the researcher is wrong.
+
+### The story so far
+- Reproducibility brings transparency (with respect to code+data) and increased transfer of knowledge
+- A lot of discussion about how to get people to share data
+- Key question of "can we trust this analysis?" is not addressed by reproducibility
+- Reproducibility address potential long after they've occured ("downstream")
+- Secondary analyses are inevitably colored by the interests / motivations of others
+
+## Evidence-based Data Analysis
+
+- Most data analyses involved stringing together many different tools and methods
+- Some methods may be standard for a given field, but other are often applied ad hoc
+- We should apply thoroughly studied (vias statistical research), mutually agreed upon methods to analyze data whenever possible
+- There should be evidence to justify the application of a given method
+- *He gives a picture of a histogram with a reference to the folks who decided on the proper default bandwidth for the bins*
+- Create analytic pipelines from evidence-based components - standardize it
+- [A deterministic statistical machine](http://simplystatistics.org/2012/08/27/a-deterministic-statistical-machine/)
+
+> StatWing looks super user-friendly and the idea of democratizing statistical analysis so more people can access these ideas is something that appeals to me. But, as one of the aforementioned statistical wizards, this had me freaked out for a minute. Once I looked at the software though, I realized it suffers from the same problem that most “user-friendly” statistical software suffers from. It makes it really easy to screw up a data analysis. It will tell you when something is significant and if you don’t like that it isn’t, you can keep slicing and dicing the data until it is. The key issue behind getting insight from data is knowing when you are fooling yourself with confounders, or small effect sizes, or overfitting. StatWing looks like an improvement on the UI experience of data analysis, but it won’t prevent false positives that plague science and cost business big $$.
+
+> So I started thinking about what kind of software would prevent these sort of problems while still being accessible to a big audience. My idea is a “deterministic statistical machine”. Here is how it works, you input a data set and then specify the question you are asking (is variable Y related to variable X? can i predict Z from W?) then, depending on your question, it uses a deterministic set of methods to analyze the data. Say regression for inference, linear discriminant analysis for prediction, etc. But the method is fixed and deterministic for each question. It also performs a pre-specified set of checks for outliers, confounders, missing data, maybe even data fudging. It generates a report with a markdown tool and then immediately publishes the result to figshare. 
+
+> The advantage is that people can get their data-related questions answered using a standard tool. It does a lot of the “heavy lifting” in checking for potential problems and produces nice reports. But it is a deterministic algorithm for analysis so overfitting, fudging the analysis, etc. are harder. By publishing all reports to figshare, it makes it even harder to fudge the data. If you fiddle with the data to try to get a result you want, there will be a “multiple testing paper trail” following you around. 
+> The DSM should be a web service that is easy to use. Anybody want to build it? Any suggestions for how to do it better? 
+
+- Once an evidence-based analytic pipeline is established, we shouldn't mess with it
+- Analysis with a "transparent box"
+- Reduce the "researcher degrees of freedom"
+- Analogous to a pre-specified clinical trial protocol
+
+### Picture of a Deterministic Statistical Machine
+
+Dataset + Input metadata ->
+Preprocessing -> Model Selection -> Sensitivity analysis
+(Each of which is fed by a Benchmark dataset)
+-> Output Paramters + Report
+Report -> Methods sections + Public repository
+
+### Case Study: Estimating Acute Effects of Ambient Air Pollution Exposure
+
+- Acute/short-term effects typically estimated via panel studies or time series studies
+- Work originalted in late 1970s early 1980s
+- Key question: "are short-term changes in pollution associated with short-term changes in a population health outcome?"
+- Studies usually conducted at community level
+- Long history of statistical research investigating proper methods of analysis
+- *Panel plot showing Mortality vs fine particulate rate for 3 years, with matching peaks, but shape of fine particulate chart is noisy, you can talk yourself out of seeing the shape.*
+- Can we encode everything that we have found in statistical / epidemiological research into a single package?
+- Time series studies do not have a huge range of variation; typically involves similar types of data and similar questoins
+- Can we create a deterministic statistical machine for this area?
+
+### DSM Modules for Time Series Studies of Air Pollution and Health
+
+1. Check for outliers, high leverage, overdispersion
+2. Fill in missing data? NO!
+3. Model selection: Estimate degrees of freedom to adjust for unmeasured confounders
+    - Other aspects of model not as critical
+4. Multiple lag analysis
+5. Sensitivity analysis with-respect-to
+    - Unmeasured confounder adjustment
+    - Influential points
+
+### Where to go from here?
+
+- one DSM is not enough
+- Different problems warrant different approaches and expertise
+- A curated library of machines providing state-of-the art analysis pipelines
+- A CRAN/CPAN/CTAN for data analysis
+- Or a "Cochrane Collaboration" for data analysis
+    - [www.cochrane.org]
+    - "Working together to provide the best evidence for health care"
+    - [http://en.wikipedia.org/wiki/Cochrane_Collaboration]
+    - This is a group of more than 31,000 volunteers that conduct systematic reviews of randomized controlled trials of health-care interventions
+    - On the website, you enter a question and it gives you an option based on the studies ("headache and asparin")
+    
+### A curated library of data analysis
+
+- Provide packages that encode data analysis pipelines for given problems, technologies, questions
+- Curated by experts knowledgeable in the field
+- Documentation / references given supporting each module in the pipeline
+- changes introduced after passing relevant benchmarks / unit tests
+
+### Summary
+
+- Reporducible research is important, but does not necessarily solve the critical question of whether a data analysis is trustworthy
+- Reproducible research focuses on the most "downstream" aspect of research dissemination
+- Evidence-based data analysis would provide standardized, best practices for give scientific areas and questions
+- Gives reviewers an important tool without dramitcally increasing the burden on them
+- More effort should be put into improving the quality of "upstream" aspects of scientific research

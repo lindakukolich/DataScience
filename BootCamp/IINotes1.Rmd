@@ -1,0 +1,555 @@
+---
+title: "Week 1 - Boot Camp II"
+author: "Linda Kukolich"
+date: "January 30, 2015"
+output: html_document
+---
+
+# Hypothesis Testing
+
+- Hypothesis testing is concerned with making decisions using data
+- A null hypothesis is specified that represents the status quo, usuallaly labeled $H_0$
+- The null hypothesis is assumed true and statistical evidence is required to reject it in favor of a research or alternative hypothesis
+
+### Example
+
+- A repiratory disturbance index of more than 30 events / hour, say, is considered evidence of severe sleep disordered breathing (SDB)
+- Suppose that in a sample of 100 overweight subjects with other risk factors for sleep disordered breathing at a sleep clinic, the mean RDI was 32 events / hour with a standard deviation of 10 events / hour
+- We might want to test the hypothesis that
+    - $H_0 : \mu = 30$
+    - $H_a : \mu > 30$
+where $\mu$ is the population mean RDI
+- Note that there are four possible outcomes of our statistical decision process
+
+| Truth |        $H_0$          | $H_a$
+|-------|:---------------------:|:------------:|
+|$H_0$  | Correctly accept null | Type 1 error |
+|$H_a$  | Type II error         | Correctly reject null |
+
+### Discussion
+
+- Consider a court of law; the null hypothesis is that the defendant is innocent
+- We require evidence to reject the null hypothesis (convict)
+- If we require little evidence, then we would increase the percentage of innocent people convicted (type I errors); however, we would also increase the percentage of guilty people convicted (correctly rejecting the null)
+- If we require a lot of evidence, then we increase the percentage of innocent people let free (correctly accepting the null) while we would also increase the percentage of guilty people let free (type II errors)
+
+### Example again
+
+- A resonable strategy would reject the null hypothesis if $\bar{X}$ was larger than some constant, say C
+- Typically, C is chosen so that the probability of a Type 1 error, $\alpha$, is 0.05 (or some other relevant constant)
+- $\alpha$ = Type 1 error rate = Probability of rejecting the null hypothesis when, in fact, the null hypothesis is correct.
+
+That is, keep the false alarms low by controlling for it, usually 5% false alarm.
+
+- Find a constant, C, such that the probability of false alarm (probability of the mean being more than C) is 0.05 given a true population mean of 30.
+- normalize the data to give a 0 mean and unit variance. That is, subtract the mean $\mu$ and divide by the variance $sd/\sqrt{n}$ on both sides of the inequality
+- Notice that the first is just a Z (standard normal distribution) and solve for C on the other side
+
+$$
+\begin{aligned}
+.05 & = P\big(\bar{X} \ge C \,|\, \mu = 30\big) \\
+& = P\big(\frac{\bar{X} - 30}{10/\sqrt{100}} \ge \frac{C - 30}{10/\sqrt{100}} \,|\, \mu = 30\big) \\
+& = P\big(Z \ge \frac{C - 30}{1}\big)
+\end{aligned}
+$$
+
+```{r}
+mu <- 30
+xbar <- 32
+sd <- 10
+n <- 100
+ts <- (xbar - mu)/(sd/sqrt(n))
+z05 <- qnorm(1-0.05)
+paste(ts, "<", z05)
+if(ts < z05) {
+    print("reject null hypothesis")
+} else {
+    print("fail to reject null hypothesis (accept Ha)")
+}
+```
+
+- Hence $(C - 30)/1 = 1.645$ implying $C = 31.645$
+- Since our mean is 32 we reject the null hypothesis
+
+```{r}
+qnorm(.95)
+xval <- seq(-3.2, 3.2, length = 1000)
+yval <- dnorm(xval)
+plot(xval, yval, type = "l", axes = TRUE, frame = FALSE, lwd = 3, xlab = "", ylab="")
+x <- seq(qnorm(.95), 3.2, length = 100)
+polygon(c(x, rev(x)), c(dnorm(x), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dnorm(x))+0.2, "5%", cex = 2)
+text(qnorm(.95), 0.01, "1.645", cex = 2)
+```
+
+### Discussion
+
+- In general we don't convert C back to the original scale
+- We would just reject because the Z-score; which is how many standard errors the sample mean is above the hypothesized mean
+
+Reject null hypothesis when:
+$$
+\frac{\bar{X} - \mu}{\sigma/\sqrt{n}} \ge Z_\alpha \\
+\frac{32 - 30}{10/\sqrt{100}} = 2
+$$
+
+is greater than 1.645
+
+## General Rule
+
+- The Z test for $H_0 : \mu = \mu_0$ versus
+    - $H_1 : \mu \le \mu_0$
+    - $H_2 : \mu \ne \mu_0$
+    - $H_3 : \mu \gt \mu_0$
+- Test statistic $TS = \frac{\bar{X} - \mu_0}{S/\sqrt{n}}$
+- Reject the null hypothesis when
+    - $H_1 : TS \le - Z_{1-\alpha}$
+    - $H_2 : |TS| \ge Z_{1-\alpha/2}$
+    - $H_3 : TS \ge Z_{1-\alpha}$
+
+## Two sided Z test
+Halve the alpha, so half the error comes from below and half from above.
+
+```{r}
+plot(xval, yval, type = "l", axes = TRUE, frame = FALSE, lwd = 3, xlab = "", ylab = "")
+x <- seq(qnorm(.975), 3.2, length = 100)
+polygon(c(x, rev(x)), c(dnorm(x), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dnorm(x))+0.02, "2.5%", cex = 2)
+text(qnorm(0.975), 0.01, "1.96", cex = 2)
+x <- seq(-3.2, qnorm(0.025), length = 100)
+polygon(c(x, rev(x)), c(dnorm(x), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dnorm(x)) + 0.02, "2.5%", cex = 2)
+text(qnorm(0.025), 0.01, "-1.96", cex = 2)
+text(0, dnorm(0)/5, "95%", cex = 2)
+```
+
+## Notes
+
+- We have fixed $\alpha$ to be low, so if we reject $H_0$ (either our model is wrong) or there is a low probability that we have made an error
+- We have not fixed the probabilitiy of a type II error, $\beta$; therefore we tend to say "Fail to reject $H_0$" rather than accepting $H_0$ (You may not have enough data, for instance, to really make a positive statement)
+- Statistical significance is not the same as scientific significance
+- The region of TS values for which you reject $H_0$ is called the rejection region (The salmon part on his graphs)
+
+## Smaller data sets, CLT does not apply
+- The Z test requires the assumptions of the Central Limit Theorem and for n to be large enough for it to apply
+- If n is small, then a Gossett's T test is performed exactly in the same way, with the normal quantiles replaced by the approriate Student's T quantiles and n-1 degrees of freedom
+- The probability of rejecting the null hypothesis when it is false is called **power**
+- Power is used a lot to calculate sample sizes for experiments
+
+### Example reconsidered
+
+Consider our example again. Suppose that n = 16 rather than 100. Then consider that
+
+$$
+0.5 = P\big(\frac{(\bar{X} - 30)}{s/\sqrt{16}} \ge t_{1-\alpha,15} \,|\, \mu = 30 \big)
+$$
+
+So that our test statistic is now $\sqrt{16}(32 - 30)/(10/4) = 0.8$, while the critical value is $t_{1-\alpha,15} = 1.75$. We now fail to reject.
+
+## Two Sided Tests
+
+- Suppose that we would reject the null hypothesis if in fact the mean was too large or two small
+- That is, we want to test the alternative $H_a \mu \ne 30$ (doesn't make a lot of sense in our setting)
+- Then note
+
+$$
+\alpha = P \big( \big| \frac{\bar{X} - 30}{s / \sqrt{16}} \big| \gt t_{1-\alpha/2,15} \big| \mu = 30 \big)
+$$
+
+- That is, we will reject if the test statistic, 0.8, is either too large or too small, but the critical value is calculated using $\alpha/2$
+In our example the critical value is 2.13, so we still fail to reject (unsurprisingly, given that the 2-sided test is harder and we failed the 1-sided test)
+
+```{r}
+xval <- seq(-4, 4, length = 1000)
+yval <- dt(xval, 15)
+plot(xval, yval, type = "l", axes = TRUE, frame = FALSE, lwd = 3, xlab = "", ylab = "")
+x <- seq(qt(.975, 15), 4, length = 100)
+polygon(c(x, rev(x)), c(dt(x, 15), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dt(x, 15))+0.02, "2.5%", cex = 2)
+text(qt(0.975, 15), 0.01, "2.13", cex = 2)
+x <- seq(-4, qt(0.025, 15), length = 100)
+polygon(c(x, rev(x)), c(dt(x, 15), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dt(x, 15)) + 0.02, "-2.5%", cex = 2)
+text(qt(0.025, 15), 0.01, "-2.13", cex = 2)
+text(0, dt(0, 15)/5, "95%", cex = 2)
+```
+
+## Confidence Intervals
+
+- Consider testing $H_0 : \mu = \mu_0$ versus $H_a : \mu \ne \mu_0$
+- Take the set of all possible values for which you fail to reject $H_0$, this set is a $(1 - \alpha)100% confidence interval for $\mu$
+- The same works in reverse, if a $(1 - \alpha)100% interval contains $\mu_0$, then we **fail to** reject $H_0$
+
+### Proof
+
+- Consider that we do not reject $H_0$ if
+
+$$
+\big| \frac{\bar{x} - \mu_0}{s/\sqrt{n}} \big| \le t_{1-\alpha/2,n-1}
+$$
+
+implying
+
+$$
+| \bar{X} - \mu_0 | \le t_{1-\alpha/2,n-1} s/\sqrt{n}
+$$
+
+implying
+
+$$
+\bar{X} - t_{1-\alpha/2, n-1} s/\sqrt{n} \lt \mu_0 \lt \bar{X} + t_{1-\alpha/2, n-1} s/\sqrt{n}
+$$
+
+## P-Values
+
+- Notice that we rejected the one sided test when $\alpha = 0.05$, would we reject if $\alpha = 0.01$, how about 0.001?
+- The smallest value for alpha that you still reject the null hypothesis is called the **attained significance level**
+- This is equvalent, but philosophically a little different from the **P-value**
+- The P-value is probability under the null hypothesis of obtaining evidence as extreme or more extreme than would be observed by chance alone
+- If the P-value is small, then either $H_0$ is true and we have observed a rare event, or $H_0$ is false
+- It tells us how good our Z/T statistic is
+
+### Example
+
+In our example the T statistic was 0.8. What's the probability of getting a T statistic as large as 0.8?
+
+```{r}
+pt(0.8, 15, lower.tail = FALSE) ## works out to be 0.22
+xval <- seq(-4, 4, length = 1000)
+yval <- dt(xval, 15)
+plot(xval, yval, type = "l", axes = TRUE, frame = FALSE, lwd = 3, xlab = "" , ylab = "")
+x <- seq(.8, 4, length = 100)
+polygon(c(x, rev(x)), c(dt(x, 15), rep(0, length(x))), col = "salmon")
+text(mean(x), mean(dt(x, 15)) + 0.02, "22%", cex = 2)
+text(0.8, 0.01, "0.8", cex=2)
+```
+
+Therefore, the probability of seeing evidence as extreme or more extreme than that actually obtained is 0.22
+
+### Notes
+
+- By reporting a P-value the reader can perform the hypothesis test at whatever $\alpha$ level he or she chooses.
+- If the P-value is less than $\alpha$ you reject the null hypothesis
+- For two sided hypothesis test, double the smaller of the two one sided hypothesis test Pvalues
+- Don't just report P-values, give Confidence intervals too!
+
+### Criticisms of the P-value
+
+- P-values only consider significance, unlike Confidence Intervals
+- It is difficult with a P-value or result of a hypothesis test to distinguis practical significance form statistical significance
+- Absolute measures of the rareness of an event are not good measures of the evidence for or against a hypothesis
+- P-values have become abusively used
+
+# Power
+
+- Power is the probability of rejecting the null hypothesis when it is false
+- Ergo, power is a good thing; you want more power
+- A type II error is failing to reject the null hypothesis when it is false; the probability of a type II error is usually called $\beta$
+- Power = $1 - \beta$
+
+### Notes
+
+- Consider our previous example involving RDI
+- $H_0 : \mu = 30$ versus $H_a : \mu \gt 30$
+- Then power is
+
+$$
+P \big( \frac{\bar{X} - 30}{s / \sqrt{n}} \gt t_{1-\alpha,n-1} \,|\, \mu = \mu_a \big)
+$$
+
+- Note that this is a function that depends on the specific value of $\mu_a$!
+- Notice as $\mu_a$ approaches 30 the power approches $\alpha$
+
+## Calculating power
+
+Assume that n is large and that we know $\sigma$
+$$
+\begin{align}
+1 - \beta & = P \big(\frac{\bar{X} - 30}{\sigma/\sqrt{n}} \gt z_{1-\alpha} | \mu = \mu_a \big) \\
+& = P \big(\frac{\bar{X} - \mu_a + \mu_a - 30}{\sigma/\sqrt{n}} \gt z_{1-\alpha} | \mu = \mu_a \big) \\
+& = P \big(\frac{\bar{X} - \mu_a}{\sigma/\sqrt{n}} \gt z_{1-\alpha} - \frac{\bar{X} - \mu_a}{\sigma/\sqrt{n}} | \mu = \mu_a \big) \\
+& = P \big(Z \gt z_{1-\alpha} - \frac{\bar{X} - \mu_a}{\sigma/\sqrt{n}} | \mu = \mu_a \big) \\
+\end{align}
+$$
+
+### Example continued
+
+- Suppose that we wanted to detect an increase in mean RDI of at least 2 events / hour (above 30). Assume normality and that the sample in question will have a standard deviation of 4; what would be the power if we took a sample size of 16?
+- $ Z_{1-\alpha} = 1.645$ and $\frac{\mu_a - 30}{\sigma\sqrt{n}} = 2/(4/\sqrt{16}) = 2$
+- $ P(Z \gt 1.645 - 2) = P(Z \gt - 0.355) = 64%$
+- What n would be required to get a power of 80%?
+- I.E. we want
+
+$$
+0.80 = P \big(Z \gt z_{1-\alpha} - \frac{\mu_a - 30}{\sigma/\sqrt{n}} \,|\, \mu = \mu_a \big)
+$$
+
+- Set $z_{1-\alpha} - \frac{\mu_a - 30}{\sigma\sqrt{n}} = z_{0.20}$ and solve for n
+
+### Notes
+
+- The calculations for $H_a : \mu \lt \mu_0$ is similar
+- For $H_a : \mu \ne \mu_0$ calculate the one sided power using $\alpha/2$ (this is only approximately right, it excludes the probability of getting a large TS in the oppisite direction of the truth)
+- Power goes up as $\alpha$ gets larger
+- Power of a one sided test is greater than the power of the associated two sided test
+- Power goes up as $\mu_1$ gets further away from $\mu_0$
+- Power goes up as n goes up
+
+## T-tests
+
+- Consider calculating power for a Gossett's T test for our example
+- The power is
+
+$$
+P(\frac{\bar{X} - 30}{S/\sqrt{n}} \gt t_{1-\alpha,n-1} | \mu = \mu_a)
+$$
+
+- Notice that this is equal to 
+
+$$
+\begin{aligned}
+& = P(\sqrt{n}(\bar{X} - 30) \gt t_{1-\alpha,n-1}S|\mu = \mu_a) \\
+& = P(\frac{\sqrt{n}(\bar{X} - 30)}{\sigma} \gt t_{1-\alpha,n-1} \frac{S}{\sigma} | \mu = \mu_a)
+\end{aligned}
+$$
+
+Which still has an S in it, which is random.
+
+$$
+P\big(\frac{\sqrt{n}(\bar{X} - \mu_a)}{\sigma} + \frac{\sqrt{n}(\mu_a - 30)}{\sigma} \gt \frac{t_{1-\alpha,n-1}}{\sqrt{n-1}} \times \sqrt{\frac{(n-1)S^2}{\sigma^2}}\big)
+$$
+
+(where we ommitted the conditional on $\mu_a$ for space)
+
+- This is now equal to
+
+$$
+P\big(Z + \frac{\sqrt{n}(\mu_a - 30)}{\sigma} \gt \frac{t_{1-\alpha,n-1}}{\sqrt{n-1}} \sqrt{\chi^2_{n-1}} \big)
+$$
+
+where Z and $\chi^2_{n-1}$ are independent standard normal and chi-squared random variables
+
+- while computing this probability is outside the scope of this class, it would be easy to approximate with Monte Carlo
+
+## Monte Carlo
+
+simulate pairs with a Z random variable and a chi-sq random variable, and then check to see what is bigger.
+
+Let's recalculate power for the previous example using the T distribution instead of the normal; here's the eay way to do it. Let $\sigma = 4$ and $\mu_a - \mu_0 = 2$
+
+```{r}
+power.t.test(n = 16, delta = 2/4, type = "one.sample", alt = "one.sided")
+# The result is 60%
+```
+
+Using Monte Carlo
+
+```{r}
+nosim <- 100000
+n <- 16
+sigma <- 4
+mu0 <- 30
+mua <- 32
+z <- rnorm(nosim)
+xsq <- rchisq(nosim, df = n-1)
+t <- qt(.95, n-1)
+# count the number of times lhs > rhs
+# divide by nosim
+mean(z + sqrt(n) * (mua - mu0) / sigma > t / sqrt(n -1) * sqrt(xsq))
+## result = 60%
+```
+
+- Notice that in both cases, power required a true mean and a true standard deviation
+- However in this (and most linear models) the power depends only on the mean (or change in means) divided by the standard deviation
+
+# Two sample tests
+
+## Matched data
+
+- When comparing groups, first determine whether observations are pairs or not
+    - before-after tests are more likely matched
+    - high and low blood pressure, for instance is not naturally matched.
+    - Matching between groups: Find a person in one group and match as closely as possible to a person in the other group while paying attention to confounding variables you think might be important.
+- when dealing with a single set of paired data, one strategy is to take the difference between the paired observation and do a one-sample t test of $H_0 : \mu_d = 0$ versus $H_a : \mu_d \ne 0$ (or one of the other two alternatives)
+- Test statistic is
+
+$$
+\frac{\bar{X}_d - \mu_{d0}}{S_d/\sqrt{n_d}}
+$$
+
+where $\mu_{d0}$ is the value under the null hypothesis (typically 0): compare this statistic to a $t_{n_d-1}$ or z statistic
+
+### Example
+
+- Consider Exam 1 and Exam 2 grades from a previous class
+- Is there any evidence that the second exam was easier or harder than the first?
+- The same students took both exams with non dropping out in-between
+- Summaries for the two exams
+
+*Making my own numbers up so I can see the plot*
+```{r}
+test1 <- 100*rnorm(50, mean=.8, sd=0.05)
+summary(test1)
+test2 <- 100*rnorm(50, mean=.9, sd=0.05)
+summary(test2)
+```
+```
+# His originals
+summary(test1)
+ Min. 1st Qu. Median  Mean 3rd Qu. Max.
+76.19   82.86  86.67 86.94   91.43  100
+summary(test2)
+ Min. 1st Qu. Median  Mean 3rd Qu. Max.
+71.00   87.00  90.00 89.82  93.00  100
+```
+```{r}
+plot(test2 ~ test1, pch=19, col="blue")
+abline(0, 1)
+```
+
+Bland/Altman plot, invented by Tukey
+```{r}
+avg <- (test1 + test2)/2
+diff <- test2 - test1
+
+plot(diff ~ avg, pch=19, col="blue")
+abline(0, 0)
+```
+
+```{r}
+diff <- test2 - test1
+n <- sum(!is.na(diff)) # 49
+mean(diff) #2.88
+sd(diff) #7.61
+testStat <- sqrt(n) * mean(diff) / sd(diff) # 2.65
+# below works out to be 0.01
+2 * pt(abs(testStat), n-1, lower.tail = FALSE)
+## uses the R function
+t.test(diff)
+```
+
+### Discussion
+
+- Also to consider, "are ratios more relevant than pair-wise differences?"; if so, try doing the test on the log-observations
+- When considering matched pairs data, you often want to plot the first observation by the second
+- A more efficient plot displays the average of the observations by the difference or doing this on the log scale
+- The previous plot is called a "mean/difference" plot, invented by Tukey (sometimes it is called a "bland/altman" plot after researchers who effectively discribed and used the method for considering measurement error)
+
+## Aside, regression to the mean
+
+- Francis Galton (a cousin of Charles Darwin) was the first to recognize that for matched data, high initial observations tended to be associated with lower second observations and low initial observations tended to be associated with higher second observations
+- Example: Sons of very tall fathers tend to be a little shorter
+- Example: Second exams for those who score very high on a first exam tend to be a little lower
+- To investigate more, we normalize both scale (so that their means are both 0 and standard deviations 1)
+- If there wa no regression to the mean, the data would scatter about an identiy line
+- The best fitting line goes through the average and has slope
+
+$$
+Cor(Test1, Test2)\frac{SD(test2)}{SD(Test1)}
+$$
+
+and passes through the point
+
+$$
+[mean(Test1), mean(test2)]
+$$
+
+- Because we normalized the data, our line passes through (0, 0) and has slope Cor(test1, test2) (normalizing doesn't impact the correlation)
+- The best fitting "regression line" has slope Cor(test1, test2) < 1
+- This will be shrunk toward a horizontal line, telling us our expected normalized test score for test 2 will be $Cor(test1, Test2) \times$ the normalized test 1 score
+- This line appropriately adjust for regression to the mean for test 2 conditioning on test1; we could similarly do the same for test 1 conditioning on test 2. this line will have slope $Cor(test1, test2)^{-1}$ if the plot has test1 on the horizontal axis
+- The latter will be shrunk toward a vertical line, the identity will fall between the two.
+- Lots of sports talk is a little skill and a lot of randomness with regression to the mean. Do well in the start of the year, do worse later. Just the way it is.
+
+## Two independent groups
+
+- The extension to two independent groups should come as no surprise
+- $H_0 : \mu_1 = \mu_2$, versus $H_a : \mu_1 \ne \mu_2$ (or one of the other two alternatives)
+- Assume a common error variance we have
+
+$$
+\frac{\bar{X} - \bar{Y}}{S_p\sqrt{\frac{1}{n_x} + \frac{1}{n_y}}}
+$$
+
+which will follow a $t_{n_x + n_y - 2}$ distribution under the null hypothesis and the usual assumptions
+
+- If assuming a common error variance is questionable
+
+$$
+\frac{\bar{X} - \bar{Y}}{\sqrt{\frac{S^2_x}{n_x} + \frac{S^2_y}{n_y}}}
+$$
+
+follows a standard normal distribution for large nx and ny. It follows an approximate Students T distribution if the Xi and Yi are normally distributed
+
+- The approximate degrees of freedom are
+
+$$
+\frac{(S^2_x/n_x + S^2_y/n_y)^2}{(S^2_x/n_x)^2/(n_x-1) + (S^2_y/n_y)^2/(n_y - 1)}
+$$
+
+- Note the connection between hypothesis testing and confidence interval still holds; for example, if zero is in your independent group T interval, you will fail to reject the independent group T test for equal means
+- Don't test for equality of means by comparing separately constructed intervals for the two groups and reject the null hypothesis if they do not overlap. Sometimes there is overlap even though the test statistic says that they have different means
+- This procedure has lower power than just doing the right test
+- Also, it leads to the potential abuse of comparing intervals for paired data. Throwing out the information that pairing gave you wastes a lot of effort in doing the matching. Throws out power and makes your conclusions weaker than they should be.
+
+### Example
+
+- Suppose that instead of having repeated data on two consecutive exams, students were randomized to two teaching mudules and took the same exam
+- We might obtain data like the following
+
+| Group | N | Mean Exam | SD Exam |
+| Module 1 | 50 | 86.9 | 6.07 |
+| Module 2 | 50 | 89.8 | 6.06 |
+
+```{r}
+# pooled sd
+sqrt((6.07 * 6.07 + 6.06 * 6.06)/2)
+```
+
+- Pooled standard devation 6.065
+- Test stat
+
+$$
+\frac{89.8 - 86.9}{6.065\sqrt{1/50 + 1/50}}
+$$
+```{r}
+mu1 <- 89.8
+s1 <- 6.07
+n1 <- 50
+mu2 <- 86.9
+s2 <- 6.06
+n2 <- 50
+sp <- sqrt(((n1 - 1)*s1^2 + (n2 - 1)*s2^2)/(n1 + n2 - 2))
+
+ts <- (mu1 - mu2)/(sp * sqrt(1/n1 + 1/n2))
+z95 <- qnorm(1-.05)
+if (abs(ts) >= z95) {
+    print(paste(abs(ts), ">=", z95))
+    print("reject null hypothesis (accept means are different")
+} else {
+    print(paste(abs(ts), "<", z95))
+    print("fail to reject null hypothesis (accept means are same")
+}
+```
+
+- Look over the review notes on formal tests for equality of variances between two groups
+- These tests, employing the F distribution, rely heavily on normality assumptions
+- Alternatively, for moderate sample sizes, consider creating a bootstrap confidence interval for the ratio of the two variances
+- For smaller sample sizes, consider basing decisions on exploratory data analysis
+
+### Final comments
+
+- Suppose you ahve equal numbers of observations for two groups (Say X and Y)
+- If the data are truly matched, then the standard error of the difference is estimating
+
+$$
+\sqrt{\frac{\sigma^2_y}{n} + \frac{\sigma^2_x}{n} = 2\frac{Cov(X, Y)}{n}}
+$$
+
+- if you ignore the matching, then the standard error of the difference is estimating
+
+$$
+\sqrt{\frac{\sigma^2_y}{n} + \frac{\sigma^2_x}{n}}
+$$
+
+- since, generally, matches data is positively correlated, by ignoring the matching, you are likely (violating assumptions and) inflating your standard error unecessarily

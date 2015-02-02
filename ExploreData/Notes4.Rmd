@@ -1,0 +1,297 @@
+---
+title: "Notes 4 - Exploratory Data Analysis"
+author: "Linda Kukolich"
+date: "January 26, 2015"
+output: html_document
+---
+Case Study in clustering - Uses the Smartphones data we had for a project in Getting and Cleaning Data.
+
+The data has been processed, converting raw numbers to more "pure" numbers with respect to the physics. Plus, the data was windowed and various measures (mean, std, max) were calculated
+
+Samsung Galaxy data
+```
+load("data/samsungData.rda")
+# tBodyAcc-{mean,std,mad,max}()-{X,Y,Z}
+names(samsungData)[1:12]
+# laying, sitting, standing, walk, walkdown, walkup
+table(samsungData$activity)
+```
+
+Plotting average acceleration (X, Y) for first subject
+
+Sitting, standing, and laying are very low variance, with some outliers. There is more variance for walking, walking up, and walking down. There is a huge amount of overlap.
+```
+par(mfrow = c(1, 2), mar = c(5, 4, 1, 1))
+samsungData <- transform(samsungData, activity = factor(activity))
+sub1 <- subset(samsungData, subject == 1)
+#mean-X
+plot(sub1[, 1], col = sub1$activity, ylab = names(sub1)[1])
+# mean-Y
+plot(sub1[, 1], col=sub1$activity, ylab = names(sub1)[2])
+legend("bottomright", legend = unique(sub1$activity), col = unique(sub1$activity), pch = 1)
+```
+
+Clustering based just on average acceleration. Coloars are all jumbled at the bottom, no good cluster cut point.
+```
+source("myplclust.R")
+distanceMatrix <- dist(sub1[,1:3])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+Trying again with acc-max-X, Y
+Maximum Body acceleration. Standing, sitting, laying are low with a few outliers. Walking, all types, is much higher
+```
+par(mfrow = c(1, 2))
+plot(sub1[,10], pch = 19, col = sub1$activity, ylab = names(sub1)[10])
+plot(sub1[,11], pch = 19, col = sub1$activity, ylab = names(sub1)[11])
+```
+
+Clustering based on maximum acceleration. Lots of jumbling within two large clusters, moving vs not moving.
+```
+source("myplclust.r")
+distanceMatrix <- dist(sub1[, 10:12])
+hclustering <- hclust(distanceMatrix)
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+```
+
+Singular Value Decomposition
+```
+# Leave off subject and activity labels, tacked onto the end
+svd1 <- svd(scale(sub1[, -c(562, 563)]))
+par(mfrow = c(1, 2))
+plot(svd1$u[, 1], col = sub1$activity, pch = 19)
+plot(svd1$u[, 2], col = sub1$activity, pch = 19)
+```
+
+Find maximum contributor, the element of the original data that has the maximum weight in the SVD vector. Then cluster based on that element.
+```
+plot(svd1$v[,2], pch = 19)
+# Find the feature that contributes most
+maxContrib <- which.max(svd$v[, 2])
+# cluster based on max acceleration plus that feature
+distanceMatrix <- dist(sub1[, c(10:12, maxContrib)])
+# Then cluster
+hclustering <- hclust(distanceMatrix)
+# separates the 3 movement activities, but not the non-moving activities
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+names(samsungData)[maxContrib] # fBodyAdd.meanFreq...Z
+```
+
+Try K-means. Ususally you want nstart to be bigger than 1, so you can try multiple initial conditions in hopes of coming across a better solution with one of them.
+```
+# K-means clustering (nstart = 1, first try)
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6)
+table(kClust$cluster, sub1$activity)
+# nstart=1, second try
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 1)
+table(kClust$cluster, sub1$activity)
+# nstart = 100, first try
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 100)
+table(kClust$cluster, sub1$activity)
+# nstart=100, second try
+kClust <- kmeans(sub1[, -c(562, 563)], centers = 6, nstart = 1)
+```
+
+Some of the clusters are still mixed, even with two passes with 100 starts.
+
+What features provide the most information to discriminate between activities?
+
+```
+# cluster 1 variable centers (laying)
+# First 2 elements high, others low
+plot(kClust$center[1, 1:10], pch = 19, ylab = "Cluster Center", xlab = "")
+table(kClust$cluster, sub1$activity)
+# cluster 2 variable centers (walking)
+# Different elements are high than were high for laying
+plot(kClust$center[4, 1:10], pch = 19, ylab = "Cluster Center", xlab = "")
+table(kClust$cluster, sub1$activity)
+```
+
+Clustering can help identify which features will be most helpful, which classes are more able to be distinguished. Helps guide where to put your energy moving forward.
+
+# Air Pollution Case Study
+
+1. Asking the question
+
+You need to start with a basic question.
+
+Example question: have the air pollution levels gone down?
+Look at Fine particulates, starting with 1999 when they were first measured, and now (2012)
+
+US-EPA Air pollution data [EPA Air Quality System (AQS) data for download](http://www.epa.gov/ttn/airs/airsaqs/detaildata/downloadaqsdata.htm)
+
+```{r, cache=FALSE}
+url1999 <- "http://www.epa.gov/ttn/airs/airsaqs/detaildata/501files/RD_501_88101_1999.zip"
+url2013 <- "http://www.epa.gov/ttn/airs/airsaqs/detaildata/501files/RD_501_88101_2013.zip"
+zip1999 <- "./data/RD_501_88101_1999.zip"
+zip2013 <- "./data/Rd_501_88101_2013.zip"
+data1999 <- "./data/RD_501_88101_1999-0.txt"
+data2013 <- "./data/RD_501_88101_2013-0.txt"
+```
+
+[PM2.5 2013](`r url1999`)
+[PM2.5 1999](`r url2013)
+
+## Opening up and exploring data files
+```{r, cache=TRUE}
+if (!file.exists("./data")) dir.create("./data")
+if (!file.exists(zip1999)){
+    download.data(url1999)
+    print(paste("Data Downloaded on", date()))
+}
+if(!file.exists(zip2013)) {
+    download.data(url2013)
+    print(paste("Data Downloaded on", date()))
+}
+if (!file.exists(data1999)) unzip(zip1999)
+if (!file.exists(data2013)) unzip(zip2013)
+```
+```{r, cache=FALSE}
+# Header - 2 lines, it looks like there are two different numbers of columns
+# BUT, only RD records are in either file, so no prob
+# Separator - |
+# RD|Action Code|State Code|County Code|Site ID|Parameter|POC|Sample Duration|Unit|Method|Date|Start Time|Sample Value|Null Data Code|Sampling Frequency|Monitor Protocol (MP) ID|Qualifier - 1|Qualifier - 2|Qualifier - 3|Qualifier - 4|Qualifier - 5|Qualifier - 6|Qualifier - 7|Qualifier - 8|Qualifier - 9|Qualifier - 10|Alternate Method Detectable Limit|Uncertainty
+pm_1999 <- read.table(data1999, comment.char="#", header=FALSE, sep = "|", na.strings="")
+cnames <- readLines(data1999, 1)
+cnames
+cnames <- strsplit(cnames, "|", fixed=TRUE)
+cnames
+# Replace the spaces with dots
+names(pm_1999) <- make.names(cnames[[1]])
+head(pm_1999)
+
+```
+
+### Explore data itself
+```{r, cache=FALSE}
+x1999 <- pm_1999$Sample.Value
+class(x1999)
+str(x1999)
+summary(x1999)
+mean(is.na(x1999)) # 11% are missing
+```
+
+### Are Missing Data a Problem?
+
+### Read in 2013 data
+```{r, cache=FALSE}
+pm_2013 <- read.table(data2013, comment.char="#", header=FALSE, sep = "|", na.strings="")
+names(pm_2013) <- make.names(cnames[[1]])
+x2013 <- pm_2013$Sample.Value
+str(x2013)
+summary(x2013)
+mean(is.na(x2013))
+```
+
+Median as moved down. Max is much higher. %missing is 6.3, which is less of a big deal.
+
+LOOK at the data
+```{r}
+boxplot(log(x1999), log(x2013))
+```
+
+Mean has gone down, but the spread has gone up. Oh, and the computer whines about taking the log of the negative values.
+
+### Why are there negative values?
+```{r}
+negative <- x2013 < 0
+sum(negative, na.rm = TRUE)
+mean(negative, na.rm=TRUE) # 2.5% of the time
+```
+### When are there negative values?
+```{r}
+dates <- as.Date(as.character(pm_1999$Date), "%Y%m%d")
+hist(dates, "month")
+# pretty even over the year, a bit of a peak at June, lowest in November
+hist(dates[negative], "month")
+# Lowest in July, Highest in September
+```
+
+### Exploring change at one monitor
+```{r}
+site1999 <- unique(subset(pm_1999, State.Code == 36, c(County.Code, Site.ID)))
+site1999 <- paste(site1999[,1], site1999[,2], sep=".")
+site2013 <- unique(subset(pm_2013, State.Code == 36, c(County.Code, Site.ID)))
+site2013 <- paste(site2013[,1], site2013[,2], sep=".")
+both <- intersect(site1999, site2013)
+both
+# 11 sites in common
+# Add the county.site list to the data frames
+pm_1999$county.site <- with(pm_1999, paste(County.Code, Site.ID, sep = "."))
+pm_2013$county.site <- with(pm_2013, paste(County.Code, Site.ID, sep = "."))
+# Get the data from the sites in common, in NY
+cnt1999 <- subset(pm_1999, State.Code == 36 & county.site %in% both)
+cnt2013 <- subset(pm_2013, State.Code == 36 & county.site %in% both)
+```
+
+### Look for a site with a good number of samples
+```{r}
+sapply(split(cnt1999, cnt1999$county.site), nrow)
+sapply(split(cnt2013, cnt2013$county.site), nrow)
+# 1.5[122, 244]
+# 101.3[152, 122]
+# 5.110[144, 122]
+# 67.1015[122, 122]
+pm1999sub <- subset(pm_1999, State.Code == 36 & County.Code == 67 & Site.ID == 1015)
+pm2013sub <- subset(pm_2013, State.Code == 36 & County.Code == 67 & Site.ID == 1015)
+```
+
+### Look at change in readings over time in two years
+```{r}
+pm1999sub$Date <- as.Date(as.character(pm1999sub$Date), "%Y%m%d")
+pm2013sub$Date <- as.Date(as.character(pm2013sub$Date), "%Y%m%d")
+par(mfrow = c(1, 2), mar=c(4, 4, 2, 1))
+rng <- range(pm1999sub$Sample.Value, pm2013sub$Sample.Value, na.rm=T)
+with(pm1999sub, plot(Sample.Value ~ Date, main="1999", ylab="", ylim=rng))
+abline(h = median(pm1999sub$Sample.Value, na.rm=T))
+with(pm2013sub, plot(Sample.Value ~ Date, main="2013", ylab="", ylim=rng))
+abline(h = median(pm2013sub$Sample.Value, na.rm=T))
+```
+
+This plot has a couple attempts.
+
+1. two plots in two windows, hard to compare
+2. lets add a median line
+3. the ylim is different, so hard to compare
+
+The medians are fairly close, but the extremes are less frequent and less extreme in 2013.
+
+### Look at data across states
+```{r}
+mean1999 <- with(pm_1999, tapply(Sample.Value, State.Code, mean, na.rm=T))
+str(mean1999)
+summary(mean1999)
+mean2013 <- with(pm_2013, tapply(Sample.Value, State.Code, mean, na.rm=T))
+str(mean2013)
+summary(mean2013)
+```
+
+All the measures are lower in 2013 than they were in 1999.
+
+```{r}
+d1999 <- data.frame(state=names(mean1999), mean=mean1999)
+d2013 <- data.frame(state=names(mean2013), mean=mean2013)
+mrg <- merge(d1999, d2013, by = "state")
+names(mrg) <- c("state", "y1999", "y2013")
+par(mfrow=c(1,1))
+with(mrg, plot(y1999 ~ state, pch=1, ylab="Average PM 2.5"))
+with(mrg, points(y2013 ~ state, col="red"))
+legend("topright", c("1999", "2013"), pch=c(1, 1), col=c("black", "red"))
+```
+
+His plot is different
+```{r}
+rng=range(mrg[,2], mrg[,3])
+with(mrg, plot(rep(1999, 52), mrg[,2], xlim=c(1998, 2014), ylim=rng, main="State Averages", ylab="PM 2.5", xlab="Year"))
+with(mrg, points(rep(2013, 52), mrg[, 3]))
+segments(rep(1999, 52), mrg[,2], rep(2013, 52), mrg[, 3])
+```
+
+Almost all of the states have moved down. A few have moved up.
+
+```{r}
+# Here are the codes for the states that are worse
+mrg$state[mrg[,3] > mrg[,2]]
+# Somewhere there is a name list to go with the codes...
+```
