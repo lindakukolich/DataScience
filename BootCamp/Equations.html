@@ -135,7 +135,7 @@ If a is constant then \( Var(aX) = a^2 Var(X) \)
 values between 0 and 1.
 <p>
 <b>Chebyshev's Inequality</b>
-$$ P(|X - \mu | \ge k\sigma) \le \frac{1}{k^2} $
+$$ P(|X - \mu | \ge k\sigma) \le \frac{1}{k^2} $$
 <p>
 <b>Variance and Correlation</b>
 Let \( { X_i }^n_{i=1} \) be a collection of n random variables
@@ -246,10 +246,10 @@ it to zero.
 <ul>
 <li><b>Mass Function</b> \(P(X = x) = p^x(1-p)^{1-x} \)
 <li><b>mean</b> p(1-p)
-<li><b>likelihood</b> \(p^{\sum x_i}(1-p)^{n-\sum x_i}
+<li><b>likelihood</b> \(p^{\sum x_i}(1-p)^{n-\sum x_i}\)
 <li><b>ML estimator for p</b> \(\hat{p} = \sum_i x_i/n \)
 </ul>
-<h1>Binomial Random Varianbles</h1>
+<h1>Binomial Random Variables</h1>
 <ul>
 <li>A collection of Bernoulli
   trials: \(X = \sum_{i=1}^n X_i \), that is, the number of heads from
@@ -260,7 +260,7 @@ it to zero.
 <h1>Normal Distribution</h1>
 <ul>
 <li><b>Density Function</b> \(
-  (2\pi\sigma^2)^{-1/2}e^{-(x-\mu)^2)/2\sigma^2}
+  (2\pi\sigma^2)^{-1/2}e^{-(x-\mu)^2)/2\sigma^2} \)
 <li><b>mean</b> &mu;
 <li><b>variance</b> = &sigma;^2
 <li><b>standard normal distribution</b> &Phi; has mean 0, variance = 1
@@ -268,8 +268,12 @@ it to zero.
 <li><b>ML estimator of &sigma;^2</b> = \(\frac{\sum_1^n (X_i -
   \bar{X})^2}{n}\)
 <li>Quartiles
-$$P(X \le x_0) = P(\frac{X-\mu}{\sigma} \le \frac{\x_0 - \mu}{\sigma}) $$
-$$ = P(Z \le \frac{x_0 - \mu}{\sigma}) = \mathrm{quartile} $$
+$$
+\begin{align}
+P(X \le x_0) &= P\big(\frac{X-\mu}{\sigma} \le \frac{x_0 - \mu}{\sigma}\big) \\
+ &= P\big(Z \le \frac{x_0 - \mu}{\sigma}\big) = \mathrm{quartile}
+\end{align}
+$$
 <li>\(x_0 = \mu + \sigma \mathrm{quartile}\)
 <li>The probability that X &le x0
 <li><code>prob &lt;- pnorm((X0 - mean)/std)</code>

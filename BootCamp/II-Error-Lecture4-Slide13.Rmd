@@ -1,0 +1,74 @@
+---
+title: "Biostatistics BootCamp II: Error on Slide: Lecture 4 - Slide 13"
+author: "Linda Kukolich"
+date: "February 4, 2015"
+output: html_document
+---
+There seems to be an error on one of the slides in lecture 4. Specifically, the result of the calculation given on the slide:
+```{r}
+(.55 - .25)/sqrt(.4*.6*(2/20))
+```
+
+does not equal the result given: 1.61
+
+## More detail
+
+The Data, taken from Lecture 4, Slide 3
+```{r}
+df <- data.frame(SideEffects = c(11, 5, 16), None=c(9, 15, 14), total=c(20, 20, 40), row.names=c("A", "B", "Total"))
+```
+
+***Text of the slide in question***
+
+## Example
+
+- Test whether or not the proportion of side effects is the same for the two drugs
+- $\hat{p}_A = .55, \hat{p}_B = 5/20 = .25, \hat{p} = 16/40 = .4$
+- Test statistic
+
+$$
+\frac{.55 - .25}{\sqrt{.4 \times .6 \times (1/20 + 1/20)}} = 1.61
+$$
+
+- Fail to reject $H_0$ at .05 level (compare with 1.96)
+- P-value $P(|Z| \ge 1.61) = .11$
+
+***My Numbers Do Not Match Dr Caffo's***
+His can be approximated with .25/sqrt(.024).
+
+## My calculations
+```{r}
+# My calculations
+n_a <- df["A", "total"]
+phata <- df["A", "SideEffects"] / n_a
+n_b <- df["B", "total"]
+phatb <- df["B", "SideEffects"] / n_b
+n <- df["Total", "total"]
+phat <- df["Total", "SideEffects"] / n
+ts <- (phata - phatb)/sqrt(phat * (1-phat) * (1/n_a + 1/n_b))
+ts
+```
+```{r}
+z975 <- qnorm(.975)
+if (abs(ts) >= z975) {
+    print(paste(ts, ">=", z975, "Reject null hypothesis"))
+} else {
+    print(paste(ts, "<", z975, "Fail to reject null hypothesis"))
+}
+pvalue <- 2*pnorm(ts, lower.tail=FALSE)
+pvalue
+```
+
+## Possible calculation that gets Dr Caffo's result
+```{r}
+ts <- phatb/sqrt(phat * (1-phat) * (1/n_a + 1/n_b))
+ts
+z975 <- qnorm(.975)
+if (abs(ts) >= z975) {
+    print(paste(ts, ">=", z975, "Reject null hypothesis"))
+} else {
+    print(paste(ts, "<", z975, "Fail to reject null hypothesis"), digits=2)
+}
+pvalue <- 2*pnorm(ts, lower.tail=FALSE)
+print(pvalue, digits=2)
+```

@@ -283,3 +283,23 @@ if ((conf[1] < 0) && (conf[2] > 0)) {
 # power, not pooled variance
 2*pt(abs(ts), df, lower.tail = FALSE)
 ```
+
+# Two Sample Binomial Score Statistic
+```{r}
+df <- data.frame(SideEffects=c(11,5, 16), NoSideEffect=c(9,15, 14), total=c(20, 20, 40), row.names=c("DrugA", "DrugB", "Total"))
+df
+na <- df["DrugA", "total"]
+na_se <- df["DrugA", "SideEffects"]
+phat <- na_se / na
+p0 = 0.1
+ts <- (phat - p0)/sqrt(p0*(1-p0)/na)
+z95 <- qnorm(1-0.05)
+power <- pnorm(z95 - ts)
+if (power <= 0.05) {
+    print(paste("power (", power, ") <= 0.05. Reject the null hypothesis (accept that ", phat, ">", p0, ")"))
+} else {
+    print(paste("power (", power, ") > 0.05. Fail to reject the null hypotheis (accept that ", phat, "<=", p0, ")"))
+}
+pbinom(na_se - 1, na, p0, lower.tail = FALSE)
+binom.test(na_se, na, p0, alternative = "greater")
+```

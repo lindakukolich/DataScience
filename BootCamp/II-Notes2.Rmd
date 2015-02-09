@@ -1,0 +1,448 @@
+---
+title: "Notes 2 - Biostatistics Boot Camp 2"
+author: "Linda Kukolich"
+date: "February 2, 2015"
+output: html_document
+---
+# Two sample Binomial Tests
+
+- Consider a rondomized trial where 40 subjects were randomized (20 each) to two drugs with the same active ingredient but different expedients
+- Consider counting the number of subjects with side effects for each drug
+
+| -------- |:-------:|:----:|:-----:|
+|        | Side    |      |       |
+|        | Effects | None | total |
+| Drug A |    11   |  9   | 20    |
+| Drug B | 5       |   15 |    20 |
+| Total |       16 |    14 |   40 |
+
+```{r}
+df <- data.frame(SideEffects=c(11,5, 16), NoSideEffect=c(9,15, 14), total=c(20, 20, 40), row.names=c("A", "B", "Total"))
+df
+```
+
+## The score statistic
+
+### Hypothesis tests for binomial proportions
+
+Start by only considering Drug A
+
+- Consider testing $H_0 : p = p0$ for a binomial proportion
+- The **score** test statistic
+$$
+\frac{\hat{p} - p_0}{\sqrt{p_0(1-p_0)/n}}
+$$
+
+follows a Z distribution for large n
+
+- This test performs better than the Wald test
+$$
+\frac{\hat{p} - p_0}{\sqrt{\hat{p}(1-\hat{p})/n}}
+$$
+
+### Inverting the two intervals
+
+- Inverting the Wald test yields the Wald interval
+$$
+\hat{p} \pm Z_{1-\alpha/2}\sqrt{\hat{p}(1-\hat{p})/n}
+$$
+
+- Inverting the Score test yields the Score interval
+$$
+\hat{p} \big(\frac{n}{n+Z^2_{1-\alpha/2}} \big) + \frac{1}{2} \big(\frac{Z^2_{1-\alpha/2}}{n+Z^2_{1-\alpha/2}} \big) \\
+\pm Z_{1-\alpha/2}\sqrt{\frac{1}{n+Z^2_{1-\alpha/2}}\big[\hat{p}(1-\hat{p})\big(\frac{n}{n+Z^2_{1-\alpha/2}} \big) + \frac{1}{4}\big(\frac{Z^2_{1-\alpha/2}}{n + Z^2_{1-\alpha/2}} \big) \big]}
+$$
+
+To make this look nicer, Let $q = \frac{n}{n+Z^2_{1-\alpha/2}}$
+
+$$
+\hat{p}q + \frac{1-q}{2} \pm Z_{1-\alpha/2}\sqrt{q/n[\hat{1}(1-\hat{p})q + \frac{1-q}{4}]}
+$$
+
+- Plugging in $Z_{1-\alpha/2} = 2$ yields the Agresti/Coull interval (about 2, so $\alpha \approx 0.5$)
+
+### Example
+
+- In our previous example consider testing whether or not Drug A's percentage of subjects with side effects is greater than 10%
+- $H_0 : p_A = 0.1$ versus $H_A : p_A > 0.1$
+- $\hat{p} = 11/20 = 0.55$
+- Test Statistic
+$$
+\frac{.55 - .1}{\sqrt{.1 \times .9/20}} = 6.7
+$$
+
+- Reject, pvalue = $P(Z > 6.7) \approx 0$
+
+```{r}
+na <- df["A", "total"]
+phat <- df["A", "SideEffects"] / na
+p0 = 0.1
+ts <- (phat - p0)/sqrt(p0*(1-p0)/na)
+ts
+power <- pnorm(ts, lower.tail=FALSE)
+power
+if (power > .95) {
+    print(paste("Reject the null hypothesis (accept that ", phat, ">", p0, ")"))
+} else {
+    print(paste("Fail to reject the null hypotheis (accept that ", phat, "<=", p0, ")"))
+}
+```
+
+We have assumed that the population is independent, which is not necessarily a good assumption. (IID model)
+
+## Exact tests
+
+- consider calculating an exact P-value
+- What's the probability, under the null hypothesis, of getting evidence as extreme or more extreme than we obtained?
+
+$$
+P(X_A \ge 11) = \sum_{x=11}^{20} {20 \choose x} 0.1^x \times (1-0.1)^{20-x} \approx 0
+$$
+```{r}
+pbinom(10, 20, .1, lower.tail = FALSE)
+binom.test(11, 20, .1, alternative = "greater")
+```
+
+- This test, unlike the asymptotic ones, guarantees the Type I error rate is less than desired level; sometimes it is much less
+- Inverting the exact binomial test yields an exact binomial interval for the true proportion
+- This interval (the Clopper/Pearson interval) has coverage greater than 95%, though can be very conservative
+- For two sided tests, calculate the two one sided P-values and double the smaller
+
+## Comparing two binomial proportions
+
+- Consider now testing whether the proportion of side effects is the same in the two groups
+- Let $X \sim \mathrm{Binomial}(n_1, p_1)$ and $\hat{p}_2 = X/n_1$
+- Let $Y \sim \mathrm{Binomial}(n_2, p_2)$ and $\hat{p}_2 = Y/n_2$
+- We also use the following notation:
+
+
+| $n_{11} = X$ | $n_{12} = n_1 - X$ | $n_1 = n_{1+}$ |
+| ------------ | ------------------ | ------------- |
+| $n_{21} = Y$ | $n_{22} = n_2 - X$ | $n_2 = n_{2+}$ |
+| $n_{+1}$ | $n_{+2}$ |  |
+
+- Consider testing $H_0 : p_1 = p_2$
+- Versus $H_1 : p_1 \ne p_2$, $H_2 : p_1 \gt p_2$, $H_3 : p_1 \lt p_2$
+- The score test statistic for this null hypothesis is
+
+$$
+TS = \frac{\hat{p}_1 - \hat{p}_2}{\sqrt{\hat{p}(1-\hat{p})(\frac{1}{n_1} + \frac{1}{n_2})}}
+$$
+
+where $\hat{p} = \frac{X + Y}{n_1 + n_2}$ is the estimate of the common proportion under the null hypothesis
+
+- This statistic is normally distributed for large $n_1$ and $n_2$.
+- This interval does not have a closed form inverse for creating a confidence interval (though the numerical interval obtained performs well)
+- An alternate interval inverts the Wald test
+
+$$
+TS = \frac{\hat{p}_1 - \hat{p}_2}{\sqrt{\frac{\hat{p}_1(1 - \hat{p}_1)}{n_1} + \frac{\hat{p}_2(1-\hat{p}_2)}{n_2}}}
+$$
+
+- The resulting confidence interval is
+$$
+\hat{p}_1 - \hat{p}_2 \pm Z_{1 - \alpha/2} \sqrt{\frac{\hat{p}_1(1-\hat{p}_1)}{n_1} + \frac{\hat{p}_2(1 - \hat{p}_2)}{n_2}}
+$$
+
+- As in the one sample case, the Wald interval and test performs poorly relative to the score interval and test
+- For testing, always use the score test
+- For intervals, inverting the score test is hard and not offered in standard software
+- A simple fix is the Agresti/Caffo interval which is obtained by calculating $\tilde{p}_1 = \frac{x+1}{n_1 + 2}$, $\tilde{n}_1 = n_1 + 2$, $\tilde{p}_2 = \frac{y + 1}{n_2 + 2}$ and $\tilde{n}_2 = (n_2 + 2)$
+- Using these, simply construct the Wald interval
+```{r}
+n11 <- df["A", "SideEffects"]
+n1 <- df["A", "total"]
+n21 <- df["B", "SideEffects"]
+n2 <- df["B", "total"]
+n1_tilde <- n1 + 2
+p1_tilde <- (n11+1)/n1_tilde
+n2_tilde <- n2 + 2
+p2_tilde <- (n21+1)/n2_tilde
+z975 <- qnorm(1-0.025)
+# Agresti/Caffo interval
+ac_int <- p1_tilde - p2_tilde + c(-1, 1) *z975 * sqrt(p1_tilde * (1-p1_tilde)/n1_tilde + p2_tilde * (1-p2_tilde) / n2_tilde)
+ac_int
+```
+
+- This interval does not approximate the score interval, but does perform better than the Wald interval
+
+### Example
+
+- Test whether or not the proportion of side effects is the same for the two drugs
+- $\hat{p}_A = .55, \hat{p}_B = 5/20 = .25, \hat{p} = 16/40 = .4$
+- Test statistic
+
+$$
+\frac{.55 - .25}{\sqrt{.4 \times .6 \times (1/20 + 1/20)}} = 1.61
+$$
+
+- Fail to reject $H_0$ at .05 level (compare with 1.96)
+- P-value $P(|Z| \ge 1.61) = .11$
+
+***My Numbers Do Not Match His***
+His can be approximated with .25/sqrt(.024). I think he left off a parenthesis in his R code.
+
+```{r}
+n_a <- df["A", "total"]
+phata <- df["A", "SideEffects"] / n_a
+n_b <- df["B", "total"]
+phatb <- df["B", "SideEffects"] / n_b
+n <- df["Total", "total"]
+phat <- df["Total", "SideEffects"] / n
+ts <- (phata - phatb)/sqrt(phat * (1-phat) * (1/n_a + 1/n_b))
+z975 <- qnorm(.975)
+if (abs(ts) >= z975) {
+    print(paste(ts, ">=", z975, "Reject null hypothesis"))
+} else {
+    print(paste(ts, "<", z975, "Fail to reject null hypothesis"))
+}
+pvalue <- 2*pnorm(ts, lower.tail=FALSE)
+pvalue
+```
+
+## Bayesian and likelihood analysis for two binomial proportions
+
+- Likelihood analysis requires the use of profile likelihoods, or some other technique and so we omit their discussion
+- Consider putting independent $\mathrm{Beta}(\alpha_1, \beta_1)$ and $\mathrm{Beta}(\alpha_2, \beta_2)$ priors on $p_1$ and $p_2$ respectively
+- Then the posterior is
+
+$$
+\pi(p_1, p_2) \propto p_1^{x + \alpha_1 - 1} (1-p_1)^{n_1 + \beta_1 - 1} \times p_2^{y+\alpha_2 - 1} (1-p_2)^{n_2 + \beta_2 - 1}
+$$
+
+- Hence under this (potentially naive) prior, the posterior for $p_1$ and $p_2$ are independent betas
+- The easiest way to explore this posterior is via Monte Carlo simulation
+
+```{r}
+x <- 11; n1 <- 20; alpha1 <- 1; beta1 <- 1
+y <- 5; n2 <- 20; alpha2 <- 1; beta2 <- 1
+p1 <- rbeta(1000, x + alpha1, n - x + beta1)
+p2 <- rbeta(1000, y + alpha2, n-y+beta2)
+rd <- p2 - p1
+plot(density(rd))
+abline(v=0, col="red")
+abline(v=quantile(rd, .025), col="blue")
+abline(v=quantile(rd, .975), col="blue")
+quantile(rd, c(.025, .975))
+mean(rd)
+median(rd)
+```
+
+- mn = mean
+- med = median
+- mod = mode
+- rd = risk difference
+- rr = risk ratio
+- or = odds ratio
+```{r}
+source("twoBinomPost.R")
+twoBinomPost(x, n1, y, n1)
+```
+
+He then shows a plot of Risk difference, without the code to generate it.
+
+# Relative Risks and Odds Ratios
+
+
+# Two sample binomials results
+X is n1 samples from a binomial distribution with probability p1 $X \sim \mathrm{Bin}(n_1, p_1)$
+and Y is n2 samples from a Bin(n2, p2)
+Which is often arranged in the following table:
+
+<table border="1">
+<tr><td>$n_{11} = x$</td><td>$n_{12} = n_1 - x$</td><td>$n_1$</td></tr>
+<tr><td>$n_{21} = y$</td><td>$n_{22} = n_2 - y$</td><td>$n_2$</td></tr>
+</table>
+
+- Last time, we considered the absolute change in the proportions, what about relative changes?
+- Relative changes are often of more interest than absolute, eg when both proportions are small
+- The **relative risk** is defined as $p_1/p_2$
+- The natural estimator for the relative risk is
+
+$$
+\hat{RR} = \frac{\hat{p}_1}{\hat{p}_2} = \frac{X/n_1}{Y/n_2}
+$$
+
+- The standard error for log $\hat{RR}$ is
+
+$$
+\hat{SE}_{log{\hat{RR}}} = \big(\frac{(1-p_1)}{p_1n_1} + \frac{1-p_2}{p_2n_2} \big)^{1/2}
+$$
+
+- Exponentiate the resulting interval to get an interval for the RR
+- The **odds ratio** is defined as
+
+$$
+\frac{\mathrm{Odds\,of\,SE\,Drug\,A}}{\mathrm{Odds\,of\,SE\,Drug\,B}} = \frac{p_1/(1-p_1)}{p_2/(1-p_2)} = \frac{p_1(1-p_2)}{p_2(1-p_1)}
+$$
+
+- The sample odds ratio simply plus in the estimates for $p_1$ and $p_2$, this works out to have a convenient form
+
+$$
+\hat{OR} = \frac{\hat{p1}/(1-\hat{p1})}{\hat{p_2}/(1 - \hat{p}_2)} = \frac{n_{11}n_{22}}{n_{12}n_{21}}
+$$
+
+(cross product ratio)
+
+- The standard error for log $\hat{OR}$ is
+
+$$
+\hat{SE}_{log\hat{OR}} = \sqrt{\frac{1}{n_{11}} + \frac{1}{n_{12}} + \frac{1}{n_{21}} + \frac{1}{n_{22}}}
+$$
+
+- Exponentiate the resulting interval to obtain an interval for the OR
+- Notice that the sample and true odds ratios do not change if we transpose the rows and the columns
+- For both the OR and RR, taking the logs helps with adherence to the error rate
+- Of course the interval for the log RR or log OR is obtained by taking
+
+$$
+Estimate \pm Z_{1-\alpha/2}SE_{Estimate}
+$$
+
+- Exponentiating yeilds an interval for the OR or RR
+- Though logging helps, these intervals still don't perform altogether that well
+
+### Example - RR
+
+- For the relative risk, $\hat{p}_A = 11/20 = .55$, $\hat{p}_B = 5/20 = .25$
+- $\hat{RR}_{A/B} = .55/.25 = 2.2$
+- $\hat{SE}_{log\hat{RR}_{A/B}} = \sqrt{\frac{1-.55}{.55\times 20} + \frac{1-.25}{.25 \times 20}} = .44$
+- Interval for the log RR: log(2.2) $\pm 1.95 \times .44 = [-.07, 1.65]$ (contains 0, not *significant*)
+- Interval for the RR: [.93, 5.21] (contains 1, not *significant*)
+
+```{r}
+nse_a <- 11
+n_a <- 20
+nse_b <- 5
+n_b <- 20
+phat_a <- nse_a/n_a
+phat_b <- nse_b/n_b
+rr_ab <- phat_a/phat_b
+print(paste("Risk Ratio A/B", rr_ab))
+se_log_rr_ab <- sqrt((1-phat_a)/(phat_a*n_a) + (1-phat_b)/(phat_b*n_b))
+print(paste("Squared Error of log RR A/B:", se_log_rr_ab))
+log_rr_int <- log(rr_ab) + c(-1, 1) * qnorm(.975) * se_log_rr_ab
+print(paste("Interval for log RR", log_rr_int[1], log_rr_int[2]))
+rr_int <- exp(log_rr_int)
+print(paste("Interval for RR", rr_int[1], rr_int[2]))
+```
+
+### Example - OR
+
+- $\hat{OR}_{A/B} = \frac{11\times 15}{9\times 5} = 3.67$
+- $\hat{SE}_{log\hat{OR}_{A/B}} = \sqrt{\frac{1}{11} + \frac{1}{9} + \frac{1}{5} + \frac{1}{15}} = .68$
+- Interval for log OR: log(3.67) &pm; 1.96 &times; .68 = [-.04, 2.64]
+- Interval for the OR: [.96, 14.01]
+
+```{r}
+nnse_a <- n_a - nse_a
+nnse_b <- n_b - nse_b
+orhat_ab <- (nse_a * nnse_b)/(nnse_a * nse_b)
+orhat_ab
+se_log_orhat_ab = sqrt(1/nse_a + 1/nnse_a + 1/nse_b + 1/nnse_b)
+se_log_orhat_ab
+log_or_int <- log(orhat_ab) + c(-1, 1) * z975 * se_log_orhat_ab
+print(paste("Log Odds ratio interval:", log_or_int[1], log_or_int[2]))
+or_int <- exp(log_or_int)
+print(paste("Odds ratio interval:", or_int[1], or_int[2]))
+```
+
+### Risk Differece
+
+- For the risk difference $\hat{RD}_{A-B} = \hat{p}_A - \hat{p}_B = .55 - .25 = .30$
+- $\hat{SE}_{\hat{RD}_{A-B}} = \sqrt{\frac{.55 \times .45}{20} + \frac{.25 \times .75}{20}} = .15$
+- Interval: $.30 \pm 1.96 \times .15 = [.15, .45]$
+
+```{r}
+rd_ab <- phat_a - phat_b
+print(paste("Risk Difference A-B", rd_ab))
+se_rd_ab <- sqrt(phat_a*(1-phat_a)/n_a + phat_b*(1-phat_b)/n_b)
+print(paste("Square Error Risk Difference A-B", se_rd_ab))
+rd_int <- rd_ab + c(-1, 1) * z975 * se_rd_ab
+print(paste("Risk Difference Interval:", rd_int[1], rd_int[2]))
+```
+
+*Shows a plot of the posterior, which lets us see that while our Risk Ratio/Odds Ratio is not significant, that it IS close. Which we do not get a sense of without seeing the posterior plot.*
+
+### Summary
+
+<table border="1">
+<tr><td>$n_{11} = x$</td><td>$n_{12} = n_1 - x$</td><td>$n_1$</td></tr>
+<tr><td>$n_{21} = y$</td><td>$n_{22} = n_2 - y$</td><td>$n_2$</td></tr>
+</table>
+
+- Risk Difference: $\hat{RD} = \hat{p}_1 - \hat{p}_2$
+- Error in Risk Difference: $\hat{SE}_\hat{RD} = \sqrt{\frac{\hat{p}_1(1-\hat{p}_1)}{n_1} +  \frac{\hat{p}_2(1-\hat{p}_2)}{n_2}}$
+- Risk Ratio: $\hat{RR} = \frac{\hat{p}_1}{\hat{p}_2}$
+- Error in Risk Ratio: $\hat{SE}_{log\hat{RR}} = \sqrt{\frac{(1-\hat{p}_1)}{\hat{p}_1 n_1} + \frac{(1-\hat{p}_2)}{\hat{p}_2 n_2}}$
+- Odds Ratio: $\hat{OR} = \frac{\hat{p}_1/(1-\hat{p}_1)}{\hat{p}_2/(1-\hat{p}_2} = \frac{n_{11}n_{22}}{n_{12}n_{21}}$
+- Error in Odds Ratio = $\hat{SE}_{log\hat{OR}} = \sqrt{ \frac{1}{n_{11}} + \frac{1}{n_{12}} + \frac{1}{n_{21}} \frac{1}{n_{22}}}$
+- Confidence Interval = Estimate $\pm Z_{1-\alpha/2}\mathrm{SE_{Est}}$
+
+# Delta Method and Standard Errors
+
+- **delta method** can be used to obtain large sample standard errors
+- Formally, the delta methods states that if
+$$
+\frac{\hat\theta - \theta}{\hat{SE}_\hat{\theta}}  \rightarrow \mathrm{N}(0,1)
+$$
+
+then
+
+$$
+\frac{f(\hat\theta) - f(\theta)}{f'(\hat\theta)\hat{SE}_\hat\theta} \rightarrow \mathrm{N}(0, 1)
+$$
+
+- Asymptotic mean of $f(\hat\theta)$ is $f(\theta)$
+- Asymptotic standard error of $f(\hat\theta)$ can be estimated with $f'(\hat\theta)\hat{SE}_\hat\theta$
+
+## Example
+
+- $\theta = \hat{p}_1$
+- $\hat\theta = \hat{p}_1$
+- $\hat{SE}_\hat\theta = \sqrt{\frac{\hat{p}_1(1-\hat{p}_1)}{n_1}}$
+- $f(x) = \mathrm{log}(x)$
+- $f'(x) = 1/x$
+- $\frac{\hat\theta - \theta}{\hat{SE}_\hat\theta} \rightarrow$ N(0, 1) by the CLT
+- Then $\hat{SE}_{\mathrm{log}\hat{p}_1} = f'(\hat\theta)\hat{SE}_\hat\theta$
+$$
+= \frac{1}{\hat{p}_1}\sqrt{\frac{\hat{p}_1(1 - \hat{p}_1)}{n_1}} = \sqrt{\frac{(1 - \hat{p}_1)}{\hat{p}_1n_1}}
+$$
+
+- And
+$$
+\frac{\mathrm{log}\hat{p}_1 - \mathrm{log}p_1}{\sqrt{\frac{(1-\hat{p}_1)}{\hat{p}_1n_1}}} \rightarrow \mathrm{N}(0, 1)
+$$
+
+## Putting it all together
+
+- Asymptotic standard error (The plus there is correct, variance of RR is sum of the log variances, not the differences)
+
+$$
+\begin{align}
+\mathrm{Var}(\mathrm{log}\hat{RR}) & = \mathrm{Var}(\mathrm{log}(\hat{p}_1 / \hat{p}_2))\\
+& = \mathrm{Var}(\mathrm{log}\hat{p}_1) + \mathrm{Var}(\mathrm{log}\hat{p}_2) \\
+& \approx \frac{(1-\hat{p}_1)}{\hat{p}_1 n_1} + \frac{(1 - \hat{p}_2)}{\hat{p}_2 n_2}
+\end{align}
+$$
+
+- The last line following from the delta method
+- The approximation requires large sample sizes
+- The delta method can be used similarly for the log odds ratio
+
+## Motivation for the delta method
+
+- If $\hat\theta$ is close to $\theta$ then (which it is for a large enough n)
+$$
+\frac{f(\hat\theta) - f(\theta)}{\hat\theta - \theta} \approx f'(\hat\theta)
+$$
+
+- So
+$$
+\frac{f(\hat\theta) - f(\theta)}{ft(\hat\theta)} \approx \hat\theta - \theta
+$$
+
+- Therefore
+$$
+\frac{f(\hat\theta) - f(\theta)}{f'(\hat\theta)} \approx \frac{\hat\theta}{\hat{SE}_\hat\theta}
+$$
