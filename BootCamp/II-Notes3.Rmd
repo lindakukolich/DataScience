@@ -1,0 +1,456 @@
+---
+title: "Notes 3 - Biostatistics Boot Camp 2"
+author: "Linda Kukolich"
+date: "March 3, 2015"
+output: html_document
+---
+# Fisher's Exact Test
+- Fisher's exact test is "exact" because it guarantees the &alpha; rate, regardless of the sample size
+- For ordinary we have the &alpha;, in the limit where n goes to infinity
+- Original example was "Could a lady tell the difference between tea + milk in a cup or milk + tea?"
+- Example, chemical toxicant and 10 mice
+
+| | Tumor | None | Total |
+| -- | -- | -- | -- |
+| Treated | 4 | 1 | 5 |
+| Control | 2 | 3 | 5 |
+| Total | 6 | 4 | |
+
+- $p_1$ = prob of a tumor for the treated mice
+- $p_2$ = prob of a tumor for the untreated mice
+- $H_0: p_1 = p_2 = p$
+- Can't use Z or $\chi^2$ because Sample Size is small
+- Don't have a specific value for p
+- Under the null hypothesis every permutation is equally likely
+- observed data
+```
+Treatment : T T T T T C C C C C 
+Tumor     : T T T T N T T N N N
+```
+
+- permuted
+```
+Treatment : T C C T C T T C T C
+Tumor     : T T T T N T T N N N
+```
+
+- Fisher's exact test uses this null distribution to test the hypothesis that $p_1 = p_2$
+- *If there is no relationship between Treatment and Tumor, we can shuffle all the Treatments and get the same results.*
+
+## Hypergeometric distribution
+- *Hypergeometric distribution is, take n1 red and n2 blue balls. Select z balls. What are the colors of the z balls?*
+- X number of tumors for the treated
+- Y number of tumors for the controls
+- $H_0: p_1 = p_2 = p$
+- Under $H_0$
+    - $X \sim \text{Binom}(n_1, p)$
+    - $Y \sim \text{Binom}(n_2, p)$
+    - $X + Y \sim \text{Binom}(n_1 + n_2, p)$
+$$
+P(X = x | X + Y = z) = \frac{{n_1 \choose x}{n_2 \choose z-x}}{{n_1 + n_2 \choose z}}
+$$
+
+This is the hypergeometric probability mass function
+
+### Proof
+$$
+\begin{align}
+P(X = x) &= {n_1 \choose x} p^x(1-p)^{n_1 - x} \\
+P(Y = z - x) &= {n_2 \choose z - x}p^{z - x}(1-p)^{n_2 - z + x} \\
+P(X + Y = z) &= {n_1 + n_2 \choose z}p^{z}(1-p)^{n_1 + n_2 - z} \\
+P(X = x | X + Y = z) &= \frac{P(X = x, X + Y = z)}{P(X + Y = z)} \\
+&= \frac{P(X = x, Y = z - x)}{P(X + Y = z)} \\
+&= \frac{P(X = x)P(Y = z - x)}{P(X + Y = z)} \\
+&= \frac{{n_1 \choose x} p^x(1-p)^{n_1 - x}{n_2 \choose z - x}p^{z - x}(1-p)^{n_2 - z + x}}{{n_1 + n_2 \choose z}p^{z}(1-p)^{n_1 + n_2 - z}} \\
+&= \frac{{n_1 \choose x}{n_2 \choose z - x}p^{x + z - x}(1 - p)^{n_1 - x + n_2 - z + x}}{{n_1 + n_2 \choose z}p^z(1-p)^{n_1+ n_2 - z}} \\
+&= \frac{{n_1 \choose x}{n_2 \choose z - x}}{{n_1 + n_2 \choose z}}
+\end{align}
+$$
+
+## Fisher's exact test in practice
+- More tumors under the treated than the controls
+- Calculate an *exact* P-value
+- Use the conditional distribution = hypergeometric
+- Fixes both the row and the column totals
+- Yields the same test regardless of whether the rows or columns are fixed
+- Hypergeometric distribution is the same as the permutation distribution given before
+
+### Tables supporting $H_a$
+- Consider $H_a: p_1 > p_2$
+- P-value requires tables as extreme or more extreme (under $H_a$) than the one observed
+- Recall we are fixing the row and column totals
+- Observed table
+```
+Table 1
+4 1 | 5
+2 3 | 5
+----+---
+6 4 |
+```
+- More extreme tables in favor of the alternative
+```
+Table 2
+5 0 | 5
+1 4 | 5
+----+---
+6 4 |
+```
+- There is only one, since we have already put all the data into one corner.
+
+$$
+\begin{align}
+P(\text{Table 1}) &= P(X = 4 | X + Y = 6) \\
+&= \frac{{5 \choose 4}{5 \choose 2}}{{10 \choose 6}} = 0.238 \\
+P(\text{Table 2}) &= P(X = 5|X + Y = 6) \\
+&= \frac{{5 \choose 5}{5 \choose 1}}{{10 \choose 6}} = 0.024
+\end{align}
+$$
+- P-value = 0.238 + 0.024 = 0.262
+- We only get significance out of the most extreme table.
+
+```{r}
+dat <- matrix(c(4, 1, 2, 4), 2)
+fisher.test(dat, alternative = "greater")
+```
+
+
+- Two sided p-value = 2 &times; one sided P-value (There are other methods which we will not discuss)
+    - Insert a long aside on how Fisher used the Hypergeometric probability as his statistic
+- P-values are usually large for small n
+    - the discreteness of the problem usually forces the pvalues to be high
+- Doesn't distinguish between rows or columns
+- The common value of p under the null hypothesis is called a nuisance parameter
+- Conditioning on the total number os successes, X + Y, eliminates the nuisance parameter, p
+- Fisher's exact test guarantees the type I error rate
+- Exact unconditional P-value \text{sup}_p P(X/n_1 > Y/n_2; p)
+    - Look at Barnard's test online
+> The difference between Barnard's exact test and Fisher's exact test is how they handle the nuisance parameter(s) of the common success probability when calculating the p-value. Fisher's test avoids estimating the nuisance parameter(s) by conditioning on the margins, an approximately ancillary statistic. Barnard's test considers all possible values of the nuisance parameter(s) and chooses the value(s) that maximizes the p-value. Both tests have sizes less than or equal to the type I error rate. However, Barnard's test can be more powerful than Fisher's test because it considers more 'as or more extreme' tables by not conditioning on both margins. In fact, one variant of Barnard's test, called Boschloo's test, is uniformly more powerful than Fisher's exact test. - Wikipedia
+
+## Monte Carlo
+- Oberved table X = 4
+```
+Treatment : T T T T T C C C C C
+Tumor     : T T T T N T T N N N
+```
+- Permute the first row
+```
+Treatment : T C T T C C C T T T
+Tumor     : T T T T N T T N N N
+```
+- Simulated table X = 3
+- Do over and over
+- Calculate the proportion of tables for which the simulated $X \ge 4$
+- This proportion is a Monte Carlo estimate for Fisher's exact P-value
+```{r}
+treat <- factor(rep( c("T", "C"), 5))
+tumor <- factor(c("T", "T", "T", "T", "N", "T", "T", "N", "N", "N"))
+
+# Greater than or equal to 4
+mean(replicate(500, {tsamp <- sample(treat)
+                sum(tumor[tsamp == "T"] == "T") >= 4}))
+# Greater than 4
+mean(replicate(500, sum(tumor[sample(treat) == "T"] == "T") > 4))
+```
+
+# Chi-Squared Tests
+
+- An alternative approach to testing equality of proportions uses the chi-squared statistic
+$$
+\sum \frac{(\text{Observed} - \text{Expected})^2}{\text{Expected}}
+$$
+- "Observed" are the observed counts
+- "Expected" are the expected counts under the null hypothesis
+- The sum is over all four cells
+- This statistic follows a Chi-squared distribution with 1 df
+- The Chi-squared statistic is exactly the sqare of the difference in proportions Score statistic
+- Example
+
+| Trt | Side Effects | None | Total |
+| --- | ------------ | ---- | ----- |
+|  X  |       44     |  56  |  100  |
+|  Y  |       77     |  43  |  120  |
+|     |      121     |  99  |  220  |
+
+- $p_1$ and $p_2$ are the rates of side effects
+- $H_0: p_1 = p_2$
+- The $\chi^2$ test statistic is $\sum \frac{() - E)^2}{E}$
+- The expected counts $E_{ij}$ are our best estimate of the number of side effects (total side effects) * number of patients
+- $O_{11} = 44, E_{11} = \frac{121}{220} \times 100 = 55$
+- $O_{21} = 77, E_{21} = \frac{121}{220} \times 120 = 66$
+- $O_{12} = 56, E_{12} = \frac{99}{220} \times 100 = 45$
+- $O_{22} = 43, E_{22} = \frac{99}{220} \times 120 = 54$
+- If these expected and observed counts differ, that means something.
+- $\chi^2 = \frac{(44 - 55)^2}{55} + \frac{(77 - 66)^2}{66} + \frac{(56-45)^2}{45} + \frac{(43 - 54)^2}{54}$
+- Which turns out to be 8.96. Compare to a $\chi^2$ with one degree of freedom
+- reject for large values because we are measuring the distance between observed and expected
+- A chisq with one degree of freedom is the square of a standard normal.
+
+```{r}
+pchisq(8.96, 1, lower.tail = FALSE)
+# 0.002
+dat <- matrix(c(44, 77, 56, 43), 2)
+# includes a continuity correction, dealing with the
+# fact that our counts are discrete and we are trying
+# to measure a continuous quantity. This is more
+# accurate and is prefered
+chisq.test(dat)
+
+# This one does not have the continuity correction and
+# should match our result
+chisq.test(dat, correct=FALSE)
+
+```
+
+- Reject if the statistic is too large
+- Alternative is two sided
+- Do not divide &alpha; by 2
+- A small $\chi^2$ statistic implies little difference between the observed values and those expected under $H_0$
+- The $\chi^2$ statistic and approach generalizes to other kinds of tests and larger contingency tables
+- Alternative computational form for the $\chi^2$ statistic
+$$
+\chi^2 = \frac{n(n_{11}n_{22} - n_{12}n_{21})^2}{n_{+1}  n_{+2} n_{1+} n_{2+}}
+$$
+
+| $n_{11} = x$ | $n_{12} = n_1 - x$ | $n_1 = n_{1+}$ |
+| ------------ | ------------------ | ------------- |
+| $n_{21} = y$ | $n_{22} = n_2 - y$ | $n_2 = n_{2+}$ |
+| $n_{+1} = x$ | $n_{+2} = n_1 - x$ | $n$ |
+
+- Notice that the statistic does not change if you transpose the rows and columns of the table
+- Surprisingly, the $\chi^2$ statistic can be used
+    - the rows are fixed (binomial)
+    - the columns are fixed (binomial)
+    - the total sample size is fixed (multinomial)
+    - none are fixed (Poisson)
+- For a given set of data, any of these assumptions results in the same value for the statistic
+- Then follows a long aside about the difference between the assumptions of two tests:
+    - Take 120 people, randomly assign each to Treatment or Control, measure the result
+    - Take 120 random people, ask them whether they had the Treatment or the Control and ask them the result
+- The model of randomness differs and the resulting interpretations differ, though the math may be the same.
+
+## Testing independence
+- Maternal age versus birthweight *From Agresti Categorical Data Analysis second edition*
+- Cross-sectional sample, only the total sample size is fixed
+
+|   | | Birthweight | |
+| -------- | ------- | ----------- | ----- |
+| Mat. Age | < 2500g | &ge; 2500 g | Total |
+| < 20y | 20 | 80 | 100 |
+| &ge; 20y | 30 | 270 | 300 |
+| Total | 50 | 350 | 400 |
+
+- $H_0$ : MA is independent of BW
+- $H_a$ : MA is not independent of BW
+- Estimated marginal probability of younger maternal age $P(MA < 20) = \frac{100}{400} = .25$
+- Estimated marginal probability of low birth weight $P(BW < 250) = \frac{50}{400} = .125$
+- Under $H_0$ estimated cell probability of younger and low birth weight $P(MA < 20 and BW < 2500) = .25 \times .125$
+- Therefore
+    - $E_{ij} = P(MA_i)*P(BW_j)*count$
+    - $E_{11} = \frac{100}{400}\times \frac{50}{400} \times 400 = 12.5$
+    - $E_{12} = \frac{100}{400} \times \frac{350}{400} \times 400 = 87.5$
+    - $E_{21} = \frac{300}{400} \times \frac{50}{400} \times 400 = 37.5$
+    - $E_{22} = \frac{300}{400} \times \frac{350}{400} \times 400 = 262.5$
+    - $\chi^2 = \frac{(20-125)^2}{12.5} + \frac{(80 - 87.5)^2}{87.5} + \frac{(30 - 37.5)^2}{37.5} + \frac{(270 - 262.5)^2}{262.5} = 6.86
+- Compare to critical value
+```{r}
+qchisq(.95, 1)
+# 3.84
+```
+- Or calculate P-value
+```{r}
+pchisq(6.86, 1, lower.tail=F)
+# 0.009
+```
+
+## Testing equality of several proportions
+```
+Alchohol use
+Group       High Low   Total
+----------------------------
+Clergy      32   268   300
+Educators   51   199   250
+Executives  67   233   300
+Retailers   83   267   350
+-----------------------------
+Total       233  967   1200
+```
+Also from Agresti's Categorical Data Analysis
+
+- Interest lies in testing whether or not the proportion of high alcohol use is the same in the four occupations
+- $H_0: p_1 = p_2 = p_3 = p_4 = p$
+- $H_a:$ at least two of the $p_j$ are unequal
+- $O_{11} = 32, E_{11} = 300\times \frac{233}{1200} = 58.25$
+- $O_{12} = 269, E_{12} = 300 \times \frac{967}{1200} = 241.75$
+- ...
+- Chi-squared statistic $\sum \frac{(O - E)^2}{E}$ = 20.59
+
+
+```{r}
+dfrm <- data.frame(High=c(32, 51, 67, 83),
+                   Low=c(268, 199, 233, 267),
+                   row.names=c("Clergy", "Educators", "Executives", "Retailers"))
+nr <- 4
+nc <- 2
+dfrm <- rbind(dfrm, Total=sapply(dfrm, sum), deparse.level=1)
+dfrm$Total <- apply(dfrm, 1, sum)
+chi <- sum(sapply(1:nc, function(c) sapply(1:nr, function(r) {o = dfrm[r, c]; e = dfrm[r,"Total"]*dfrm["Total",c]/dfrm["Total", "Total"]; (o - e)^2/e})))
+chi # 20.59
+df <- (nr - 1)*(nc-1)
+df # 3
+pchisq(chi, df, lower.tail=FALSE) # about 0
+```
+- With such a low pvalue, reject the null hypothesis. it is clear that at least one of the proportions of drinkers is different than the average
+
+## Generalization
+### Word distributions
+From Rice Mathematical Statistics and Data Analysis, second edition
+
+- Counts of words from 2 Jane Austen books and from a third book that might be hers, but we do not know for sure.
+- $H_0:$ The probabilities of each word are the same for every book
+- $H_a:$ At least two are different
+```{r}
+dfrm <- data.frame(book1=c(147, 25, 32, 94, 59, 18),
+                   book2=c(186, 26, 39, 105, 74, 10),
+                   book3=c(101, 11, 15, 37, 28, 10),
+                   row.names=c("a", "an", "this", "that", "with", "without"))
+nr <- dim(dfrm)[1]
+nc <- dim(dfrm)[2]
+dfrm <- rbind(dfrm, Total=sapply(dfrm, sum), deparse.level=1)
+dfrm$Total <- apply(dfrm, 1, sum)
+dfrm
+chi <- sum(sapply(1:nc, function(c) sapply(1:nr, function(r) {o = dfrm[r, c]; e = dfrm[r,"Total"]*dfrm["Total",c]/dfrm["Total", "Total"]; (o - e)^2/e})))
+chi # 12.27139
+df <- (nr - 1)*(nc-1)
+df # 10
+pchisq(chi, df, lower.tail=FALSE) # .2673039
+```
+- High, so fail to reject. We do not have evidence that the books are by different authors.
+
+## Independence
+```
+        Wife's Rating
+Husband N  F  V  A  Tot
+-----------------------
+N       7  7  2  3  19
+F       2  8  3  7  20
+V       1  5  4  9  19
+A       2  8  9  14 33
+----------------------
+        12 28 18 33 91
+```
+- **N**ever, **F**airly often, **V**ery often, **A**lmost always
+- Ratings of sexual fun
+- From Agresti's Categorical Data Analysis
+- $H_0$: H and W ratings are independent
+- $H_a$; not independent
+- $P(H = N & W = A) = P(H=N)P(W=A)$
+- stats = $\sum\frac{(O-E)^2}{E}$
+```{r}
+dfrm <- data.frame(N=c(7, 2, 1, 2),
+                   F=c(7, 8, 5, 8),
+                   V=c(2, 3, 4, 9),
+                   A=c(3, 7, 9, 14),
+                   row.names=c("N", "F", "V", "A"))
+nr <- dim(dfrm)[1]
+nc <- dim(dfrm)[2]
+chisq.test(dfrm)
+# 16.9552, df = 9, p-value = 0.04942
+# low, so reject null, not independent, but just barely
+```
+### Notes
+
+- Cell counts might be too small to use large sample approximation, either use a Fisher test, or simulate the P value
+```{r}
+fisher.test(dfrm) # Gets twice what Chisq gets...
+chisq.test(dfrm, simulate.p.value=T, B=999)
+```
+- Equal distribution and independence test yield the same results
+- Same test results if
+    - row totals are fixed
+    - column totals are fixed
+    - total SS is fixed
+    - none are fixed
+- Note that this is common in statistics; mathematically equivalent results are applied in different settings, but result in different interpretations
+- chi-squared result requires large cell counts
+    - It is asymptotic. Something needs to be going to infinity
+- df is always (rows - 1)(columns - 1)
+- Generalizations of Fisher's exact test can be used or continuity corrections can be employed
+- A word on derivation
+    - $\sum \frac{(O-E)^2}{E}$ comes from poisson, observed - mean / standard deviation, and then square it
+    - in Poisson, mean is also the variance
+    - The Chi-Square components are all like Z statistics, which is part of its azymptotic derivation
+
+## Monte Carlo
+### Exact Permutation test
+- Reconstruct the individual data
+```
+W:NNNNNNNFFFFFFFVVAAANNFFFFFFFF ...
+H:NNNNNNNNNNNNNNNNNNNFFFFFFFFFF ...
+```
+- Permute either the W or H row
+- Recalculate the contingency table
+- Calculate the $\chi^2$ statistic for each permutation
+- Percentage of times it is larger than the observed is an exact P-value
+```{r}
+h <- colSums(dfrm)
+w <- rowSums(dfrm)
+h <- factor(unlist(sapply(names(h), function(a) rep(a, h[a]))))
+w <- factor(unlist(sapply(names(w), function(a) rep(a, w[a]))))
+x <- matrix(c(h, w), 2)
+chisq.test(x, simulate.p.value = TRUE)
+```
+
+### Chi-squared goodness of fit
+- Results from R's Random Number Generator
+
+|           | [0,.25) | [.25,.5) | [.5, .75) | [.75, 1) | Total |
+| --------- | -------- | --------- | -------- | ----- |
+| Count     |    254   |    235    |    267   |  244  | 1000 |
+| TP        | .25       |      .25 |      .25 | .25   | 1 |
+```{r}
+dfrm <- data.frame(matrix(c(254, .25, 235, .25, 267, .25, 244, .25), 2))
+nr <- dim(dfrm)[1]
+nc <- dim(dfrm)[2]
+dfrm$Total <- apply(dfrm, 1, sum)
+dfrm
+chi <- sum(sapply(1:nc, function(c) {o = dfrm[1, c]; e = dfrm[2,c]*dfrm[1, "Total"]; (o - e)^2/e}))
+chi # 2.264
+df <- (nr - 1)*(nc-1)
+df # 3
+pchisq(chi, df, lower.tail=FALSE) # .52
+```
+
+## Goodness of fit testing
+### Testing Mendel's Hypothesis
+```
+            Phenotype
+          Yellow   Green    Total
+Observed  6022     2001     8023
+TP        .75      .25      1
+Expected  6017.25  2005.75  8023
+```
+- $H_0: p_1 = .75, p_2=.25$
+```{r}
+dfrm <- data.frame(Yellow=c(6022, .75), Green=c(2001, .25), row.names=c("Observed", "TP"))
+nr <- dim(dfrm)[1]
+nc <- dim(dfrm)[2]
+dfrm$Total <- apply(dfrm, 1, sum)
+dfrm <- rbind(dfrm, Expected=c(sapply(1:nc, function(c) dfrm[2, c]*dfrm[1, nc+1]), dfrm[1, nc+1]), deparse.level=1)
+dfrm
+chi <- sum(sapply(1:nc, function(c) {o = dfrm[1, c]; e = dfrm[2,c]*dfrm[1, "Total"]; (o - e)^2/e}))
+chi # .015
+df <- (nr - 1)*(nc-1)
+df # 1
+pchisq(chi, df, lower.tail=FALSE) # .90
+```
+- Fisher combined several of Mendel's tables
+- Statistic 42, df = 84, P-value = .99996
+- Agreement with theoretical counts is perhaps too good?
+
+### Notes
+- Test of whether or not observed counts equal theoretical values
+- Test statistic is $\sum \frac{(O - E)^2}{E}$
+- TS follows $\chi^2$ distribution for large n
+- df is the number of cells minus 1
+- Especially useful for testing RNGs
+- Kolmogorov/Smirnov test is an alternative test that does not require discretization

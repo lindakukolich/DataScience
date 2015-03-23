@@ -1,0 +1,2678 @@
+---
+title: "R Cookbook Notes"
+author: "Linda Kukolich"
+date: "February 21, 2015"
+output: html_document
+---
+## 1. Getting Started and Getting Help
+
+- Local installed documentation
+- Task Views
+- Package documentation
+- Mailing Lists
+- Question and Answer Websites
+- The Web
+
+### 1.1 Downloading and Installing R
+[http://www.r-project.org]
+
+### 1.2 Starting R
+- R
+- RStudio in the Applications folder
+
+### 1.3 Entering Commands
+- Type at the prompt...
+```{r}
+max(1, 2, 4)
+```
+
+### 1.4 Exiting from R
+- q()
+
+### 1.5 Interrupting R
+- ^C
+
+### 1.6 Viewing the Supplied Documentation
+- help.start()
+
+### 1.7 Getting Help on a Function
+- help(mean)
+- ?mean
+- args(mean)
+- example(mean)
+
+### 1.8 Searching the Supplied Documentation
+- help.search("pattern")
+- ??pattern
+
+### 1.9 Getting Help on a Package
+- help(package="packagename")
+- vignette()
+- vignette(package="packagename")
+- vignette("vignettename")
+
+### 1.10 Searching the Web for Help
+- RSiteSearch("key phrase")
+
+### 1.11 Finding Relevant Functions and packages
+- task views [http://cran.r-project.org/web/views/]
+- [http://rseek.org]
+- 
+### 1.12 Searching the Mailing Lists
+- http://rseek.org and look at "support lists"
+- RSiteSearch("keyphrase")
+
+### 1.13 Submitting Questions to the Mailing Lists
+- Subscribe to the appropriate list
+- Read the Posting Guide
+- Search the archives first!
+- [How to ask questions the right way](http://www.catb.org/~esr/faqs/smart-questions.html)
+
+## 2 Some Basics
+
+### 2.1 Printing Something
+- Autoprinting
+```{r}
+pi
+sqrt(2)
+print(pi)
+cat("The zero occurs at", 2*pi, "radians.\n")
+```
+
+### 2.2 Setting Variables
+```{r}
+x <- 3
+y <- 4
+z <- sqrt(x^2 + y^2)
+print(z)
+## Assignment to a global rather than local variable
+z <<- z + 1
+print(z)
+# Wierd assigments that you should not use
+z = z + 1
+z + 1 -> z
+print (z)
+```
+
+### 2.3 Listing Variables
+```{r}
+z <- c("three", "blind", "mice")
+f <- function(n, p) sqrt(p*(1-p)/n)
+.hidvar <- 10
+ls()
+ls.str()
+ls(all.names=TRUE)
+```
+### 2.4 Deleting Variables
+```{r}
+rm(.hidvar)
+rm(f)
+ls(all.names=TRUE)
+# Do Not Do this
+# rm(list=ls())
+```
+
+### 2.5 Creating a Vector
+```{r}
+c(1, 1, 2, 3, 5, 8, 13, 21)
+# C flattens multiple vectors, making their contents a single vector (losing the original association)
+v1 <- c(1, 2, 3)
+v2 <- c(4, 5, 6)
+c(v1, v2)
+# The types have to match, so R will convert things to make it possible
+v2 <- c("four", "five", "six")
+c(v1, v2)
+
+class(v1); mode(v1)
+class(v2); mode(v2)
+```
+
+### 2.6 Computing Basic Statistics
+```{r}
+x <- c(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+mean(x)
+median(x)
+sd(x)
+var(x)
+y <- log(x+1)
+cor(x, y)
+cov(x, y)
+x <- c(x, NA)
+mean(x)
+mean(x, na.rm=TRUE)
+small <- rnorm(10)
+medium <- 10 + rnorm(10)
+big <- 100 + rnorm(10)
+dframe <- data.frame(small=small, medium=medium, big=big)
+print(dframe)
+# This doesn't work
+mean(dframe)
+# this does
+apply(dframe, 2, mean)
+apply(dframe, 2, sd)
+
+var(dframe)
+```
+### 2.7 Creating Sequences
+```{r}
+1:5
+seq(from=1, to=5, by=2)
+rep(1, times=5)
+9:0
+```
+### 2.8 Comparing Vectors
+```{r}
+a <- 3
+a == pi
+a != pi
+a < pi
+a > pi
+a <= pi
+a >= pi
+v <- c(3, pi, 4)
+w <- c(pi, pi, pi)
+v == w
+v < w
+v == pi
+any(v == pi)
+all(v == 0)
+```
+### 2.9 Selecting Vector Elements
+- Use square brackets  to select vector elements
+- Use negative indexes to exclude elements
+- Use a vector on indexes to select multiple elements
+- Use a logical vector to select elements
+```{r}
+fib <- c(0, 1, 1, 2, 3, 5, 8, 13, 21, 34)
+fib[1]
+fib[2]
+fib[3]
+fib[1:3]
+fib[4:9]
+fib[c(1, 2, 4, 8)]
+fib[-1]
+fib[-(1:3)]
+fib[fib < 10]
+fib %% 2 == 0
+fib[fib%%2 == 0]
+years <- c(1960, 1964, 1976, 1994)
+names(years) <- c("Kennedy", "Johnson", "Carter", "Clinton")
+years["Carter"]
+years[c("Carter", "Clinton")]
+```
+
+### 2.10 Performing Vector Arithmetic
+```{r}
+v <- c(11, 12, 13, 14, 15)
+w <- c(1, 2, 3, 4, 5)
+v + w
+v - w
+v * w
+v / w
+w ^ v
+w + 2
+2^w
+w^2
+mean(w)
+w - mean(w)
+log(w)
+```
+### 2.11 Getting Operator Precedence Right
+- [], [[]] - indexing
+- :: ::: - Access variables in a name space
+- $ @ Component extraction, slot extraction
+- ^ exponentiation
+- - + Unary minus and plus
+- : sequence creation
+- %any% special operators
+    - %% modulo
+    - %/% integer division
+    - %*% matrix multiplication
+    - %in% returns TRUE if the left operand occurs in its right operand
+- * / multiplication, division
+- + - addition, subtraction
+- == != < > <= >= Comparison
+- ! logical negation
+- & && Logical and, short-circuit and
+- | || logical or, short-circuit or
+- ~ formula
+- -> ->> rightward assignment
+- = assignment (right to left)
+- <- <<- assignment (right to left)
+- ? help
+
+### 2.12 Defining a Function
+function(args) {
+  expr
+  expr
+}
+- All functions return a value
+- call by value
+- local variables are created with regular assignment
+- global variables are modified using <<-
+### 2.13 Typing Less and Accomplishing More
+Use command-Enter to execute lines in the editor window
+
+### 2.14 Avoiding Some Common Mistakes
+- forgetting the ()s after a function name
+- backslash has to be repeated, because it is a special character (bigger problem for Windows file paths)
+- incorrectly continuting an expression across lines
+```{r}
+total <- 1 + 2 + 3 +
+    4 + 5
+print(total)
+total <- 1 + 2 + 3
++ 4 + 5
+print(total)
+```
+- Using = (assignment) when you mean == (comparison)
+- Writing 1:n+1 when you meant 1:(n+1)
+```{r}
+n <- 5
+1:n+1
+1:(n+1)
+```
+- messing up the recycling rule
+```{r}
+x <- c(1, 2, 4, 10)
+y <- c(1, 2)
+x * y
+```
+- Forgetting to load a library
+- Writing aList[i] when you meant aList[[i]]
+- Using & instead of &&, | instead of ||
+- passing multiple arguments to a single-argument function
+```{r}
+mean(9, 10, 11) # x, trim, na.rm, ...
+```
+- using max or min (is the biggest thing here) when you wanted pmax or pmin (given several vectors, which is the biggest at each index)
+
+## 3. Navigating the Software
+### 3.1 Getting and Setting the Working Directory
+- getwd()
+- setwd("dir")
+
+### 3.2 Saving Your Workspace
+- save.image()
+
+### 3.3 Viewing Your Command History
+- history()
+
+### 3.4 Saving the Result of the Previous Command
+```
+aVeryLongRunningFunction() # Oops! Forgot to save the output
+x <- .Last.value
+```
+
+### 3.5 Displaying the Search Path
+- search()
+
+### 3.6 Accessing the Functions in a Package
+- library(packagename)
+- detach(package:packagename)
+
+### 3.7 Accessing Built-in Datasets
+- data(datasetname, package="packagename")
+- head(datasetname)
+- help(datasetname)
+- data(package="packagename") to see all available packages
+- Use ‘data(package = .packages(all.available = TRUE))’
+to list the data sets in all *available* packages.
+
+### 3.8 Viewing the list of Installed Packages
+- library()
+- installed.packages()
+- installed.packages()[,c("Package", "Version")]
+
+### 3.9 Installing Packages from CRAN
+- install.packages("package.name")
+- can install packages locally rather than system wide.
+- install.packages("package.name", lib="~/lib/R")
+
+### 3.10 Settig a Default CRAM Mirror
+1. chooseCRANmirror()
+2. select a mirror and press ok
+3. Get the URL: options("repos")
+4. Add this line to your .Rprofile file
+    - options(repos="URL")
+
+### 3.11 Suprressing the Startup Message
+- R --quiet
+
+### 3.12 Running a Script
+- source("script.path.R")
+
+### 3.13 Running a Batch Script
+- R CMD BATCH scriptfile outputfile
+    - --quiet Surpress startup boilerplate
+    - --slave Also inhibit echoing input
+    - --no-restore Do not load the .Rhistory or .RData files
+    - --no-save Do not save .Rhistory or .Rdata
+    - --no-init-fie Do not read .Rprofile or ~/.Rprofile
+- Rscript scriptfile arg1 arg2 arg3
+    - like CMD BATCH, but no outputfile (redirect to save)
+    - Things to add to the script:
+        - '#!/usr/bin/Rscript --slave'
+        - argv <- commandArgs(TRUE)
+
+### 3.14 Getting and Setting Environment Variables
+- Sys.getenv("var.name")
+- Sys.setenv("var.name=value")
+
+### 3.15 Locating the R Home Directory
+- Sys.getenv("R_HOME")
+
+### 3.16 Customizing R
+- ~/.Rprofile
+- help(options) To see what you can change
+
+## 4. Input and Output
+There is a nice guide on CRAN [R Data Inport/Export](http://cran-r.project.org/doc/manuals/R-data.pdf).
+He then talks about the way that some data is hard to read into R straight. The designers assumed that you would be willing to run standard UNIX tools like perl, awk, sed, cut, or paste to perform basic reformatting before working with the data in R.
+
+### 4.1 Entering Data from the Keyboard
+- scores <- c(61, 66, 90, 88, 100)
+- OR scores <- data.frame; scores <- edit(scores)
+- The second way brings up a baby spreadsheet to fill in
+
+### 4.2 Printing Fewer Digits (or More Digits)
+```{r}
+print(pi)
+print(pi, digits=4)
+print(pi, digits=15)
+cat(pi, "\n")
+cat(format(pi, digits=4), "\n")
+print(pnorm(-3:3), digits=3)
+q<- seq(from=0, to=3, by=0.5)
+tbl <- data.frame(Quant=q, Lower=pnorm(-q), Upper=pnorm(q))
+print(tbl, digits=2)
+```
+### 4.3 Redirecting Output to a File
+- cat("The answer is", answer, "\n", file="filename", append=FALSE)
+    - Or use a connection
+    - con < file("analysisReport.txt", "w")
+    - cat(data, file=con)
+    - cat(results, file=con)
+    - cat(conclusion, file=con)
+    - close(con)
+- sink
+    - sink("filename")
+    - *things that may print to the console and will be redirected to filename*
+    - sink()
+
+### 4.4 Listing Files
+- list.files()
+- list.files(all.files=TRUE)
+
+### 4.5 Dealing with "cannot Open File" in Windows
+- You probably forgot to make the backslash a double backslash, since it is a special character
+- You also can use forward slashes, and accept you are using a UNIX based tool with UNIX based file paths.
+
+### 4.6 Reading Fixed-Width Records
+- records.data.frame <- read.fwf("statisticians.txt", widths=c( 10, 10, 4, -1, 4), col.names=c("Last", "First", "Born", "Died"))
+- 10 characters for the Last name
+- 10 characters for the first name
+- 4 characters for the year born
+- a single space, to be ignored
+- 4 characters for the year died
+
+There is more, read the help page
+
+### 4.7 Reading Tabular Data Files
+- records.df <- read.table("statisticians.txt", sep=":", stringsAsFactor=FALSE)
+- There is much more. Read the help file
+
+### 4.8 Reading from CSV Files
+- read table with a default separater of ","
+- also, header defaults to TRUE
+- as.is leaves character strings alone, instead of converting them to factors
+
+### 4.9 Writing to CSV Files
+- write.csv(x, file="filename", row.names=FALSE)
+- Cannot append, use write.table to append
+
+### 4.10 Reading Tabular or CSV Data from the Web
+- read.csv("http://www.url/file.csv")
+- If the URL is https, use download.file(URL, method="curl") and then read the result
+- Actually, use download file first anyway
+
+### 4.11 Reading Data from HTML Tables
+- XML:readHTMLTable
+- First call gives a list of all the tables, in order
+- a second call with just the right number, which=3, will pull just the table you want.
+
+### 4.12 Reading Files with a Complex Structure
+- readLines to read all the lines, or a limited number of lines and parse them yourself
+- scan(filename, what=*class*(count))
+- class is one of:
+    - numeric
+    - integer
+    - complex
+    - character (string)
+    - logical
+- if count is 0, read the whole file, otherwise read that many tokens and stop
+- lots of other features
+- An example from StatLib
+```{r, cache=TRUE}
+world.series <- scan("http://lib.stat.cmu.edu/datasets/wseries",
+                     skip=35,
+                     nlines=23,
+                     what=list(year=integer(0),
+                               pattern=character(0)),
+                     )
+perm <- order(world.series$year)
+world.series <- list(year=world.series$year[perm],
+                     pattern=world.series$pattern[perm])
+world.series
+```
+
+### 4.13 Reading from MySQL Databases
+- library(RMySQL)
+- open library with dbConnect
+- dbGetQuery to initiate a SELECT and return results
+- dbDisconnect to terminate connection
+
+### 4.14 Saving and Transporting Objects
+- binary
+    - save(myData, file="myData.RData")
+    - load("myData.RData")
+- ascii
+    - dput(myData, file="myData.txt")
+    - dump("myData", file="myData.txt")
+
+## 5. Data Structures
+- Vectors
+    - elements are all one class
+    - indexed using [], either by number or by name
+- Lists
+    - elements can be of differing classes
+    - indexed using [[]] to extract the contents on an element
+    - indexed using [] to return a list containing the given element(s)
+    - also indexed using lst$Name or lst[["Name"]]
+- Modes vs classes
+
+| **Object** | **Example** | **Mode** | **Class** |
+| --- | --- | --- | --- |
+| Number | 3.1415 `r x <- 3.1415` | `r mode(x)` | `r class(x)` |
+| Vector of numbers | c(1, 3, 4) `r x <-c(1, 3, 4)` | `r mode(x)` | `r class(x)` |
+| Character string | "Moe" `r x <- "Moe"` | `r mode(x)` | `r class(x)` |
+| Vector of character strings |  c("Moe", "Larry", "Curly") `r x <- c("Moe", "Larry", "Curly")` | `r mode(x)` | `r class(x)` |
+| Factor | factor(c("NY", "CA", "IL")) `r x <- factor(c("NY", "CA", "IL"))` | `r mode(x)` | `r class(x)` |
+| List | list("A", 2, c(3,3,3)) `r x <- list("A", 2, c(3,3,3))` | `r mode(x)` | `r class(x)` |
+| Data Frame | data.frame(x=1:3, y=c("NY", "CA", "IL")) `r x <- data.frame(x=1:3, y=c("NY", "CA", "IL"))` | `r mode(x)` | `r class(x)` |
+| Function | function(p) p+1 | `r mode(mean)` | `r class(mean)` |
+
+- Scalars - a vector with length 1, so a plain number
+- matrices - a vector or list with dimensions
+```{r}
+A <- 1:6
+dim(A)
+print(A)
+dim(A) <- c(2, 3)
+print(A)
+```
+
+- Arrays - a 3 or more dimensional matrix
+```{r}
+D <- 1:12
+dim(D) <- c(2, 3, 2)
+print (D)
+```
+
+- factor categories or grouping tags for variables usually in a data.frame
+- data.frame
+    - a list of named vectors and factors which form the columns
+    - the vectors must all have the same length, which gives the number of rows
+    
+### 5.1 Appending Data to a Vector
+```{r}
+v <- c(1, 2)
+v <- c(v, 3)
+v[length(v)+1] <- 4
+```
+This is possible, but not very efficient. Try to build the whole vector at once using vector operations, which are more efficent than the memory overhead of reallocating the array over and over again.
+
+### 5.2 Inserting Data into a Vector
+- append(vec, newvalues, after=n)
+
+### 5.3 Understanding the Recycling Rule
+- Given an operation using two vectors of unequal length, R will try to make them fit together by repeating one vector enough times to have it fit with the other
+```{r}
+a <- 1:3
+b <- 1:6
+c <- 1:4
+a * b
+c(1*1, 2*2, 3*3, 1*4, 2*5, 3*6)
+a * c
+c(1*1, 2*2, 3*3, 1*4)
+b * c
+c(1*1, 2*2, 3*3, 4*4, 5*1, 6*2)
+cbind(a, b)
+```
+
+### 5.4 Creating a Factor (Categorical variable)
+```{r}
+f <- factor(c("Win", "Win", "Lose", "Tie", "Win", "Lose"))
+f
+```
+
+### 5.5 Combining Multiple Vectors into one Vector and a Factor
+You have several groups of data, with one vector for each group. You want to combine the vectors into one large vector and simultaneously create a parallel factor that identifies each value's original group. Like say a vector of labeled training data from several input vectors of typed data.
+- comb <- stack(list(fresh=freshmen, soph=sophomores, jrs=juniors))
+- comb is then a data.frame(?) with a values column and a ind column with the factor telling which list contributued which entries.
+- aov(values ~ ind, data=comb)
+
+### 5.6 Creating a List
+- list
+
+### 5.7 Selecting List Elements by Position
+- lst[[n]]
+- lst[[c(n1, n2, n3)]]
+
+### 5.8 Selecting List Elements by Name
+- lst[["name"]]
+- lst$name
+- lst[c("name1", "name2")]
+
+### 5.9 Building a Name/Value Association List
+```{r}
+lst <- list(mid=0.5, right=0.841, far.right=0.977)
+lst["left"] <- 0.159
+lst$far.left <- 0.023
+```
+
+### 5.10 Removing an Element from a List
+```{r}
+lst[["left"]] <- NULL
+```
+
+### 5.11 Flatten a List into a Vector
+- unlist
+
+### 5.12 Removing NULL Elements from a List
+- lst[sapply(lst, is.null)] <- NULL
+
+### 5.13 Remvoing List Elements Using a Condition
+- lst[lst < 0] <- NULL
+- lst[abs(unlist(lst)) < 1] <- NULL
+- Nicer: lst[lapply(lst, abs) < 1] <- NULL
+
+### 5.14 Initializing a Matrix
+- matrix(vec, nrows, ncols)
+- matrix(scalar, nrows, ncols) - populate with all one thing
+
+### 5.15 Performing Matrix Operations
+- t(A) - Matrix transposition
+- solve(A) - Matrix inverse
+- A %*% B - matrix multiplication
+- diag(n) - n-by-n diagonal (identity) matrix
+
+### 5.16 Giving Descriptive Names to the Rows and Columns
+- rownames(mat) <- c("rowname1", "rowname2")
+- colnames(mat) <- c("col1", "col2", "col3")
+
+On the other hand, do not add rownames to data.frames. For Tidy Data, the rowname ought to be another column
+
+### 5.17 Selecting One Row or Column from a Matrix
+- vec <- mat[row, ] - A vector
+- vec <- mat[, col] - A vector
+- mat2 <- mat[row, , drop=FALSE] - A 1 row matrix
+- mat2 <- mat[, col, drop=FALSE] - A 1 column matrix
+
+### 5.18 Initializing a Data Frame from Column Data
+- dfrm <- data.frame(v1, v2, v3, f1, f2)
+- dfrm <- as.data.frame(list.of.vectors)
+
+### 5.19 Initializing a Data Frame from Row Data
+- store each row in a one-row data frame
+- store the one row data frames in a list
+- use do.call and rbind to combine the rows into a data frame
+```{r}
+obs <- list(data.frame(pred1=-1.197, pred2=.36, pred3="AM", resp=18.801),
+            data.frame(pred1=-0.952, pred2=1.23, pred3="PM", resp=25.709),
+            data.frame(pred1=0.279, pred2=0.423, pred3="PM", resp=21.572))
+do.call(rbind, obs)
+obs <- list(list(pred1=-1.197, pred2=.36, pred3="AM", resp=18.801),
+            list(pred1=-0.952, pred2=1.23, pred3="PM", resp=25.709),
+            list(pred1=0.279, pred2=0.423, pred3="PM", resp=21.572))
+do.call(rbind, Map(as.data.frame,obs))
+```
+
+### 5.20 Appending Rows to a Data Frame
+- newRow <- data.frame(*elements*)
+- df <- rbind(df, newRow)
+- **Bad idea for large data frames as it spends lots of R time reallocating the underlying matrix**
+
+### 5.21 Preallocating a Data Frame
+- Same as 5.20, but you know how large the data.frame will be at the end (n)
+- df <- data.frame(col1=numeric(c), col2=character(n), col3=factor(n, levels=c("A", "B", "C", "D", "E")))
+- newrow=data.frame(col1=5, col2="five", col3="E")
+
+### 5.22 Selecting Data Frame Columns by Position
+- dfrm[[n]] - returns a vector with one column
+- dfrm[,n] - returns a vector with one column
+- dfrm[n] - returns a data frame with one column
+- dfrm[c(n1, n2)], drm[,c(n1, n2)] - returns a data frame with selected columns
+- dfrm[,vec]
+    - if length(vec) == 1, returns a vector
+    - if length(vec) > 1, returns a data frame
+- dfrm[,vec, drop=FALSE)]
+    - returns a data frame
+
+### 5.23 Selecting Data Frame Columns by Name
+Same as 5.22, except with names and with the possibility of $ notation.
+
+- dfrm[["name"]], dfrm[,"name"], dfrm$name
+- dfrm["name"]
+- dfrm[c("name1", "name2")], dfrm[,c("name1", "name2")]
+
+### 5.24 Selecting Rows and Columns More Easily
+- subset(dfrm, select=c(col1, col2))
+- Note that you do not quote the column names
+- the select and subset arguments of subset are cool
+- subset(dfrm, select=c(predictor, response), subset=(response > 0))
+
+### 5.25 Changing the Names of Data Frame Columns
+- colnames(dfrm) <- newnames
+
+### 5.26 Editing a Data Frame
+- temp <- edit(dfrm)
+- dfrm <- temp
+- OR, if you feel brave
+- fix(dfrm)
+- **This breaks reproducible data processing principals** Though it might work even there if it is in the inital capture phase and is then saved to disk. You need to use SOME editor to get the data in the first time.
+
+### 5.27 Removing NAs from a Data Frame
+- clean <- na.omit(dfrm)
+- remove entire rows with ANY missing values
+
+### 5.28 Excluding Columns by Name
+- subset(dfrm, select = -badboy)
+- cor(subset(patient.data, select=c(-patient.id, -dosage)))
+
+### 5.29 Combining Two Data Frames
+- all.cols <- cbind(dfrm1, dfrm2)
+- all.rows <- rbind(dfrm1, dfrm2)
+
+### 5.30 Merging Data Frames by Common Column
+```{r}
+born <- data.frame(name=c("Moe", "Larry", "Curly", "Harry"), year.born=c(1887, 1902, 1903, 1964), place.born=c("Bensonhurst", "Philadelphia", "Brooklyn", "Moscow"))
+died <- data.frame(name=c("Curly", "Moe", "Larry"), year.died=c(1952, 1975, 1975))
+merge(born, died, by="name")
+```
+
+### 5.31 Accessing Data Frame Contents More Easily
+- with(dataframe, expr)
+- z <- (suburbs$pop - mean(suburbs$pop)) / sd(suburbs$pop)
+- z <- with(suburbs, (pop - mean(pop)) / sd(pop))
+- attach(suburbs)
+    - Attaches a COPY of the data frame to the environment.
+    - It does not affect the original data
+- z <- (pop - mean(pop)) / sd(pop)
+- detach()
+
+### 5.32 Converting One Atomic Value into Another
+- as.character(x)
+- as.complex(x)
+- as.numeric(x)
+- as.double(x)
+- as.integer(x)
+- as.logical(x)
+
+### 5.33 Converting One Structured Data Type into Another
+- as.data.frame(x)
+- as.list(x)
+- as.matrix(x)
+- as.vector(x)
+
+| **Conversion** | **How** | **Notes** |
+| -------------- | ------- | --------- |
+| Vector -> List | as.list(vec) | list(vec) creates a 1-element list where the element is a copy of vec |
+| Vector -> Matrix | cbind(vec) | a one-column matrix |
+| | as.matrix(vec) | a one-column matrix |
+| | matrix(v, n, m) | an n &times; m matrix |
+| Vector -> Data frame | as.data.frame(vec) | 1-column data frame |
+| | as.data.frame(rbind(vec)) | 1-row data frame |
+| List -> Vector | unlist(lst) | Use unlist rather than as.vector; Problems when list is not all atomics or not all the same mode |
+| List -> Matrix | as.matrix | 1-column matrix |
+| | as.matrix(rbind(lst)) | 1-row matrix |
+| | matrix(lst, n, m) | n &times; m matrix |
+| List -> Data frame | as.data.frame(lst) | list elements are columns of data frame |
+| | do.call(rbind, Map(as.data.frame,obs)) | list elements are rows of data frame |
+| Matrix -> Vector | as.vector(mat) | returns all matrix elements in a vector |
+| Matrix -> List | as.list(mat) | returns all matrix elements in a list |
+| Matrix -> Data Frame | as.data.frame(mat) | |
+| Data Frame -> Vector | dfrm[1, ] or dfrm[,1] or dfrm[[1] | 1-row or 1-column data frame |
+| as.vector(as.matrix(dfrm)) | normal data frame |
+| Data frame -> List | as.list(dfrm) | Not a big jump, just returning data.frame to its list base class |
+| Data frame -> Matrix | as.matrix(dfrm) | All the elements need to be the same mode or there will probably be a conversion to strings |
+
+## 6. Data Transormations
+The apply functions
+
+- apply
+- lapply
+- sapply
+- tapply
+- mapply
+- split
+
+### 6.1 Splitting a Vector into Groups
+- groups <- split(vec, fac)
+- groups <- unstack(data.frame(vec, fac))
+
+### 6.2 Applying a Function to Each List Element
+- lst <- lapply(lst, fun)
+- vec <- sapply(lst, fun)
+```{r}
+scores <- list(S1=c(89, 85, 86, 88, 89, 86, 82, 96, 85, 93, 91, 98, 87, 94, 77, 98, 85, 89, 95, 85, 93, 93, 97, 71, 97, 93, 75, 68, 98, 95, 79, 94, 98, 95),
+               S2=c(60, 98, 94, 95, 99, 97, 100, 73, 93, 91, 98, 86, 66, 83, 77, 97, 91, 93, 71, 91, 95, 100, 72, 96, 91, 76, 100, 97, 99, 95, 97, 77, 94, 99, 88, 100, 94, 93, 86),
+               S3=c(95, 86, 90, 90, 75, 83, 96, 85, 96, 85, 83, 84, 81, 98, 77, 94, 84, 89, 93, 99, 91, 77, 95, 90, 91, 87, 85, 76, 99, 99, 97, 97, 97, 77, 93, 96, 90, 97, 97, 88),
+               S4=c(67, 93, 63, 83, 87, 97, 96, 92, 93, 96, 87, 90, 94, 82, 91, 85, 93, 83, 90, 87, 99, 94, 88, 90, 72, 81, 93, 93, 94, 97, 89, 96, 95, 82, 97))
+lapply(scores, length)
+sapply(scores, length)
+sapply(scores, mean)
+sapply(scores, sd)
+sapply(scores, range)
+tests <- lapply(scores, t.test)
+sapply(tests, function(t) t$conf.int)
+```
+
+### 6.3 Applying a Function to Every Row
+```{r}
+mat <- matrix(rnorm(32), 4, 2)
+apply(mat, 1, mean)
+apply(mat, 1, sum)
+```
+
+### 6.4 Applying a Function to Every Column
+```{r}
+apply(mat, 2, mean)
+dfrm <- data.frame(mat)
+lapply(dfrm, mean)
+sapply(dfrm, mean)
+```
+
+### 6.5 Applying a Function to Groups of Data
+```{r}
+f <- factor(rep(c(1, 2, 1, 3), 2))
+vec <- as.vector(mat)
+tapply(vec, f, mean)
+```
+
+### 6.6 Applying a Funciton to Groups of Rows
+```{r}
+by(dfrm, factor(c(1, 2, 1, 3)), sum)
+```
+
+### 6.7 Appying a Function to Parallel Vectors or Lists
+You need to apply a function that takes multiple arguments, but the function is not vectorized.
+
+```{r}
+gcd <- function(a, b) {
+    if (b == 0) a
+    else gcd(b, a %% b)
+    }
+
+gcd(c(3, 8, 15), c(9, 12, 21))
+mapply(gcd, c(3, 8, 15), c(9, 12, 21))
+```
+
+## 7. Strings and Dates
+- Classes for Dates and Times
+    - Date
+    - POSIXct - seconds since midnight, Dec 31, 1970
+    - POSIXlt - year, month, day, timezone, hour, etc.
+- packages that work with dates
+    - chron
+        - dates and times, but no timezones
+    - lubridate
+        - dates, times, time zones, datetime arithmetic
+    - mondate
+        - MONTHS, dates, times
+    - timeDate
+        - can handle holidays
+        - very powerful
+
+### 7.1 Getting the Length of a String
+- nchar(str)
+
+### 7.2 Concatenating Strings
+```{r}
+paste("Everybody", "loves", "stats.")
+paste("Everybody", "loves", "stats.", sep="-")
+paste("Everybody", "loves", "stats.", sep="")
+paste("Everybody", "loves", pi)
+stooges <- c("Moe", "Larry", "Curly")
+paste(stooges, "loves", "stats.")
+paste(stooges, "loves", "stats", collapse=", and ")
+```
+
+### 7.3 Extracting Substrings
+- substr(string, start_index, end_index)
+```{r}
+cities <- c("New York, NY", "Los Angeles, CA", "Peoria, IL")
+substr(cities, 1, 3)
+substr(cities, nchar(cities) - 1, nchar(cities))
+```
+
+### 7.4 Splitting a String According to a Delimiter
+```{r}
+strsplit("/usr/local/bin/R", "/")
+strsplit(c("/usr/local/bin/R", "/etc/passwd/", "/home/kukolich/"), "/")
+```
+
+### 7.5 Replacing Substrings
+- sub(old, new, string) - In PERL: s/old/new/
+- gsub(old, new, string) - In PERL: s/old/new/g
+- Old is actually a regular expression, unless fixed=TRUE. Even more PERLish
+```{r}
+original="I am here before you to stand behind you, to tell you something I know nothing about."
+sub("you", "John", original)
+gsub("you", "Mary", original)
+gsub("to (.*) ", "sleep ", original)
+gsub("to (.*?) ", "sleep ", original)
+```
+
+### 7.6 Seeing the Special Characters in a String
+```{r}
+str <- "first\rsecond\n"
+nchar(str)
+cat(str)
+print(str)
+```
+
+### 7.7 Generating All Pairwise Combinations of Strings
+```{r}
+locations <- c("NY", "LA", "CHI", "HOU")
+treatments <- c("T1", "T2", "T3")
+outer(locations, treatments, paste, sep="-")
+m <- outer(treatments, treatments, paste, sep="-")
+m
+m[!lower.tri(m)]
+```
+
+### 7.8 Getting the Current Date
+```{r}
+Sys.Date()
+```
+
+### 7.9 Converting a String into a Date
+```{r}
+as.Date("2010-12-31")
+as.Date("12/31/2010", format="%m/%d/%Y")
+```
+
+### 7.10 Converting a Date into a String
+- strftime()
+- %b - abbreviated month
+- %B - Full month name
+- %d - two digit day
+- %m - two digit month
+- %y - two digit year
+- %Y - four digit year
+
+### 7.11 Converting Yeqr, Month, and Day into a Date
+- ISOdate(year, month, day) - POSIXct object
+- as.Date(ISOdate(year, month, day))
+- ISOdatetime(year, month, day, hour, minute, second)
+
+### 7.12 Getting the Julian Date
+- Number of days since Dec 31, 1970
+- julian(as.Date("2010-03-15"))
+- as.integer(as.Date("2010-03-15"))
+
+### 7.13 Extracting the Parts of a Date
+- Convert to POSIXlt and print fields
+- memebers of POSIXlt (all of them are integers)
+    - sec
+    - min
+    - hour
+    - mday
+    - mon
+    - year
+    - wday
+    - yday
+    - isdst
+
+### 7.14 Creating a Sequence of Dates
+```{r}
+s <- as.Date("2015-02-22")
+e <- as.Date("2015-02-28")
+seq(from=s, to=e, by=1)
+seq(from=s, by=7, length.out=3)
+seq(from=s, by="month", length.out=4)
+seq(from=s, by="3 months", length.out=4)
+seq(from=s, by="year", length.out=2)
+# caution on "by month" where the date isn't IN the month
+seq(from=as.Date("2015-01-31"), by="month", length.out=12)
+```
+
+## 8. Probability
+- dnorm
+    - normal density
+    - the shape of the bell curve
+- pnorm
+    - normal distribution function
+    - $P(x) = \int_{-\infty}^x density(x)dx$
+- qnorm
+    - normal quantile function
+    - The value of X that gives a certain probability
+- rnorm
+    - a random number
+    - a lot of them together will have a normal distribution
+- distributions
+    - binomial distribution
+        - binom
+        - n = number of trials
+        - p is probability of success
+        - p(x) = ${n \choose x} p^x (1-p)^(n-x)
+        - lots of coin flips using a possibly unfair coin
+    - geometric
+        - geom
+        - a sequence of bernoulli trials
+        - implemented using binom
+        - density = $p(1-p)^x$
+    - hypergeometric
+        - hyper
+        - m = number of white balls in urn
+        - n = number of black balls in urn
+        - k = number of balls drawn from urn without replacement
+        - $p(x) = {m \choose x} {n \choose k-x} / {m+n \choose k}$
+    - negative binomial
+        - nbinom
+        - the number of failtures that occur in a sequence of Bernoulli trials before a target number of successes is reached.
+        - mean = $n(1-p)/p$
+        - variance = $n(1-p)/p^2$
+    - poisson
+        - pois
+        - lambda = mean
+        - $p(x) = \lambda^x e^{-\lambda}/x!
+    - beta
+        - beta
+        - shape1, shape2
+    - cauchy
+        - cauchy
+        - location; scale
+    - chi-squared
+        - chisq
+        - df = degrees of freedom
+    - exponential
+        - exp
+        - rate
+    - f
+        - f
+        - df1 and df2, degrees of freedom
+    - gamma
+        - gamma
+        - rate; either rate or scale
+    - log-normal
+        - lnorm
+        - meanlog = mean on log scale
+        - sdlog = standard deviation on log scale
+    - logistic
+        - logis
+        - location
+        - scale
+    - normal
+        - norm
+        - mean
+        - sd = standard deviation
+        - ?Normal
+    - Student's T
+        - t
+        - df = degrees of freedom
+        - ?TDist
+    - Uniform
+        - unif
+        - min = lower limit
+        - max = upper limit
+    - Weibull
+        - weibull
+        - shape; scale
+    - Wilcoxon
+        - wilcox
+        - m = number of observations in first sample
+        - n = number of observations in second sample
+
+### 8.1 Counting the Number of Combinations
+- choose(n, k) Choose k things from a set of n things
+
+### 8.2 Generating Combinations
+- combn(items, k)
+- generate all sets of k items from the vector of items
+```{r}
+combn(c("T1", "T2", "T3", "T4", "T5"), 3)
+```
+
+### 8.3 Generating Random Numbers
+- r*dist*(args)
+
+### 8.4 Generating Reproducible Random Numbers
+- set.seed()
+
+### 8.5 Generating a Random Sample
+- sample(set, n) - without replacement
+
+### 8.6 Generating Random Sequences
+- sample(set, n, replace=TRUE)
+```{r}
+# select 1 or 0 20 times with p(1) = .8 and p(0) = .2
+sample(c(1, 0), 20, replace=TRUE, p=c(.8, .2))
+# select 1 and 1-1 10 times with p(1) = .8 and p(0) = .2
+rbinom(10, 1, .8)
+```
+
+### 8.7 Randomly Permuting a Vector
+- sample(vec)
+```{r}
+sample(1:10)
+```
+
+### 8.8 Calculating Probabilities for Discrete Distributions
+- P(X=x) use d*dist*(x)
+- P(X &le; x) use p*dist*(x)
+- P(X &gt; x) use p*dist*(x, lower.tail=FALSE)
+- Probability of exactly 7 heads in 10 coin flips
+```{r}
+dbinom(7, size=10, prob=.5)
+```
+- Probability of no more than 7 heads in 10 fair coin flips
+```{r}
+pbinom(7, size=10, prob=.5)
+```
+- Probability of more than 7 heads in 10 fair coin flips
+```{r}
+pbinom(7, size=10, prob=.5, lower.tail=FALSE)
+```
+- Probability of between 3 and 7 heads in 10 fair coin flips P(3 < X <= 7)
+```{r}
+diff(pbinom(c(3, 7), size=10, prob=.5))
+```
+
+### 8.9 Calculating Probabilities for Continuous Distributions
+Since P(X=x) is 0 for continuous distribution functions, use p*dist*()
+
+### 8.10 Converting Probabilities to Quantiles
+Given p and a distribution, you want the x that yields $P(X \le x) = p$
+- qnorm(0.05, mean=100, sd=15) = 75.3272
+- That is, 5% of the distribution is below 75.3272 and 95% is above it.
+
+### 8.11 Plotting a Density Function
+```{r}
+x <- seq(from=-3, to=3, length.out=100)
+plot(x, dnorm(x))
+x <- seq(from=0, to=6, length.out=100)
+ylim <- c(0, .6)
+par(mfrow=c(2, 2))
+plot(x, dunif(x, min=2, max=4), main="Uniform", type='l', ylim=ylim)
+y <- dnorm(x, mean=3, sd=1)
+plot(x, dnorm(x, mean=3, sd=1), main="Normal", type='l', ylim=ylim)
+abline(h=0)
+region.x <- x[1 <= x & x <= 2]
+region.y <- y[1 <= x & x <= 2]
+region.x <- c(region.x[1], region.x, tail(region.x,1))
+region.y <- c(0, region.y, 0)
+polygon(region.x, region.y, density=10)
+
+plot(x, dexp(x, rate=1/2), main="Exponential", type='l', ylim=ylim)
+plot(x, dgamma(x, shape=2, rate=1), main="Gamma", type='l', ylim=ylim)
+```
+
+## 9. General Statistics
+### Null Hypotheses, Alternative Hypotheses
+Many of the statistical tests in this chapter uses the time-tested paradigm of statstistical inference. In the paradigm, we have one or two data samples. We also have two competing hypotheses, either of which could reasonably be true.
+
+One hypothesis, called the *null hypothesis*, is that *nothing happened*: The mean was unchanged; the treatment had no effect; you got the expected anser; the model did not improve; and so forth.
+
+The other hypothesis, called the *alternative hypothsis*, is that *something happened*: the mean rose the treatment improved the patients' health; you got an unexpected answer; the model fit better; and so forth.
+
+We want to determine which hypothesis is more likely in the light of the data:
+
+1. To begin, we assume that the null hypothesis is true.
+2. We calculate a test statistic. It could be something simple, such as the mean of the sample, or it could be quite complex. The critical requirement is that we must know the statistic's distribution. We might know the distribution of the sample mean, for example, by invoking the Central Limit Theorem. (*If you average enough samples together, you will get a normal distribution*)
+3. From the statistic and its distribution we can calculate a *p-value*, the probability of a test statistic as extreme or more extreme than the one we observed, while assuming that the null hypothesis is true.
+4. If the p-value is too small, we have string evidence against the null hypothesis. This is called *rejecting the null hypothesis*.
+5. If the p-value is not small then we have no such evidence. This is called *failing to reject the null hypothsis*.
+
+There is one necessary dicision here: When is a p-value "too small"? For this book, we will work with $p < 0.05$ and fail to reject when $p > 0.05$. In statistical terminology, I chose a *significance level* of $\alpha = 0.05$ to define the border between strong evidence and insufficient evidence against the null hypothesis.
+
+But the real answer is, "it depends". Your chosen significance level depends on your problem domain. The conventional limit of $p < 0.05$ works for many problems. In my work, the data is especially noisy, so I am often satisfied with $p < 0.10$. For someone working in high-risk areas, $p < 0.01$ or $p < 0.001$ might be necessary.
+
+In the recipes, I mention which tests include a p-value so that you can compare the p-value against your chosen significance level of &alpha;. I worded the recipes to help you interpret the comparison. here is the wording from Recipe 9.4, a test for the independence of two factors:
+
+*Coventionally, a p-value of less that 0.05 indicates that the variables are likely not independent whereas a p-value exceeding 0.05 fails to provide any such evidence.*
+
+This is a compact way of saying:
+- The null hypothesis is that the variables are independent
+- The alternative hypothesis is that the variables are not independent
+- For &alpha; = 0.05, if p < 0.05 then re reject the null hypothsis, giving strong evidence that the variables are not independent; if p > 0.05, we fail to reject the null hypothesis.
+- You are free to choose your own &alpha;, of course, inwhich case your decision to reject or fail to reject might be different.
+
+### Confidence intervals
+Hypothesis testing is a well-understood mathematical procedure, but it can be frustrating.  First, the semantics is tricky. The test does not reach a definite, useful conclusion. You might get strong evidence against the null hypothesis, but that's all you'll get. Second, it does not give you a number, only evidence.
+
+If you want numbers then use confidence intervals, which bound the estimate of a population parameter at a given level of confidence. Recipes in this chapter can calculate confidence intervls for means, medians, and proportions of a population.
+
+For example, Recipe 9.9 calculates a 95% confidence interval for the population mean based on a sample data. The interval is 97.16 < &mu; < 103.98, which means there is a 95% probabilitiy that the population's mean, &mu;, is between 97.16 and 103.98.
+
+### 9.1 Summarizing Your Data
+- summary(vec)
+    - gives min 1st Qu. Median, Mean, 3rd Quartile, and Max
+- summary(mat)
+    - runs summary on each column independent
+- summary(factor) 
+    - gives counts of each level
+- summary(dframe)
+    - numeric - summary
+    - factor - summary counts
+    - character - length, class, and mode
+- summary(list)
+    - gives the class and mode of each entry
+    - lapply(vec.list, summary) gives a summary of each entry
+    
+### 9.2 Calculating Relative Frequencies
+- mean(x > 0)
+    - returns the proportion of entries where x > 0
+- mean(lab == "NJ")
+    - return the proportion of labs in New Jersey
+- mean(after > before)
+    - fraction of observations for which the effect increases
+- mean(abs(x - mean(x) > 2*sd(x)))
+    - fraction of observations that exceed two standard deviations from the mean
+- mean(diff(ts) > 0)
+    - fraction of observations in a time series that are larger then the previous observation
+
+### 9.3 Tabulating Factors and Creating Contingencies
+- table(f) produces counts of one factor
+- table(f1, f2) produces contingency tables, or cross-tabulations. How many times that row-column combination occurred
+```
+> table(initial)
+initial
+  Yes    No Maybe
+   37    36    27
+> table(outcome)
+outcome
+Fail Pass
+  47   53
+> table(initial, outcome)
+        outcome
+initial Fail Pass
+  Yes     13   24
+  No      24   12
+  Maybe   10   17
+```
+
+- xtabs also can produce a contingency table and takes formulas as inputs
+
+### 9.4 Testing Categorical Variables for Indepedence
+- summary(table(fac1, fac2))
+- This performs a chi-squared test of the contingency table, including a p-value. If the p-value is less that 0.05 it is likely that the variables are not independent. (H0 factors are independent. Ha they are not independent.)
+```
+> summary(table(initial, outcome))
+Number of cases in table: 100
+Number of factors: 2
+Test for independence of all factors:
+    Chisq = 9.757, df = 2, p-value = 0.01255
+```
+The small p-value indicates that the two factors, initial and outcome, are probably not independent. That is, there is some connection between the variables.
+
+### 9.5 Calculating Quantiles (and Quartiles) of a Dataset
+Given a fraction f, you want to know the corresponding quantile of your data. That is, you seek the observation x such that the fraction of observations below x is f.
+- quantile(vec, c(0.05, 0.95))
+- quantile(vec) - will give quartiles (f = c(0, .25, .50, .75, 1))
+```{r}
+vec <- rnorm(100, mean=10, sd=2)
+quantile(vec, c(0.025, 0.975))
+quantile(vec)
+```
+
+### 9.6 Inverting a Quantile
+Given an observation x from your data, you want to know its corresponding quantile. That is, what fraction of the data is less than x?
+```{r}
+mean(vec < 9)
+```
+
+### 9.7 Converting Data to Z-Scores
+- scale(x)
+    -  by default normalizes a vector to give 0 mean, unit variance
+    - normalizes columns of a matrix independently
+    - can use your center and scale to do the scaling (x - center)/scale
+
+### 9.8 Testing the Mean of a Sample (t Test)
+You have a sample from a population. Given this sample, you want to know if the mean of the population could reasonably be a particular value m.
+- t.test(x, mu=m)
+```{r}
+# p-value extremely low. Mean not likely to be 5
+t.test(vec, mu=5)
+# p-value is pretty high. Mean likely to be 10, which it was.
+t.test(vec, mu=10)
+```
+
+### 9.9 Forming a Confidence Interval for a Mean
+In the t.test call above, you also got a 95% confidence interval. The test estimates that there is a 95% probability that the mean falls within the given interval. That interval was $9.38 \le \mu \le 10.27$
+
+Set the confidence level with the conf.level argument.
+```{r}
+t.test(vec, mu=10, conf.level=0.99)
+```
+
+### 9.10 Forming a Confidence interval for a Median
+```{r}
+wilcox.test(vec, mu=10, conf.int=TRUE)
+# Note: pseudomedian is not median
+median(vec)
+```
+Bootstrapping is also useful for estimating a median.
+
+### 9.11 Testing a Sample Proportion
+You have a sample of values from a population consisting of successes and failures. You believe the true proportion of successes is p, and you want to test that hypothesis using the sample data.
+
+Suppose the Cubs have played 20 games and won 11 of them. How confident should we be that the Cubs will win over half their games this year?
+```{r}
+prop.test(11, 20, 0.5, alternative="greater")
+```
+The p-value, .41, shows that we can be `r 100*(1-2*.41)` % confident that the Cubs will have a winning year. Not good.
+
+### 9.12 Forming a Confidence Iterval for a Proportion
+This is an output of prop.test. Use conf.level to set the confidence level to a particular value.
+
+### 9.13 Testing for Normality
+You want a statistical test to determine whether your data sample is from a normally distributed population.
+- shapiro.test(x)
+
+The null hypothesis is that the data is normally distributed, so a high p-value indicates that it is and a very low p value indicates that it is probably not.
+
+The nortest package has several other tests of normality.
+
+He recommends plotting a histogram and eyeballing it as a better "test".
+
+### 9.14 Testing for Runs
+Your data is a sequence of binary values. You want to know if this is a random sequence.
+- library(tseries)
+- runs.test(as.factor(s))
+
+The null hypothesis is that the sequence is random, so a low p-value indicates a non-random sequence.
+```{r}
+library(tseries)
+s <- sample(c(0, 1), 100, replace=T)
+runs.test(as.factor(s))
+s <- c(0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0)
+runs.test(as.factor(s))
+s <- rep(c(0, 1), 5)
+runs.test(as.factor(s))
+```
+
+### 9.15 Comparing the Means of Two Samples
+- t.test(x, y)
+    - default is that these are not paired samples
+    - Randomly select two groups of people. One group gets coffee and takes the SAT. The other group takes the test without coffee.
+- t.test(x, y, paired)
+    - if each x goes with a matching y, then the data is paired
+    - Randomly select a group of people. Give them the SAT twice, once with morning coffee and once without. The pair of scores from each person are *paired*.
+- var.equal=TRUE is the populations can be assumed to have the same variance.
+- This assumes that the populations are normally distributed for small sample sizes (below 20 points)
+- Small p-value means that the means are likely different. Larger p-values mean that the means are likely the same.
+
+### 9.16 Comparing the Locations of Two Samples Nonparametrically
+You have samples from two populations. You don't know the distribution of the populations, but you know they have similar shapes. You want to know: Is one population shifted to the left of right compared to the other?
+
+- Wilcoxon-Mann-Whitney test.
+- wilcox.test(x, y, paired=TRUE)
+- wilcox.test(x, y) # paired = FALSE
+- Does not assume normal distributions like the T-test, just that the two unknown distributions are the same shape as each other.
+
+### 9.17 Testing a Correlation for Significance
+- cor.test(x, y) - normal distributions
+- cor.test(x, y, method="Spearman") - non-normal distributions
+
+### 9.18 Testing Groups for Equal Proportions
+- You have binary samples from two or more groups. You want to know if the proportion of successes is equal in the groups.
+- nsuccess <- c(ns1, ns2, ns3)
+- ntest <- c(n1, n2, n3)
+- prob.test(ns, nt)
+```{r}
+# 14 A's out of 38 students
+# versus
+# 10 A's out of 40 students
+prop.test(c(14, 10), c(38, 40))
+```
+High p-value, 0 in the confidence interval. The evidence does not suggest a difference in the grading of the two teachers.
+
+### 9.19 Performing Pariwise Comparisons Between Group Means
+Place all data into one vector and create a parallel factor to identify the groups. Use `pairwise.t.test` to perform the pairwise comparison of means.
+```{r}
+set.seed(2)
+x <- rnorm(50, mean=2, sd=1)
+y <- rnorm(50, mean=2, sd=1)
+z <- rnorm(50, mean=1, sd=2)
+X <- c(x, y, z)
+f <- as.factor(c(rep(1, 50), rep(2, 50), rep(3, 50)))
+pairwise.t.test(X, f)
+# 1 vs 2 has a high P-value. They are likely the same
+# 3 vs 1 has a lower P-value, but not significantly so
+# 3 vs 2 has a lower P-value, but not significantly so
+x <- rnorm(50, mean=2, sd=1)
+y <- rnorm(50, mean=2, sd=1)
+z <- rnorm(50, mean=1, sd=2)
+X <- c(x, y, z)
+# But if I run it again, Now both distributions are likely to have different means
+pairwise.t.test(X, f)
+```
+
+### 9.20 Testing Two samples for the Same Distribution
+- ks.test
+    - A nonparametric test which does not make assumptions about the underlying distribution
+    - It tests the location, dispersion, and shape of the populations, based on the samples. If these characteristics differ the test will detect that.
+```{r}
+z <- rexp(50)
+ks.test(x, y)
+ks.test(x, z)
+```
+A low p-value indicates that it is likely that the distributions differ. A high p-value indicates that the distributions are likely to be the same.
+
+## 10. Graphics
+Basic plotting commands
+
+- plot
+    - generic plotting function
+- boxplot
+    - like a scatter plot with a big box over most of the data
+- hist
+    - histogram
+- qqnorm
+    - quantile-quantile plot (like a histogram histogram plot?)
+curve
+    - graph a function
+- points
+    - add points to an existing basic plot
+- lines
+    - add lines to an existing basic plot
+- abline
+    - add a straight line to an existing basic plot
+- segments
+    - add line segments to an existing basic plot
+- polygon
+    - add a closed polygon to an existing basic plot
+- text
+    - add text to an existing basic plot
+- lattice
+    - a library with a nice way of creating lots of tiled plots showing particular factors
+- ggplot2
+    - another very nice plotting library
+    
+### 10.1 Creating a Scatter Plot
+```{r}
+x <- rnorm(50, mean=2, sd=1)
+y <- rnorm(50, mean=0, sd=2)
+plot(x, y)
+data(cars)
+plot(cars)
+```
+
+### 10.2 Adding a Title and Labels
+```{r}
+plot(x, y, main="2 normal samples", xlab="mean=2, sd=1", ylab="mean=0, sd=2")
+plot(cars, ann=FALSE)
+title(main="cars: Speed vs. Stopping Distance (1920)", xlab="Speed (MPH)", ylab="Stopping Distance (ft)")
+```
+
+### 10.3 Adding a Grid
+```{r}
+plot(x,y, type="n")
+grid()
+points(x, y, pch=19)
+
+plot(cars, ann=FALSE, pch=19)
+title(main="cars: Speed vs. Stopping Distance (1920)", xlab="Speed (MPH)", ylab="Stopping Distance (ft)")
+grid()
+```
+
+By plotting the points first, and then the grid, some of the points have grid lines overtop them.
+
+
+### 10.4 Creating a Scatter Plot of Multiple Groups
+```{r}
+data(iris)
+with(iris, plot(Petal.Length, Petal.Width, pch=as.integer(Species)))
+```
+
+### 10.5 Adding a Legend
+legend(x, y, labels, *one-or-more of: pch, lty, lwd, col*)
+- x, y - location of the legend in plot coordinates. Also:
+    - topright
+    - topleft
+    - bottomright
+    - bottomleft
+- labels
+    - a vector of character strings, one for each line of the legend
+- pch, lty, lwd, col
+    - the PointType, LineType, LineWidth, or Color of the symbol beside each legend line
+    - These can be combined as needed to label the plot correctly.
+```{r}
+f <- factor(iris$Species)
+with(iris, plot(Petal.Length, Petal.Width, pch=as.integer(f)))
+legend(1.5, 2.4, as.character(levels(f)), pch=1:length(levels(f)))
+```
+
+### 10.6 Plotting the Regression Line of a Scatter Plot
+Make a linear model of the relationship between a pair of vectors. Display that model over a scatter plot of the data
+```{r}
+m <- lm(y ~ x)
+plot(y ~ x)
+abline(m)
+
+m <- with(cars, lm(dist ~ speed))
+with(cars, plot(dist ~ speed))
+abline(m)
+```
+
+### 10.7 Plotting All variables against all other variables
+```{r}
+plot(iris[,1:4])
+```
+
+### 10.8 Creating one scatter plot for each factor level
+- This is a conditional plot
+```{r}
+with(iris, coplot(Sepal.Length ~ Sepal.Width | Species))
+```
+
+### 10.9 Creating a bar chart
+```{r}
+data(airquality)
+# calculate temperature by month
+heights <- tapply(airquality$Temp, airquality$Month, mean)
+barplot(heights, main="Mean Temp. by Month",
+        names.arg=c("May", "Jun", "Jul", "Aug", "Sep"),
+            ylab="Temp (deg. F)")
+```
+
+### 10.10 Adding confidence intervals to a bar chart
+```{r}
+attach(airquality)
+limits <- tapply(Temp, Month, function(v) t.test(v)$conf.int)
+lower <- sapply(limits, function(v) v[1])
+upper <- sapply(limits, function(v) v[2])
+library(gplots)
+barplot2(heights, plot.ci=TRUE, ci.l=lower, ci.u=upper,
+        ylim=c(50, 90), xpd=FALSE,
+        main="Mean Temp. By Month",
+        names.arg=c("May", "Jun", "Jul", "Aug", "Sep"),
+        ylab="Temp (deg. F)")
+```
+
+### 10.11 coloring a bar chart
+```{r}
+# simple
+barplot(c(3, 5, 4), col=c("red", "white", "blue"))
+# custom gray scale
+rel.hts <- rank(heights) / length(heights)
+grays <- gray(1 - rel.hts)
+barplot(heights, col=grays, main="Mean Temp. By Month")
+```
+
+### 10.12 Plotting a line from x and y points
+```{r}
+data(pressure)
+plot(pressure, type="l")
+```
+
+### 10.13 Changing the type, width, or color of a line
+- lty=
+    - "solid" or 1
+    - "dashed" or 2
+    - "dotted" or 3
+    - "dotdash" or 4
+    - "longdash" or 5
+    - "twodash" or 6
+    - "blank" or 0
+- col=
+    - a color name ("red", "blue", etc.)
+
+### 10.14 Plotting multiple datasets
+```{r}
+x1 <- seq(0, 10, by=2)
+y1 <- sin(x1)
+x2 <- seq(1, 7, by=.5)
+y2 <- 2*cos(x2)
+xlim <- range(c(x1, x2))
+ylim <- range(c(y1, y2))
+plot(x1, y1, type="l", xlim=xlim, ylim=ylim)
+lines(x2, y2, lty="dashed")
+# Try again without the xlim and ylim
+plot(x1, y1, type="l")
+lines(x2, y2, lty="dashed")
+```
+
+### 10.15 Adding vertical or horizontal lines
+```{r}
+samp <- rnorm(20, mean=5)
+plot(samp)
+m <- mean(samp)
+abline(h=m)
+stdevs <- m + c(-2, -1, +1, +2)*sd(samp)
+abline(h=stdevs, lty="dotted")
+```
+
+### 10.16 Creating a box plot
+```{r}
+boxplot(rnorm(200, mean=5))
+```
+
+### 10.17 Creating one box plot for each factor level
+```{r}
+boxplot(Petal.Length ~ Species, data=iris,
+        main="Petal Length by Iris Species")
+```
+
+### 10.18 Creating a histogram
+```{r}
+data(mtcars)
+hist(mtcars$mpg, main="MPG", xlab="MPG")
+library(lattice)
+with(mtcars, histogram(mpg))
+```
+
+### 10.19 Adding a density estimate to a histogram
+```{r}
+with(mtcars, hist(mpg, prob=T))
+lines(density(mtcars$mpg))
+```
+
+### 10.20 Creating a discrete histogram
+```{r}
+poisPicks <- rpois(50, 5)
+plot(table(poisPicks), type="h", lwd=5, ylab="Frequency")
+```
+
+### 10.21 creating a normal quantile-quantile (Q-Q)...
+```{r}
+data(airquality)
+qqnorm(airquality$Ozone, main="Q-Q Plot: Ozone")
+qqline(airquality$Ozone)
+qqnorm(log(airquality$Ozone), main="Q-Q Plot: log(Ozone)")
+qqline(log(airquality$Ozone))
+```
+
+### 10.22 Creating other Quantile-Quantile plots
+You want to view a quantile-quantile plot for your data, but it is not normally distributed.
+- Use the ppoints function to generate a sequence of points between 0 and 1
+- Transform those points into quantiles, using the quantile function for the assumed distribution
+- Sort your sample data
+- Plot the sorted data against the computed quantiles
+- Use abline to plot the diagonal line
+```{r}
+RATE = 1/10
+N = 100
+y <- rexp(N, rate=RATE)
+plot(qexp(ppoints(y), rate=RATE), sort(y), ann=F)
+abline(a=0, b=1)
+title(main="Q-Q Plot", xlab="Theoretical Quantiles", ylab="Sample Quantiles")
+```
+
+### 10.23 Plotting a variable in multiple colors
+```{r}
+x <- sin(seq(0,100)/5)
+colors <- ifelse(x >= 0, "black", "gray")
+plot(x, type='h', lwd=3, col=colors)
+```
+- see colors() to see the names of the available colors
+
+### 10.24 Graphing a function
+```{r}
+curve(sin, -3, +3)
+f <- function(x) exp(-abs(x))*sin(2*pi*x)
+curve(f, -5, +5, main="Dampened Sine Wave")
+```
+### 10.25 Pausing between plots
+- par(ask=TRUE) - pause between interactive plots
+- par(ask=FALSE) - stop pausing between interactive plots
+
+### 10.26 Displaying several figures on one page
+- par(mfrow = c(n, m))
+```{r}
+par(mfrow=c(2, 2))
+Quantile <- seq(from=0, to=1, length.out=30)
+plot(Quantile, dbeta(Quantile, 2, 4), type="l", main="First")
+plot(Quantile, dbeta(Quantile, 4, 3), type="l", main="Second")
+plot(Quantile, dbeta(Quantile, 1, 1), type="l", main="Third")
+plot(Quantile, dbeta(Quantile, 0.5, 0.5), type="l", main="Fourth")
+par(mfrow=c(1, 1))
+```
+- also look at
+    - layout
+    - split.screen
+    - lattice
+
+### 10.27 Opening additional graphics windows
+- win.graph()
+    - doesn't work in RStudio
+- dev.set()
+
+### 10.28 Writing Your Plot to a File
+1. Interactive
+    1. write plot to graphics window
+    2. `savePlot(filename="filename.ext", type="type")`
+    3. Some quality problems because the screen size changes during the transfer
+2. Batch
+    1. open graphics device using something like `png()` or `jpeg()`
+    2. write plot
+    3. dev.off() to close graphics file
+    4. Be careful with dev.off() in interactive mode, since it kills your active graphics window too.
+
+### 10.29 Changing Graphical Parameters
+`par()` can set everything, but read the manual page before you use it. What you do with par() is global. Save the old value so you can put things back.
+
+- ask=*logical*
+    - Pause before every new graph if TRUE
+- bg="*color*"
+    - background color
+    - defaults to transparent
+- cex=*number*
+    - Heigh of text and plotted points, expresed as a multiple of normal size
+- col="*color*"
+    - Default plotting color
+- fg="*color*"
+    - Foreground color
+- lty="*linetype*"
+    - Type of line: solid, dotted, dashed, etc.
+- lwd=*number*
+    - 1 = normal, higher integers are thicker
+- mfcol=c(*nr*, *nc*) or mfrow=c(*nr*,*nc*)
+    - Create a multifigure matrix with nr rows and nc columns, filling columns first or rows first
+- new=*logical*
+    - Used to plot one figure on top of another
+- pch=*pointtype*
+    - Default point type
+- xlog=*logical*
+    - Use logarithmic X scale
+- ylog=*logical*
+    - Use logarithmic Y scale
+
+## 11. Linear Regression and  ANOVA (ANalysis Of VAriance)
+### Introduction
+
+In statistics, modeling is where we get down to business. Models quantify the relationships between our variables. Models let us make predictions.
+
+A *simple linear regression* is the most basic model. It’s just two variables and is modeled as a linearrelationship with an error term: $y_i = \beta_0 + \beta_1xi + \epsilon$
+
+We are given the data for x and y. Our mission is to fit the model, which will give us the best estimates for $\beta_0$ and $\beta_1$ (Recipe 11.1). That generalizes naturally to multiple linear regression, where we have multiple variables on the righthand side of the relationship (Recipe 11.2): $yi = \beta_0 + \beta_1u_i + \beta_2v_i + \beta_3w_i + \epsilon$
+
+Statisticians call u, v, and w the *predictors* and y the *response*. Obviously, the model is useful only if there is a fairly linear relationship between the predictors and the response, but that requirement is much less restrictive than you might think. Recipe 11.11 discusses transforming your variables into a (more) linear relationship so that you can use the well-developed machinery of linear regression.
+
+The beauty of R is that anyone can build these linear models. The models are built by a function, lm, which returns a model object. From the model object, we get the coefficients ($\beta_i$) and regression statistics. It’s easy.
+
+The horror of R is that anyone can build these models. Nothing requires you to check that the model is reasonable, much less statistically significant. Before you blindly believe a model, check it. Most of the information you need is in the regression summary (Recipe 11.4):
+
+- Is the model statistically significant?
+    - Check the F statistic at the bottom of the summary.
+- Are the coefficients significant?
+    - Check the coefficient’s t statistics and p-values in the summary, or check their confidence intervals (Recipe 11.13).
+- Is the model useful?
+    - Check the $R^2$ near the bottom of the summary.
+- Does the model fit the data well?
+    - Plot the residuals and check the regression diagnostics (Recipes 11.14 and 11.15).
+- Does the data satisfy the assumptions behind linear regression?
+    - Check whether the diagnostics confirm that a linear model is reasonable for your data (Recipe 11.15)
+
+### ANOVA - Analysis of variance.
+Analysis of variance (ANOVA) is a powerful statistical technique. First-year graduate students in statistics are taught ANOVA almost immediately because of its importance, both theoretical and practical. I am often amazed, however, at the extent to which people outside the field are unaware of its purpose and value.
+
+Regression creates a model, and ANOVA is one method of evaluating such models. The mathematics of ANOVA are intertwined with the mathematics of regression, so statisticians usually present them together; I follow that tradition here.
+
+ANOVA is actually a family of techniques that are connected by a common mathematical analysis. This chapter mentions several applications:
+
+- One-way ANOVA
+    - This is the simplest application of ANOVA. Suppose you have data samples from several populations and are wondering whether the populations have different means. One-way ANOVA answers that question. If the populations have normal distributions, use the oneway.test function (Recipe 11.20); otherwise, use the nonparametric version, the kruskal.test function (Recipe 11.23)
+- Model comparison
+    - When you add or delete a predictor variable from a linear regression, you want to know whether that change did or did not improve the model. The anova function compares two regression models and reports whether they are significantly different (Recipe 11.24).
+- ANOVA table
+    - The anova function can also construct the ANOVA table of a linear regression model, which includes the F statistic needed to gauge the model’s statistical significance (Recipe 11.3). This important table is discussed in nearly every textbook on regression.
+
+The following references contain more about the mathematics of ANOVA.
+
+### See Also
+
+There are many good texts on linear regression. One of my favorites is *Applied Linear Regression Models*(4th ed.) by Kutner, Nachtsheim, and Neter (McGraw-Hill/Irwin). I generally follow their terminology and conventions in this chapter.
+
+I also like *Practical Regression and ANOVA Using R* by Julian Faraway because it illustrates regression using R and is quite readable. It is unpublished, but you can download the free PDF from CRAN.
+
+### 11.1 Performing Simple Linear Regression
+You have two vectors, x and y, that hold paired observations. You believe there is a linear relationship between x and y and you want to create a regression model of the relationship.
+- lm(y ~ x)
+```{r}
+data(cars)
+lm(dist ~ speed, data=cars)
+```
+In this case the regression equation is:
+$$
+dist_i = -17.579 + 3.932 speed_i + \epsilon
+$$
+
+### 11.2 Performing Multiple Linear Regression
+- `lm(y ~ u + v + w)`
+```{r}
+u <- rnorm(20, mean=0)
+v <- rnorm(20, mean=2)
+w <- rnorm(20, mean=4)
+z <- rnorm(20, mean=6)
+eps <- rnorm(20, sd=5)
+y <- u + .002 * v - 2 * w + - .0001 * z + eps
+dfrm <- data.frame(y=y, u=u, v=v, w=w, z=z)
+lm(y ~ u + v + w + z, data=dfrm)
+```
+
+### 11.3 Getting Regression Statistics
+Save the regression model in a variable, say m
+```{r}
+m <- lm(y ~ u + v + w + z, data=dfrm)
+# ANOVA table
+anova(m)
+# model coefficients
+coefficients(m) # coef(m)
+# confidence intervals for regression coefficients
+confint(m)
+# redisual sum of squares
+deviance(m)
+# vector of orthogonal effects
+effects(m)
+# vector of fitted y values
+fitted(m)
+# model rediduals
+residuals(m) # resid(m)
+# Key statistics, such as $R^2$, the F statistic, and the residual standard erros ($\sigma$)
+summary(m)
+# Variance-covariance matrix of the main parameters
+vcov(m)
+```
+
+### 11.4 Understanding the Regression Summary
+- Call
+- Residuals statistics
+    - Ideally, the regression residuals would have a perfect, normal distribution. These statistics help you identify possible deviations from normality. The OLS algorithm is mathematically guaranteed to produce residuals with a mean of zero. Hence the sign of the median indicates the skew’s direction, and the magnitude of the median indicates the extent. In this case the median is negative, which suggests some skew to the left.
+    - If the residuals have a nice, bell-shaped distribution, then the first quartile (1Q) and third quartile (3Q) should have about the same magnitude. In this example, the larger magnitude of 3Q versus 1Q (9.525 versus 9.215) indicates a slight skew to the left in our data.
+    - The Min and Max residuals offer a quick way to detect extreme outliers in the data, since extreme outliers (in the response variable) produce large residuals.
+- Coefficients
+    - The column labeled Estimate contains the estimated regression coefficients as calculated by ordinary least squares.
+    - Theoretically, if a variable’s coefficient is zero then the variable is worthless; it adds nothing to the model. Yet the coefficients shown here are only estimates, and they will never be exactly zero. We therefore ask: Statistically speaking, how likely is it that the true coefficient is zero? That is the purpose of the t statistics and the p-values, which in the summary are labeled (respectively) t value and Pr(>|t|).
+    - The p-value is a probability. It gauges the likelihood that the coefficient is not significant, so smaller is better. Big is bad because it indicates a high likelihood of insignificance. In this example, the p-value for the speed coefficient is a tiny 1.49e-12, so speed is likely significant. *In his example, he has 3 variables, one of which has a p-value near 0.06, above the 95% significance level so less likely to be important* Variables with large p-values
+            are candidates for elimination.
+    - A handy feature is that R flags the significant variables for quick identification. Do you notice the extreme righthand column containing double asterisks (**), a single asterisk (*), and a period(.)? That column highlights the significant variables. The line labeled "Signif. codes" at the bottom gives a cryptic guide to the flags’ meanings
+    - The column labeled Std. Error is the standard error of the estimated coefficient. The column labeled t value is the t statistic from which the p-value was calculated.
+- Residual standard error
+    - This reports the standard error of the residuals ($\sigma$)—that is, the sample standard deviation of $\epsilon$.
+- $R^2$ (coefficient of determination)
+    - R^2 is a measure of the model’s quality. Bigger is better. Mathematically, it is the fraction of the variance of y that is explained by the regression model. The remaining variance is not explained by the model, so it must be due to other factors (i.e., unknown variables or sampling variability). In this case, the model explains 0.6511 (65.111%) of the variance of y, and the remaining 0.3489 (34.89%) is unexplained.
+    - That being said, I strongly suggest using the adjusted rather than the basic R^2. The adjusted value accounts for the number of variables in your model and so is a more realistic assessment of its effectiveness. In this case, then, I would use 0.6438, not 0.6511.
+- F statistic
+    - The F statistic tells you whether the model is significant or insignificant. The model is significant if any of the coefficients are nonzero (i.e., if $\beta_i \ne 0$ for some i). It is insignificant if all coefficients are zero ($\beta_a = \beta_2 = ...  = \beta_n = 0$).
+    - Conventionally, a p-value of less than 0.05 indicates that the model is likely significant (one or more $\beta_i$ are nonzero) whereas values exceeding 0.05 indicate that the model is likely not significant. Here, the probability is only 1.49e-12 that our model is insignificant. That’s good.
+    - Most people look at the R^2 statistic first. The statistician wisely starts with the F statistic, for if the model is not significant then nothing else matters.
+            
+### 11.5 Performing Linear Regression Without an Intercept
+- Add `+ 0` to the righthand side of your regression formula.
+- Use this when you want to say that when x is zero, y should be zero.
+- When you want to do this, check the confidence interval on the intercept. If it contains zero, it is plausible that is could be zero, so it might be safe to add the `+0` to the call.
+```{r}
+lm(dist ~ speed + 0, data=cars)
+confint(lm(dist ~ speed, data=cars))
+```
+
+### 11.6 Performing Linear Regresion with Interaction Terms
+- lm(y ~ u*v)
+- This produces a model for
+$$
+y_i = \beta_0 + \beta_1 u_i + \beta_2 v_i + \beta_3 u_iv_i + \epsilon
+$$
+- lm(y ~ u\*v\*w)
+- $y_i = \beta_0 + \beta_1 u_i + \beta_2 v_i + \beta_3 w_i + \beta_4 u_iv_i + + \beta_5 u_iw_i + \beta_6 v_iw_i + \beta_7 u_iv_iw_i + \epsilon$
+- lm(y ~ u + v + w + u:v:w)
+- $y_i = \beta_0 + \beta_1 u_i + \beta_2 v_i + \beta_3 w_i + \beta_4 u_iv_iw_i + \epsilon$
+- Other operators
+    - (u + v + w)^2 - first order interactions
+    - (u + v + w)^3 - first and second order interactions
+    - ^4 - etc
+    - x\*(u + v + w) = x\*u + x\*v + x\*w
+    - x:(u + v + w) = x:u + x:v + x:w
+- These are all the same
+    - y ~ u\*v
+    - y ~ u + v + u:v
+    - y ~ (u + v)^2
+
+### 11.7 Selecting the Best Regression Variables
+- step(full.model, direction="backward")
+    - removes underperforming variables
+    - Shows a sequence of the models explored
+    - Selects a parameter to drop based on 
+- min.model <- lm(y ~ 1)
+- fwd.model <- step(min.model, direction="forward", scope=( ~ x1 + x2 + x3 + x4 ))
+    - adds variables one at a time
+- He has a word about greed in setting up your search. If you have too many terms, step will spend a lot of time sifting through trash before it finds anything worth keeping.
+```{r}
+n = 30
+u <- rnorm(n, sd=2)
+v <- rnorm(n, sd=1)
+w <- rnorm(n, sd=2)
+z <- rnorm(n, sd=.24)
+eps <- rnorm(n, sd=5)
+y <- u + .002 * v - w + - .0001 * z + eps
+dfrm <- data.frame(y=y, u=u, v=v, w=w, z=z)
+full.model <- lm(y ~ u + v + w + z, data=dfrm)
+summary(full.model)
+reduced.model <- step(full.model, direction="backward")
+min.model <- lm(y ~ 1, data=dfrm)
+fwd.model <- step(min.model, direction="forward", scope=( ~ u + v + w + z))
+```
+
+### 11.8 Regressing on a Subset of your data
+- lm(y ~ x , subset=1:100)
+- lm(y ~ x, subset=(lab == "NJ"))
+
+### 11.9. Using an Expression Inside a Regression Formula
+- lm(y ~ I(u + v))
+    - $y_i = \beta_0 + \beta_1(u_i+v_i) + \epsilon$
+- lm(y ~ u + I(u^2))
+    - $y_i = \beta_0 + \beta_1 u_i + \beta_2 u_i^2 + \epsilon$
+
+### 11.10 Regressing on a Polynomial
+- lm(y, poly(x, 3, raw=TRUE))
+    - $y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \beta_3 x_i^3 + \epsilon$
+
+### 11.11 Regressing on Transformed Data
+- lm(log(z) ~ t)
+    - $z = \text{exp}^{\beta_0 + \beta_1 t + \epsilon}$ *NOT a linear model*
+    - $log(z) = \beta_0 + \beta_1 t + \epsilon$ *A Linear Model*
+- lm(sqrt(y) ~ x)
+- lm(y ~ sqrt(x))
+- lm(log(y) ~ log(x))
+
+### 11.12. Finding the Best Power Transformation (Box- Cox Procedure)
+- MASS:boxcox
+```{r}
+library(MASS)
+x <- 10:100
+eps <- rnorm(length(x), sd=5)
+y <- (x + eps)^(-1/1.5)
+m <- lm(y ~ x)
+summary(m)
+plot(m, which=1) # plot fitted vs residuals
+bc <- boxcox(m)
+which.max(bc$y)
+lambda <- bc$x[which.max(bc$y)]
+lambda
+m2 <- lm(I(y^lambda) ~ x)
+summary(m2)
+```
+
+### 11.13. Forming Confidence Intervals for RegressionCoefficients
+```{r}
+# Use the model from 11.7
+confint(full.model)
+confint(full.model, level=0.99)
+```
+*See Also* The 'coefplot' function of the 'arm' package.
+
+### 11.14. Plotting Regression Residuals
+```{r}
+plot(full.model, which=1)
+plot(fwd.model, which=1)
+```
+
+### 11.15. Diagnosing a Linear Regression
+1. Plot the model object
+```{r}
+par(mfrow=c(2, 2))
+plot(full.model)
+```
+
+2. Identify possible outliers either by looking at the diagnostic plot of the residuals or by using the outlierTest function of the car package
+```{r}
+library(car)
+outlierTest(full.model)
+```
+
+```{r}
+n = 30
+u <- rnorm(n, sd=3)
+v <- rnorm(n, sd=1)
+w <- rnorm(n, sd=2)
+z <- rnorm(n, sd=.24)
+eps <- rnorm(n, sd=5)
+y <- u^2 + .002 * v - w + - .0001 * z + eps
+dfrm <- data.frame(y=y, u=u, v=v, w=w, z=z)
+bad.model <- lm(y ~ u + v + w + z, data=dfrm)
+par(mfrow=c(2, 2))
+plot(bad.model)
+outlierTest(bad.model)
+```
+
+### 11.16. Identifying Influential Observations
+The 'influence.measures' function reports several useful statistics for identifying influential observations, and it flags the significant ones with an asterisk. Its main argument is the model object from your regression:
+```{r}
+influence.measures(bad.model)
+```
+
+### 11.17. Testing Residuals for AutoCorrelation (Durbin-Watson Test)
+The Durbin–Watson test is often used in time series analysis, but it was originally created for diagnosing autocorrelation in regression residuals. Autocorrelation in the residuals is a scourge because it distorts the regression statistics, such as the F statistic and the t statistics for the regression coefficients. The presence of autocorrelation suggests that your model is missing a useful predictor variable or that it should include a time series component, such as a trend or a seasonal indicator.
+      
+```{r}
+library(lmtest)
+dwtest(bad.model)
+```
+The output includes a p-value. Conventionally, if p < 0.05 then the residuals are significantly correlated whereas p > 0.05 provides no evidence of correlation.
+
+You can perform a visual check for autocorrelation by graphing the autocorrelation function (ACF) of the residuals. This, however, fails because the model is the wrong type as input to this function.
+
+### 11.18. Predicting New values
+```{r}
+preds <- data.frame(u=c(3.0, 3.1), v=c(4.0, 4.2), w=c(5.5, 5.8), z=c(6.2, 6.0))
+predict(bad.model, newdata=preds)
+```
+
+### 11.19 Forming Prediction Intervals
+```{r}
+predict(bad.model, newdata=preds, interval="prediction")
+```
+
+### 11.20 Performing One-Way ANOVA
+Your data is divided into groups and the groups are normally distributed. You want to know if the groups have significantly different means.
+
+Use a factor to define the groups. Then apply the oneway.test function. The output includes a p-value. Conventionally, a p-value of less than 0.05 indicates that two or more groups have significantly different means whereas a value exceeding 0.05 provides no such evidence.
+```{r}
+data(iris)
+# Unequal variances
+oneway.test(iris$Sepal.Width ~ iris$Species)
+# OR
+# Equal variances
+m <- with(iris, aov(Sepal.Width ~ Species))
+summary(m)
+```
+
+### 11.21 Creating an interaction Plot
+- interaction.plot
+ANOVA is a form of linear regression, so ideally there is a linear relationship between every predictor and the response variable. One source of nonlinearity is an interaction between two predictors: as one predictor changes value, the other predictor changes its relationship to the response variable. Checking for interaction between predictors is a basic diagnostic.
+
+The faraway package contains a dataset called rats. In it, treat and poison are categorical variables and time is the response variable. When plotting poison against time we are looking for straight, parallel lines, which indicate a linear relationship. However, using the interaction.plot function reveals that something is not right:
+```{r}
+library(faraway)
+data(rats)
+with(rats, interaction.plot(poison, treat, time))
+```
+The resulting graph is shown in Figure 11-6. Each line graphs time against poison. The difference between lines is that each line is for a different value of treat. The lines should be parallel, but the top two are not exactly parallel. Evidently, varying the value of treat “warped” the lines, introducing a nonlinearity into the relationship between poison and time.
+
+This signals a possible interaction that we should check. For this data it just so happens that yes, there is an interaction but no, it is not statistically significant. The moral is clear: the visual check is useful, but it’s not foolproof. Follow up with a statistical check.
+
+### 11.22 Finding Differences between means of Groups
+```{r}
+m <- with(iris, aov(Sepal.Length ~ Species))
+TukeyHSD(m)
+plot(TukeyHSD(m))
+```
+HSD = Honest Significant Differences. Invented by John Tukey.
+
+### 11.23 Performing Robust ANOVA (krusdal-Wallis Test)
+Your data is divided into groups. The groups are not normally distributed, but their distributions have similar shapes. You want to perform a test similar to ANOVA—you want to know if the group medians are significantly different
+- kruskal.test(x ~ f)
+- X is a vector of data and f is a grouping factor.
+```{r}
+midterm <- c(0.8182, 0.6818, 0.5114, 0.6705, 0.6818, 0.9545, 0.9091, 0.9659, 1.0000, 0.7273, 0.7727, 0.7273, 0.6364, 0.6250, 0.6932, 0.6932, 0.0000, 0.8750, 0.8068, 0.9432, 0.9006, 0.7029, 0.9171, 0.9628)
+hw <- c(4, 4, 2, 3, 4, 4, 4, 3, 4, 4, 3, 3, 1, 4, 4, 3, 3, 4, 3, 4, 4, 3, 4, 4)
+kruskal.test(midterm ~ hw)
+```
+
+He had more data and there was a correlation between number of homeworks completed and midterm grade. At first he thought that meant that the homework was an effective teaching tool. Then he remebered that correlation is not causation. Perhaps students who are motivated to do the homework are also motivated to study for the exam. In the end, He could only conclude that students who do more homework are likely to score better on the midterm, but that he doesn't know why.
+
+### 11.24 Comparing Models by using ANOVA
+- anova(m1, m2)
+```{r}
+n = 30
+u <- rnorm(n, sd=3)
+v <- rnorm(n, sd=1)
+w <- rnorm(n, sd=2)
+z <- rnorm(n, sd=.24)
+eps <- rnorm(n, sd=5)
+y <- u + .002 * v - w + - .0001 * z + eps
+m1 <- lm(y ~ u)
+m2 <- lm(y ~ u + v)
+m3 <- lm(y ~ u + v + w)
+anova(m1, m2)
+# High P-value, not significantly different
+anova(m2, m3)
+# Low p-value, models differ
+```
+
+## 12. Useful Tricks
+### 12.1 Peeking at Your Data
+- head(x)
+- tail(x)
+- head(dfrm)
+
+### 12.2 Widen your output
+- options(width=numcols)
+
+### 12.3 Printing the Result of an Assignment
+- (x <- 1/pi)
+
+### 12.4 Summing Rows and Columns
+- rowSums(m)
+- colSums(m)
+
+### 12.5 Printing Data in Columns
+- print(cbind(x, y))
+
+### 12.6 Binning Your Data
+```{r}
+x <- rnorm(100)
+breaks <- c(-3, -2, -1, 0, 1, 2, 3)
+f <- cut(x, breaks)
+summary(f)
+f <- cut(x, breaks, labels=c("Bottom", "Low", "Neg", "Pos", "High", "Top"))
+summary(f)
+```
+NOTE: You have lost a lot of information by binning. Keep the original data.
+
+### 12.7 Finding the Position of a Particular Value
+- match(Val, vec)
+- which.min(vec)
+- which.max(vec)
+
+### 12.8. Selecting Every nth Element of a Vector
+- v[ seq_along(v) %% n == 0 ]
+- v[c(FALSE, TRUE)]  gives every other, using the recycling rule.
+
+### 12.9. Finding Pairwise Minumums or Maximums
+```{r}
+pmin(1:5, 5:1)
+pmax(1:5, 5:1)
+```
+
+### 12.10. Generating All Combinations of Several Factors
+- expand.grid(f1, f2)
+```{r}
+sides <- factor(c("Heads", "Tails"))
+faces <- factor(c("1 pip", paste(2:6, "pips")))
+expand.grid(sides, faces)
+expand.grid(sides, sides, sides)
+```
+
+### 12.11. Flatten a Data Frame
+```{r}
+daily.prod <- data.frame(Widgets=c(179, 153, 183, 153, 154), Gadgets=c(167, 193, 190, 161, 181), Thingys=c(182, 166, 170, 171, 186), row.names=c("Mon", "Tue", "Wed", "Thu", "Fri"))
+# take mean of each column separately
+mean(daily.prod)
+# take mean of the whole table
+mean(as.matrix(daily.prod))
+```
+
+### 12.12. Sorting a Data Frame
+```{r}
+daily.prod[order(daily.prod$Widgets),]
+```
+
+### 12.13. Sorting by Two Columns
+```{r}
+daily.prod[order(daily.prod$Widgets, daily.prod$Gadgets),]
+```
+
+### 12.14. Striping Attributes from a Variable
+- attributes(x) <- NULL
+- attr(x, "attributename") <- NULL
+- careful with the dim attribute of a matrix, without with the matrix is just a vector
+
+### 12.15. Revealing the Structure of an Object
+- class(x)
+- mode(x)
+- str(x)
+- names(x)
+
+### 12.16. Timing Your Code
+- system.time(aLongRunningExpression)
+
+### 12.17. Suppressing Warnings and Error Messages
+- suppressMessage(annoyingFunction())
+- suppressWarnings(annoyingFunction())
+
+### 12.18. Taking Function Arguments from a List
+- do.call(function, list)
+```{r}
+numbers <- list(1, 3, 5, 7, 9)
+mean(unlist(numbers))
+
+lol <- list(col1=list(7, 8, 9), col2=list(70, 80, 90), col3=list(700, 800, 900))
+# no help
+cbind(lol)
+# One column. Not a matrix
+cbind(unlist(lol))
+do.call(cbind, lol)
+```
+
+### 12.19. Defining Your Own Binary Operators
+You want an operator like + or / that works between arguments. Text between two % signs is a binary operator.
+```{r}
+'%+-%' <- function(x, margin) x + c(-1, 1)*margin
+100 %+-% (1.96*15)
+# %any% is really high precedence
+100 %+-% 196*15
+```
+
+## 13. Beyond Basic Numerics and Statistics
+### 13.1. Minimizing or Maximizing a Single Parameter
+- optimize(f, lower=lowerBound, upper=upperBound)
+- optimize(f, lower=lowerBound, upper=upperBound, maximum=TRUE)
+```{r}
+f <- function(x) 3*x^4 - 2*x^3 + 3*x^2 - 4*x + 5
+optimize(f, lower=-20, upper=20)
+```
+
+- minumum
+    - value of x which is the minimum
+- objective
+    - value of the function at x
+- If your function has multiple minima in the range, only one will be returned
+
+### 13.2. Minimizing or Maximizing a Multiparameter Function
+- optim(startingPoint, f)
+- optim(startingPoint, f, control=list(fnscale=-1))
+    - use -f() to find the maximum
+```{r}
+steps <- 20
+x <- seq(-1, 1, length.out=steps)
+z <- (x + 10)^(.7) + rnorm(steps)
+f <- function(v) { a <- v[1]; b <- v[2]
+                   sum(abs(z - ((x + a)^b)))
+                   }
+optim(c(1,1), f)
+```
+- covergence = 0, It found a minimum
+- par - value of (a, b) that minimizes the function
+- value - value of function at (a, b)
+- It finds the right answer for
+    - (2, 3)
+- It finds the wrong answer for
+    - (2, -3) - Fails for negatives?
+    - (-2, 3)
+    - (10, .7) - There is a lower minimum at the value picked
+
+### 13.3. Calculating Eigenvalues and Eigenvectors
+```{r}
+fibmat <- matrix(c(0, 1, 1, 1), c(2, 2))
+eigen(fibmat)
+```
+
+### 13.4. Performing Principal Component Analysis
+- r <- prcomp(~ x + y + z)
+- print(r)
+    - standard deviations and rotation matrix
+- summary(r)
+    - Importance of components
+        - standard deviation
+        - proportion of variance
+        - cumulative proportion
+- plot(r)
+    - bar chart of variances
+- predict(r)
+    - rotate data into PCA "space"
+
+### 13.5. Performing Simple Orthogonal Regression (Total Least Squares)
+The ordinary least squares algorithm is asymmetric. That is, calculating lm(y ~ x) is not the mathematical inverse of calculating lm(x ~ y). It assumes that x is a constant vector and y is made of random variables, so all variance is attributed to y and none to x.
+
+There are three graphs for a set of x,y points
+- y ~ x
+    - lower slope
+    - dotted verticle lines from each point to line
+- x ~ y
+    - higher slope
+    - dotted horizontal lines from each point to the trend line
+- Orthogonal Regression
+    - medium slope
+    - dotted lines going from points to a place on the line (minimum distance from point to line, so meets at a right angle)
+- Code:
+    - r <- prcomp( ~ x + y)
+    - slope <- r$rotation[2, 1] / r$rotation[1, 1]
+    - intercept <- r$center[2] - slope*r$center[1]
+
+### 13.6. Finding Clusters in Your Data
+- d <- dist(x)
+    0 compute distances between observations
+- hc <- hclust(d)
+    - form hierarchical clusters
+    - these can be plotted in a dendrogram
+    - there are tools for coloring dendrogram leaves by factors
+- clust <- cutree(hc, k=n)
+    - Identify which observations in x go into which of n clusters
+- Other packages exist, like mclust
+
+```{r}
+means <- sample(c(-3, 0, 3), 99, replace=TRUE)
+x <- rnorm(99, mean=means)
+tapply(x, factor(means), mean)
+d <- dist(x)
+hc <- hclust(d)
+clust <- cutree(hc, k=3)
+head(clust, 20)
+tapply(x, clust, mean)
+par(mfrow=c(1, 2))
+plot(x ~ factor(means), main="Original Clusters", xlab="Cluster Mean")
+plot(x ~ factor(clust), main="Identified Clusters", xlab="Cluster Number")
+```
+
+### 13.7. Predicting a Binary-Valued Variable (Logistic Regression)
+That is, pattern classification for a single pair of classes.
+
+- m <- glm(b ~ x1 + x2 + x3, family=binomial)
+- dfrm <- data.frame(x1=value, x2=value, x3=value)
+- predict(m, type="response", newdata=dfrm)
+```{r}
+data(pima, package="faraway")
+b <- factor(pima$test) # test positive for diabetes
+m <- glm(b ~ diastolic + bmi, family=binomial, data=pima)
+summary(m)
+m.red <- glm(b ~ bmi, family=binomial, data=pima)
+newdata <- data.frame(bmi=32.0)
+predict(m.red, type="response", newdata=newdata)
+newdata <- data.frame(bmi=quantile(pima$bmi, .90))
+predict(m.red, type="response", newdata=newdata)
+```
+
+### 13.8. Bootstrapping a Statistic
+```
+library(boot)
+bootfun <- function(data, indices) {
+    r <- prcomp( ~ x + y, data=data, subset=indices)
+    slope <- r$rotation[2, 1] / r$rotation[1, 1]
+    return(slope)
+}
+bood.data <- data.frame(x=x, y=y)
+# calculate 999 slopes of the relationship between x and y based on bootstrap samples
+reps <- boot(data, bootfun, R=999)
+# give two versions of the 90% confidence interval
+boot.ci(reps, type=c("perc", "bca"), conf=.90)
+```
+
+### 13.9. Factor Analysis
+Factor analysis creates linear combinations of your variables, called *factors*, that abstract the variables's underlying commonality. If your N variables are perfectly independent, then they have nothing in common and N factors are required to describe them. But to the extent that the variables have an underlying commonality, fewer factors capture most of the variance and so fewer than N factors are required.
+
+For each factor and variable, we calculate the correleation between them and call it the *loading*. Variables with high loading are well explained by the factor. We can square the loading to know what fraction of the total variance is explained by the factor.
+
+Factor analysis is useful when it shows that a few factors capture most of the variance of your variables. Thus it alerts. you to reduncancy in your data. in tat case you can reduce your dataset by combining closely related variables or by eliminating redundant variables altogether.
+
+A more subtle application of factor analysis is interpreting the factors to find interrelationships between your variables. If two variables both have large loadings for the same factor, then you know they have something in common. What is it? There is no mechanical answer. You'll need to study the data and its meaning.
+
+There are two tricky aspects of factor analysis. The first is choosing the number of factors. Fortunately, you can use principal components analysis to get a good inital estimate of the number of factors. The second tricky aspect is interpreting the factors themselves.
+
+An example with stock market data
+```
+plot(prcomp(diffs))
+# two factors hold most of the variance, maybe a thirs is needed
+factanal(diffs, factors=2)
+# pvalue is very low. Two factors is not enough
+factanal(diffs, factors=3)
+# pvalue is .34, so 3 will be enough
+```
+### interpretation of loadings
+- factor 1
+    - lots of high loadings
+    - possibly the overall movement of the market
+- factor 2
+    - Two high loadings
+    - Those two stocks may be related, in the same sector?
+- factor 3
+    - The third factor also has two high loadings
+    - the two stocks in question are both petroleum related
+    - This data was collected during the Deep-Water Horizon oil rig distaster in the Gulf of Mexico.
+
+
+## 14. Time Series Analysis
+Time series analysis has become a hot topic with the rise of quantitative finance and automated trading of securities. Many of the facilities described in this chapter were invented by practitioners and researcers in finance, securities trading, and portfolio management.
+
+This chapter's first recipe recommends using the oo or xts packages for representing time series data . They are quite general and shoud meet the needs of most users. Nerly every subsequent recipe assumes you are using one of those two representations.
+
+The base distribution of R includes a time series class called ts. I don't recommend this representations for general use because the implementation is self is too restrictive and because the associated functions (methods) are limited in scope, usefulness, and power.
+
+### Date versus Datetime
+Every observation in a time series has an associated date or time. The object classes used in this chapter , zoo and xts, give you the choice of using either dates or datetimes for representing the data's time component. You would use dates to represent any data that does not actually require a time. Day, Month, year - date. More than once per day - datetime.
+
+### 14.1. Representing Time Series Data
+- x is a vector or data frame
+- dt is a vector of dates or datetimes
+- zoo
+    - library(zoo)
+    - ts_z <- zoo(x, dt)
+- xts
+    - library(xts)
+    - ts_x <- xts(x, dt)
+- conversion
+    - as.zoo(ts_x)
+    - as.xts(ts_z)
+- zoo
+    - The index can be any ordered values, such as Date objects, POSIXct objects, integers, or even floating point values
+- xts
+    - the index must be a supported date or time class. Date, POSIXct, chron, yearmon, yearqtr, dateTime, 
+```{r}
+# daily prices
+prices <- c(132.45, 130.85, 130.00, 129.55, 130.85)
+dates <- as.Date(c("2010-01-04", "2010-01-05", "2010-01-06", "2010-01-07", "2010-01-08"))
+ibm.daily <- zoo(prices, dates)
+print(ibm.daily)
+# prices by seconds after 9:30 am
+prices <- c(131.18, 131.20, 131.17, 131.15, 131.17)
+seconds <- c(9.5, 9.500278, 9.500556, 9.500833, 9.501111)
+ibm.sec <- zoo(prices, seconds)
+print(ibm.sec)
+# Just get the raw data, not the times
+coredata(ibm.daily)
+# Just get the times, not the raw data
+index(ibm.daily)
+```
+- More documentation
+    - vignette("zoo")
+    - vignette("xts")
+- See also the timeSeries package, part of the Rmetrics project for quantitative finance
+
+### 14.2. Plotting Time Series Data
+plot(x) works on zoo and xts objects
+```{r}
+cpi.raw <- read.csv("data/cpi.txt", col.names=c("year", "jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec", "avg"))
+dates <- seq(from=as.Date("2013-12-01"), to=as.Date("1913-01-01"), by="-1 month")
+cpi.monthly <- as.vector(t(cpi.raw[,2:13]))
+cpi <- zoo(cpi.monthly, dates)
+
+ibm <- read.csv("data/ibm-history.csv")
+ibm.daily <- zoo(ibm$Close, as.Date(ibm$Date))
+
+# make inflation adjustments to the prices
+infl <- ibm$Close/(1.03^4)
+times <- index(ibm.daily)
+library(xts)
+# This is from 14.5, but I need it here
+ibm.1980 <- na.locf(merge(ibm.daily, cpi))[seq(as.Date('1980-01-01'), as.Date('2014-12-31'), by="month")]
+
+# R = real value (constant dollar)
+# N = nominal value (current dollar)
+# PI = price index
+# R = N/PI*100
+
+ibm.1980$infl <- ibm.1980$ibm.daily / ibm.1980$cpi * 100
+
+xlab="Date"
+ylab="Relative Price"
+main="IBM: Historical vs. Inflation-Adjusted"
+lty=c("dotted", "solid")
+ylim=range(ibm.1980[,c(1,3)])
+plot(ibm.1980$ibm.daily, lty="solid", main=main, xlab=xlab, ylab=ylab, ylim=ylim)
+lines(ibm.1980$infl, lty="dotted")
+legend(as.Date("1980-01-01"), 210,
+       c("Hist", "Infl-Adj"),
+       lty=c("dotted", "solid"))
+```
+
+### 14.3. Extracting the Oldest of Newest Obervations
+- head(ts)
+- tail(ts)
+- xts
+    - first(as.xts(ibm), "3 weeks")
+    - last(as.xts(ibm), "month")
+    
+### 14.4. Subsetting a Time Series
+- ts[as.Date("yyyy-mm-dd")]
+- dates <- seq(startdate, enddate, increment)
+- ts[dates]
+- window(ts, start=startdate, end=enddate)
+```{r}
+ibm.daily[2]
+ibm.daily[2:4]
+ibm.daily[as.Date('2010-01-05')]
+ibm.daily[seq(as.Date('2010-01-04'), as.Date('2010-01-08'), by=2)]
+window(ibm.daily, start=as.Date('2010-01-05'), end=as.Date('2010-01-07'))
+```
+
+### 14.5. Merging Several Time Series
+- merge(ts1, ts2)
+```{r}
+# Put NA in where things do not match
+head(merge(ibm.daily, cpi))
+tail(merge(ibm.daily, cpi))
+# put the most recent value in place of any missing one
+# last observation carried forward
+head(na.locf(merge(ibm.daily, cpi)))
+tail(na.locf(merge(ibm.daily, cpi)))
+# Just take the ones with matching dates
+head(merge(ibm.daily, cpi, all=FALSE))
+```
+
+### 14.6. Filling or Padding a Time Series
+Your time series data is missing observations. You want to fill or pad the data with the missing dates/times
+
+- Create a zero-width zoo object with the missing dates
+- merge the object with the data that is missing entries, all=TRUE
+```{r}
+dates <- seq(from=as.Date("1970-01-01"), to=as.Date("1979-12-31"), by=1)
+empty <- zoo(, dates)
+cpi.1970s <- cpi[index(cpi) >= as.Date("1970-01-01") & index(cpi) < as.Date("1980-01-01")]
+filled.cpi <- na.locf(merge(cpi.1970s, empty, all=TRUE))
+head(filled.cpi)
+```
+
+### 14.7. Lagging a Time Series
+- lag(ts, k)
+```{r}
+head(ibm.1980)
+# Shift forward 1 day
+# (each day holds the next day's data)
+head(lag(ibm.1980, k=+1, na.pad=TRUE))
+tail(lag(ibm.1980, k=+1, na.pad=TRUE))
+# shift backward 1 week
+head(lag(ibm.1980, k=-2, na.pad=TRUE))
+tail(lag(ibm.1980, k=-2, na.pad=TRUE))
+```
+
+### 14.8. Computing Successive Differences
+```{r}
+# differences between entries
+head(diff(ibm.1980))
+# differences between years on monthly data
+head(diff(ibm.1980, lag=12))
+```
+
+### 14.9. Performing Calculations on Time Series
+```{r}
+head(100* diff(ibm.1980)/ibm.1980)
+```
+
+### 14.10 Computing a Moving Average
+```{r}
+# Cheat to include future data, to make the 12
+head(rollmean(cpi.1970s, 12))
+# Look only at current data
+head(rollmean(cpi.1970s, 12, align="right"))
+```
+
+### 14.11. Applying a Function by Calendar Period
+- xts
+    - apply.daily(ts, f)
+    - apply.weekly(ts, f)
+    - apply.monthly(ts, f)
+    - apply.quarterly(ts, f)
+    - apply.yearly(ts, f)
+- zoo
+    - apply.monthly(as.xts(ts), f)
+```{r}
+# Find the standard deviation on a month by month basis
+plot(sqrt(251) *apply.monthly(as.xts(diff(log(ibm.daily))), sd), main="IBM: Monthly Volatility", ylab="Std dev, annualized")
+              
+```
+
+### 14.12. Applying a Rolling Function
+You want to apply a function to a time series in a rolling manner: calculate the the function at a data point; go to the next data point and calculate again.
+```
+rollapply(ts, 21, f)
+Does this:
+f(ts[1:21])
+f(ts[2:22])
+f(ts[3:23])
+```
+```{r}
+head(rollapply(ibm.daily, 30, mean))
+head(rollapply(ibm.daily, 30, mean, align="right"))
+head(rollapply(ibm.daily, 30, mean, align="left"))
+# Skip ahead so we use each data point just for one result
+head(rollapply(ibm.daily, 30, by=30, mean))
+```
+### 14.13. Plotting the Autocorrelation Function
+The autocorrelation function is an important tool for revealing the interrelationships within a time series. It is a collection of correlations, pk for k=1, 2, 3 where $\rho_k$ is the correlation between all pairs of data points that are exactly k steps apart
+
+You have to have filled in all the gaps first
+```{r}
+acf(head(filled.cpi, 100))
+```
+
+### 14.14. Testing a Time Series for Autocorrelation
+Low pvalue indicates significant autocorrelation, byt does not say which ones. High pvalue indicates no significant autocorrelations.
+```{r}
+Box.test(filled.cpi)
+```
+For small samples, Box.test(ts, type="Ljung-Box")
+
+### 14.15. Plotting the Parial Autocorrelation Function
+The practical value of a PACF is that it helps you to identify the number of autoregression (AR) coefficients in an ARIMA model.
+
+Lag values whose lines cross above the dotted line are statistically significant.
+```{r}
+pacf(filled.cpi)
+```
+
+### 14.16. Finding Lagged Correlations Between Two...
+You have two time series and you are wondering if there is a lagged correlation between them.
+- ccf(bonds, cmdtys, main="Bonds vs. Commodities")
+
+Correlations that extend above or below the dotten lines are statistically significant.
+
+### 14.17. Detrending a Time Series
+- Your data contains a trend that you want to remove.
+- Use linear regression to identify the trend component; then subtract the trend compnent from the time series.
+- m holds the slope and intercept of the line that best fits the data, $y_i = \beta_1 x_i - \beta_0$
+- resid gives the error for each point: $r_i = y_i - \beta_1 x_i 0 \beta_0$
+
+So, rotate the data using the slope and bring it near zero with the intercept. The detrended data is the result.
+
+```{r}
+m <- lm(coredata(filled.cpi) ~ index(filled.cpi))
+detr <- zoo(resid(m), index(filled.cpi))
+par(mfrow=c(2,1), mar=c(2, 4, 0, 1))
+plot(filled.cpi, ylab="cpi")
+plot(detr, lty="dashed", ylab="detrend cpi")
+```
+### 14.18. Fitting an ARIMA Model
+- forecast:auto.arima
+1. Identify the model order
+2. Fit the model to the data, giving the coefficients
+3. Apply diagnostic measure to validate the model
+```{r}
+library(forecast)
+auto.arima(ibm.daily)
+# get confidence intervals
+m <- arima(x=cpi, order=c(1,1,0))
+confint(m)
+```
+
+His example had 4 terms, ar1, ar2, ma1, ma2. The best order was (2, 1, 2), which means that it differences the data once (d = 1) before selectin a model with two AR coefficients (p=2) and two MA coefficients (q=2)
+```
+arima(x, order=c(2, 1, 2))
+Series: x
+ARIMA(2, 1, 2)
+
+Call: arima(x = x, order = c(2, 1, 2))
+
+Coefficients:
+        ar1      ar2      ma1     ma2
+     0.0451  -0.9183  -0.0066  0.6178
+s.e. 0.0249   0.0252   0.0496  0.0517
+
+sigma^2 estimated as 0.9877: log likelihood = -708.45
+AIC = 1426.9 AICc = 1427.02  BIC = 1447.98
+
+m <- arima(x, order=c(2,1,2))
+confint(m)
+           2.5 %      97.5 %
+ar1 -0.003811699  0.09396993
+ar2 -0.967741073 -0.86891013
+ma1 -0.103861019  0.09059546
+ma2  0.516499037  0.71903424
+```
+The ar1 and ma1 coefficients have confidence intervals that contain 0, which means that their values may be zero, which marks them as insignificant.
+
+He goes on to warn us about using this technique without knowing more, which is fine by me since I forget what the acronym even stands for at the moment.
+
+### 14.19. Removing Insignificant ARIMA Coefficients
+force ar1 and ma1 to be zero, retaining just ar2 and ma2
+```
+m <- arima(x, order=c(2, 1, 2), fixed=c(0, NA, 0, NA))
+m
+Series: x
+ARIMA(2, 1, 2)
+
+Call: arima(x = x, order = c(2, 1, 2), fixed = c(0, NA, 0, NA))
+
+Coefficients:
+     ar1      ar2  ma1     ma2
+       0  -0.9082    0  0.5931
+s.e.   0   0.0268    0  0.9522
+
+sigma^2 estimated as 0.999: log likelihood = -711.27
+etc.
+```
+### 14.20. Running Diagnostics on an ARIMA Model
+tsdiag(m) produces 3 graphs
+- Standardized Residuals
+- ACF of Residuals
+- p values for Ljung-Box statistic
+
+If they are good:
+- The standardized residuals don't show clusters of volatility
+- The autocorrelation function (ACF) show no significant autocorrelation between the residuals.
+- The p-values for the Ljung-Box statistics are all large, indicating that the residuals are patternless. We have extracted the information and left behind only "noise."
+
+If they are not good: (ACF lines above the dotted line, Box stat dots below the dotted line), use some checks of the residuals like:
+- Tests for normality
+- Quantile-quantile plot
+- histogram
+- scatter plot against the fitted values
+- time-series plot
+
+### 14.21. Making Forecasts from an ARIMA Model
+- predict(m, n.ahead=10)
+- will take the model produced by arima and give the next 10 most likely entries in the series
+
+### 14.22. Testing for Mean Reversion
+- Mean reversion means that it tends to return to its long-run average. It may wander off, but eventually it wanders back. If a time series is not mean reverting, then it can wander away without returning to the mean.
+- tseries:adf.test
+    - Augmented Dickey-Fuller test
+    - low p-value indicates mean reversion
+    - detrends and recenters your data
+- fUnitRoots:adfTest(coredata(ts), type="nc")
+    - neither detrends nor recenters your data
+    - type="c" recenters but does not detrend
+
+### 14.23. Smoothing a Time Series
+- KernSmooth:dpill
+    - select an initial bandwidth parameter
+- KernSmooth:locploy
+    - smooth the data
+
+```{r}
+par(mfrow=c(1, 1), mar=c(5, 4, 4, 2) + 0.1)
+t <- seq(from=-10, to=10, length.out=201)
+noise <- rnorm(201)
+s <- sin(t)
+y <- s + noise
+plot(y ~ t, type="l", main="Smoothing Via Local Polynomials", ylab="sin(t) + e")
+library(KernSmooth)
+gridsize <- length(y)
+bw <- dpill(t, y, gridsize=gridsize)
+lp <- locpoly(x=t, y=y, bandwidth=bw, gridsize=gridsize)
+smooth <- lp$y
+lines(smooth ~ t, type="l", lty="dashed")
+```
+- See also, ksmooth, lowess, and HoltWinters
+- as well as expsmooth for exponential smoothing

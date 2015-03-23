@@ -1,0 +1,149 @@
+---
+title: "The Exponential Distribution and the CLT"
+author: "Linda Kukolich"
+date: "February 10, 2015"
+output: html_document
+---
+This report will examine the exponential distribution and the Central Limit Theorem (CLT). According to the notes given to us in Statistical Inference: "the CLT states that the distribution of averages of *independent and identically distributed* (iid) variables (properly normalized) becomes that of a standard normal as the sample size increases". This report will show that given 1000 sets of 40 samples, the CLT holds.
+
+- - -
+
+## The Exponential Distribution
+
+The density of the exponential distribution is
+$f(x) = \lambda e^{-\lambda x}$
+for $x \ge 0$
+
+This gives a mean of $1/\lambda$ and a variance of $1/\lambda^2$ (See the appendix for a derivation.)
+
+The variance of the sample mean will be $\frac{1}{n \lambda^2}$
+Which gives us a standard error of
+$\frac{1}{\lambda\sqrt{n}}$.
+
+## Simulation
+
+First, let's do our simulation, 40 sets of 1000 samples of an exponential distribution, with a lambda of 0.2.
+
+```{r}
+# Set the seed, to ensure repeatability
+set.seed(1220)
+# Set our constants and parameters of our distributions
+nosim <- 1000
+n <- 40
+lambda <- .2
+s_theory <- m_theory <- 1/lambda
+se_theory <- s_theory/sqrt(n)   # standard deviation of the sample mean
+# sample the distribution 40*1000 times
+data <- matrix(rexp(n*nosim, lambda), nosim)
+m <- apply(data, 1, function(p) sum(p)/n)
+s <- apply(data, 1, function(p) sqrt(sum((p - m)^2)/(n-1)))
+```
+
+## Distribution of averages of samples
+
+The central limit theorem works with "averages of iid variables ... as the sample size increases". We are working with 1000 sets of 40 samples. While we saw some variability in the 40 samples, looking at 1000 such sets ought to "average things out".
+
+```{r}
+# Take the means of the 1000 rows of data
+means <- apply(data, 1, mean)
+# Calculate our theoretical distribution over the domain of our plot
+x <- seq(0, 9, length.out=50)
+y <- dnorm(x, mean=m_theory, sd=se_theory)
+```
+
+## Histogram of the means of 40 samples, with a normal distribution, $N(\frac{1}{\lambda}, \frac{1}{\lambda \sqrt{40}})$
+```{r, echo = FALSE, fig.width=6, fig.height=6, fig.align='center'}
+hist(means, col="pink", main="", probability=TRUE)
+lines(x, y, lwd=2, col="blue")
+abline(v=m_theory, lwd=2, lty="dashed", col="blue")
+abline(v=m_theory - se_theory, lwd=2, lty="dashed", col="blue")
+abline(v=m_theory + se_theory, lwd=2, lty="dashed", col="blue")
+
+avgMean = mean(means)
+avgSE = sd(means)
+abline(v=avgMean, col="red", lwd=2, lty="dotted")
+abline(v=avgMean - avgSE, col="red", lwd=2, lty="dotted")
+abline(v=avgMean + avgSE, col="red", lwd=2, lty="dotted")
+legend("topright", legend=c("P(mean(X))", "Normal Dist", "Mean & Deviation", "Theory", "Observed"), col=c("pink", "blue", NA, "blue", "red"), lwd=2, lty=c("blank", "solid", "blank", "dashed", "dotted"), pch=c(15, NA, NA, NA, NA))
+```
+
+In the figure above, the pink boxes show P(X), a normalized histogram of the sample means from each of the 1000 sets of 40 samples. The solid blue line shows a normal distribution. The blue dashed lines show the mean of this distribution ($1/\lambda = 5$) and one standard deviation above and below that mean ($1/\lambda \pm 1/(\lambda\sqrt{40} = 5 \pm 0.79$). These marks for the mean and standard error can be hard to see on the plot because the measured sample mean (`r round(avgMean, 2)`) and the square root of the variance of the sample mean (`r round(avgSE, 2)`) are also shown in red, nearly on top of the dashed blue theoretical lines. These values are given in the table below, for clarity.
+
+ |  | Mean | Standard Error
+| --- | --- | --- |
+| Theory | `r m_theory` | `r round(se_theory, 3)`
+| Measured | `r round(avgMean, 3)` | `r round(avgSE, 3)`
+
+It would be nice to calculate the actual error between the normalized histrogram we show and the theoretical distribution. We can eyeball it and see that it matches, but that doesn't give us a number that would let us compare different theoretical models. Sadly, this task is beyond my current abilities in R. For now, the curve matches nicely, the mean matches nicely, and the standard error, as given by the variance of the sample mean, matches nicely. All in all, a win for the Central Limit Theorem.
+
+## Appendix
+
+### Derivation of Mean and Variance of Exponential Distribution
+
+The density of the exponential distribution is
+$f(x) = \lambda e^{-\lambda x}$
+for $x \ge 0$
+
+### Mean
+$$
+\begin{align}
+E[X] &= \int_0^{\infty} x \lambda e^{- \lambda x}dx\\
+&= - x e^{-\lambda x}\big|_0^\infty - \int_0^\infty -e^{-\lambda x} dx \\
+&= (0 - 0) - \frac{1}{\lambda} e^{-\lambda x} \big|_0^\infty \\
+&= (0 - 1)\frac{-1}{\lambda} \\
+&= 1/\lambda
+\end{align}
+$$
+
+### Variance
+$$
+\begin{align}
+E[X^2] - E[X]^2 &= \int_0^\infty x^2 \lambda e^{-\lambda x} dx - \frac{1}{\lambda^2} \\
+&= x^2 (-e^{-\lambda x}) \big|_0^\infty + \int_0^\infty 2x e^{-\lambda x} dx - \frac{1}{\lambda^2} \\
+&= (0 - 0) + \big[- \frac{2}{\lambda}xe^{-\lambda x} \big]_0^\infty + \frac{2}{\lambda} \int_0^\infty e^{-\lambda x} dx - \frac{1}{\lambda^2} \\
+&= (0 - 0) - \frac{2}{\lambda} \frac{1}{\lambda} e^{-\lambda x}\big|_0^\infty - \frac{1}{\lambda^2} \\
+&= - \frac{2}{\lambda^2} (0 - 1) - \frac{1}{\lambda^2} \\
+&= \frac{1}{\lambda^2}
+\end{align}
+$$
+
+## Distribution of individual samples
+
+Let us examine one of sets. That is, what does 1000 samples from an exponential distribution look like? The shape of the histogram ought to match the underlying exponential distribution.
+
+### Histogram of 40 samples, with $\lambda e^{-\lambda x}$
+```{r}
+x <- seq(0, 35, length.out=50)
+y <- lambda * exp(-lambda*x)
+```
+```{r, echo = FALSE, fig.width=6, fig.height=6, fig.align='center'}
+hist(data[1,], main="Histogram of One Set of 40 Samples", col="lightblue", probability=TRUE, xlab="")
+lines(x,y, lwd=2, col="blue")
+abline(v=5, lwd=2, lty="dashed", col="blue")
+abline(v=m[1], col="red", lty="dotted")
+abline(v=m[1]-s[1], col="red", lty="dotted")
+abline(v=m[1]+s[1], col="red", lty="dotted")
+m <- round(m[1], 1)
+s <- round(s[1], 1)
+legend(x="topright", legend=c("P(X)", "Exponential Dist", "1/lambda = 5", paste("mean(X) = ", m), paste("+- sqrt(s(X))", s)), lty=c("blank", "solid", "dashed", "dotted", "dotted"), col=c("lightblue", "blue", "blue", "red", "red"), pch=c(15, NA, NA, NA, NA))
+```
+
+The line of the function $\lambda e^{-\lambda x}$ is a good match for the histogram, which has been normalized to give probabilities rather than counts. The dotted red line marking the sample mean for this set is near 5, which is the mean of the underlying distribution.
+
+Out of curiosity, do all the histograms look similar?
+Do they all appear to match the shape of the underlying distribution?
+
+- - -
+
+### Histograms of the first 16 sets of 40 samples
+```{r, echo = FALSE, fig.width=6, fig.height=6, fig.align='center'}
+par(mfrow=c(4,4), mar=c(0, 0, 0, 0))
+null <- lapply(1:16, function(p) {hist(data[p,], main="", col="lightblue", axes=FALSE, probability=TRUE); m <- mean(data[p,]); lines(x,y, col="blue"); abline(v=5, lty="dashed", col="blue"); abline(v=m, col="red", lty="dotted")})
+par(mfrow=c(1,1), mar=c(5, 4, 4, 2) + 0.1)
+```
+
+The theory line seems to be a reasonable match for the histogram probability boxes, though some match better than others. The dotted red lines showing the sample means are near the dashed blue lines for the theoretical mean of 5, though again, some match better than others.
+
+## Reviewer Comments
+ expDist (full marks) I would have liked to see more discussion on the variance. You showed the theoretical and measured Standard Error in a table, but did not discuss it much. You have said "1000 sets of 40 samples", but I think you mean "1000 samples of 40 values". Later, you have said "40 sets of 1000 samples" . (From your code, I think you have done 1000 samples each with sample-size 40, which is correct.) Again, you have said "Histogram of the means of 40 samples", but then you have compared it with a normal distribution with a sample-size of 40. I would have liked to see all of your code, including the parts that create the plots. 
+ 

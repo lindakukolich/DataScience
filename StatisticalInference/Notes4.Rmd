@@ -1,0 +1,658 @@
+---
+title: "Notes 4 - Statistical Inference"
+author: "Linda Kukolich"
+date: "March 2, 2015"
+output: html_document
+Professors      : Brian Caffo, Jeff Leek, Roger Peng
+job         : Johns Hopkins Bloomberg School of Public Health
+---
+
+## Power
+- Power is the probability of rejecting the null hypothesis when it is false
+- Ergo, power (as its name would suggest) is a good thing; you want more power
+- A type II error (a bad thing, as its name would suggest) is failing to reject the null hypothesis when it's false; the probability of a type II error is usually called $\beta$
+- Note Power  $= 1 - \beta$
+
+
+## Notes
+- Consider our previous example involving RDI
+- $H_0: \mu = 30$ versus $H_a: \mu > 30$
+- Then power is 
+$$P\left(\frac{\bar X - 30}{s /\sqrt{n}} > t_{1-\alpha,n-1} ~;~ \mu = \mu_a \right)$$
+- Note that this is a function that depends on the specific value of $\mu_a$!
+- Notice as $\mu_a$ approaches $30$ the power approaches $\alpha$
+
+
+
+## Calculating power for Gaussian data
+- We reject if $\frac{\bar X - 30}{\sigma /\sqrt{n}} > z_{1-\alpha}$    
+    - Equivalently if $\bar X > 30 + Z_{1-\alpha} \frac{\sigma}{\sqrt{n}}$
+- Under $H_0 : \bar X \sim N(\mu_0, \sigma^2 / n)$
+- Under $H_a : \bar X \sim N(\mu_a, \sigma^2 / n)$
+- So we want 
+```{r, echo=TRUE,eval=FALSE}
+alpha = 0.05
+z = qnorm(1 - alpha)
+pnorm(mu0 + z * sigma / sqrt(n), mean = mua, sd = sigma / sqrt(n), 
+      lower.tail = FALSE)
+```
+
+
+## Example continued
+- $\mu_a = 32$, $\mu_0 = 30$, $n =16$, $\sigma = 4$
+```{r, echo=TRUE,eval=TRUE}
+mu0 = 30; mua = 32; sigma = 4; n = 16
+alpha = 0.05
+z = qnorm(1 - alpha)
+pnorm(mu0 + z * sigma / sqrt(n), mean = mu0, sd = sigma / sqrt(n), 
+      lower.tail = FALSE)
+pnorm(mu0 + z * sigma / sqrt(n), mean = mua, sd = sigma / sqrt(n), 
+      lower.tail = FALSE)
+```
+## Plotting the two gaussians
+This picture makes a ton more sense to me, given my background in pattern classification using gaussian models.
+
+##  Plotting the power curve
+
+```{r, fig.align='center', fig.height=6, fig.width=12, echo=FALSE}
+library(ggplot2)
+nseq = c(8, 16, 32, 64, 128)
+mua = seq(30, 35, by = 0.1)
+power = sapply(nseq, function(n)
+    pnorm(mu0 + z * sigma / sqrt(n), mean = mua, sd = sigma / sqrt(n), 
+          lower.tail = FALSE)
+    )
+colnames(power) <- paste("n", nseq, sep = "")
+d <- data.frame(mua, power)
+library(reshape2)
+d2 <- melt(d, id.vars = "mua")
+names(d2) <- c("mua", "n", "power")    
+g <- ggplot(d2, 
+            aes(x = mua, y = power, col = n)) + geom_line(size = 2)
+g            
+```
+
+
+
+## Graphical Depiction of Power
+```{r, echo = TRUE, eval=FALSE}
+library(manipulate)
+mu0 = 30
+myplot <- function(sigma, mua, n, alpha){
+    g = ggplot(data.frame(mu = c(27, 36)), aes(x = mu))
+    g = g + stat_function(fun=dnorm, geom = "line", 
+                          args = list(mean = mu0, sd = sigma / sqrt(n)), 
+                          size = 2, col = "red")
+    g = g + stat_function(fun=dnorm, geom = "line", 
+                          args = list(mean = mua, sd = sigma / sqrt(n)), 
+                          size = 2, col = "blue")
+    xitc = mu0 + qnorm(1 - alpha) * sigma / sqrt(n)
+    g = g + geom_vline(xintercept=xitc, size = 3)
+    g
+}
+manipulate(
+    myplot(sigma, mua, n, alpha),
+    sigma = slider(1, 10, step = 1, initial = 4),
+    mua = slider(30, 35, step = 1, initial = 32),
+    n = slider(1, 50, step = 1, initial = 16),
+    alpha = slider(0.01, 0.1, step = 0.01, initial = 0.05)
+    )
+
+```
+```{r}
+g = ggplot(data.frame(mu = c(27, 36)), aes(x = mu))
+g = g + stat_function(fun=dnorm, geom = "line",                   
+                      args = list(mean = mu0, sd = sigma / sqrt(n)), 
+                      size = 2, col = "red")
+g = g + stat_function(fun=dnorm, geom = "line", 
+                      args = list(mean = 34, sd = sigma / sqrt(n)), 
+                      size = 2, col = "blue")
+xitc = mu0 + qnorm(1 - alpha) * sigma / sqrt(n)
+g = g + geom_vline(xintercept=xitc, size = 3)
+g
+```
+
+
+## Question
+- When testing $H_a : \mu > \mu_0$, notice if power is $1 - \beta$, then 
+$$1 - \beta = P\left(\bar X > \mu_0 + z_{1-\alpha} \frac{\sigma}{\sqrt{n}} ; \mu = \mu_a \right)$$
+- where $\bar X \sim N(\mu_a, \sigma^2 / n)$
+- Unknowns: $\mu_a$, $\sigma$, $n$, $\beta$
+- Knowns: $\mu_0$, $\alpha$
+- Specify any 3 of the unknowns and you can solve for the remainder
+
+
+## Notes
+- The calculation for $H_a:\mu < \mu_0$ is similar
+- For $H_a: \mu \neq \mu_0$ calculate the one sided power using
+  $\alpha / 2$ (this is only approximately right, it excludes the probability of
+  getting a large TS in the opposite direction of the truth)
+- Power goes up as $\alpha$ gets larger
+- Power of a one sided test is greater than the power of the
+  associated two sided test
+- Power goes up as $\mu_1$ gets further away from $\mu_0$
+- Power goes up as $n$ goes up
+- Power doesn't need $\mu_a$, $\sigma$ and $n$, instead only $\frac{\sqrt{n}(\mu_a - \mu_0)}{\sigma}$
+  - The quantity $\frac{\mu_a - \mu_0}{\sigma}$ is called the effect size, the difference in the means in standard deviation units.
+  - Being unit free, it has some hope of interpretability across settings
+
+## My understanding of Power
+Power is the amount of the proposed gaussian that lies above the 1-&alpha; line on the observed gaussian (for mean0 < meanA).
+- Find wanted = mean0 + qnorm((1-alpha))*sigma/sqrt(n)
+- Find pnorm(wanted, mean=meanA, sd=sigma, lower.tail=FALSE)
+- That's the power (?)
+
+## T-test power
+-  Consider calculating power for a Gossett's $T$ test for our example
+-  The power is
+  $$
+  P\left(\frac{\bar X - \mu_0}{S /\sqrt{n}} > t_{1-\alpha, n-1} ~;~ \mu = \mu_a \right)
+  $$
+- Calculating this requires the non-central t distribution.
+- `power.t.test` does this very well
+  - Omit one of the arguments and it solves for it
+
+
+## Example
+You can monkey around with delta and sd, since it is the effect size (delta/sd) that is important. Delta = (meanA - mean0)
+```{r}
+power.t.test(n = 16, delta = 2 / 4, sd=1, type = "one.sample",  alt = "one.sided")$power
+power.t.test(n = 16, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$power
+power.t.test(n = 16, delta = 100, sd=200, type = "one.sample", alt = "one.sided")$power
+```
+
+
+## Example
+Now, for 3 ways to say the effect size, get the n you need for a given power.
+
+```{r}
+power.t.test(power = .8, delta = 2 / 4, sd=1, type = "one.sample",  alt = "one.sided")$n
+power.t.test(power = .8, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$n
+power.t.test(power = .8, delta = 100, sd=200, type = "one.sample", alt = "one.sided")$n
+ceiling(power.t.test(power = .8, delta = 100, sd=200, type="one.sample", alt = "one.sided")$n)
+```
+```{r}
+power.t.test(power = .8, sd=4, n = 27, type="one.sample", alt = "one.sided")$delta
+power.t.test(power = .8, delta=2, n = 27, sd=NULL, type="one.sample", alt="one.sided")$sd
+```
+
+# Multiple Testing
+## Key ideas
+
+* Hypothesis testing/significance analysis is commonly overused
+* Correcting for multiple testing avoids false positives or discoveries
+* Two key components
+  * Error measure
+  * Correction
+
+
+
+
+## Three eras of statistics
+
+__The age of Quetelet and his successors, in which huge census-level data sets were brought to bear on simple but important questions__: Are there more male than female births? Is the rate of insanity rising?
+
+The classical period of Pearson, Fisher, Neyman, Hotelling, and their successors, intellectual giants who __developed a theory of optimal inference capable of wringing every drop of information out of a scientific experiment__. The questions dealt with still tended to be simple Is treatment A better than treatment B? 
+
+__The era of scientific mass production__, in which new technologies typified by the microarray allow a single team of scientists to produce data sets of a size Quetelet would envy. But now the flood of data is accompanied by a deluge of questions, perhaps thousands of estimates or hypothesis tests that the statistician is charged with answering together; not at all what the classical masters had in mind. Which variables matter among the thousands measured? How do you relate unrelated information?
+
+[http://www-stat.stanford.edu/~ckirby/brad/papers/2010LSIexcerpt.pdf](http://www-stat.stanford.edu/~ckirby/brad/papers/2010LSIexcerpt.pdf)
+
+
+
+## Reasons for multiple testing
+
+
+Photos of
+
+- molecular sequencing machines
+- mri scanner
+- fit bits
+- other ways of collecting TONS of data
+
+
+
+
+## Why correct for multiple tests?
+
+- Jelly Beans cause acne! Scientists investigate! But we're playing minecraft! Fine...
+- We found no link for (purple, red, blue.)
+- Green has a 0.05% link
+- Green Jelly beans linked to Acne!
+
+But if you test 20 things and then cherry pick the one that has a wanted answer, you have cheated. That is, you expect to find at least one error in 20 95% hypothesis tests.
+
+
+[http://xkcd.com/882/](http://xkcd.com/882/)
+
+## Types of errors
+
+Suppose you are testing a hypothesis that a parameter $\beta$ equals zero versus the alternative that it does not equal zero. These are the possible outcomes. 
+</br></br>
+
+|                    | $\beta=0$   | $\beta\neq0$   |  Hypotheses
+|--------------------|-------------|----------------|---------
+|Claim $\beta=0$     |      $U$    |      $T$       |  $m-R$
+|Claim $\beta\neq 0$ |      $V$    |      $S$       |  $R$
+|    Claims          |     $m_0$   |      $m-m_0$   |  $m$
+
+</br></br>
+
+__Type I error or false positive ($V$)__ Say that the parameter does not equal zero when it does
+
+__Type II error or false negative ($T$)__ Say that the parameter equals zero when it doesn't 
+
+Which error rate you care about depends on the relative cost of the different errors, not diagnosing sometone versus (type II Bad) jailing an innocent man (type I bad), for instance
+
+## Error rates
+
+__False positive rate__ - The rate at which false results ($\beta = 0$) are called significant: $E\left[\frac{V}{m_0}\right]$*
+
+__Family wise error rate (FWER)__ - The probability of at least one false positive ${\rm Pr}(V \geq 1)$
+
+__False discovery rate (FDR)__ - The rate at which claims of significance are false $E\left[\frac{V}{R}\right]$
+
+* The false positive rate is closely related to the type I error rate [http://en.wikipedia.org/wiki/False_positive_rate](http://en.wikipedia.org/wiki/False_positive_rate)
+
+
+
+## Controlling the false positive rate
+
+If P-values are correctly calculated calling all $P < \alpha$ significant will control the false positive rate at level $\alpha$ on average. 
+
+<redtext>Problem</redtext>: Suppose that you perform 10,000 tests and $\beta = 0$ for all of them. 
+
+Suppose that you call all $P < 0.05$ significant. 
+
+The expected number of false positives is: $10,000 \times 0.05 = 500$  false positives.  (Extreme in healt, common in signal processing)
+
+__How do we avoid so many false positives?__
+
+
+
+
+## Controlling family-wise error rate (FWER)
+
+Control the probability that making even one error is less than alpha.
+
+The [Bonferroni correction](http://en.wikipedia.org/wiki/Bonferroni_correction) is the oldest multiple testing correction. 
+
+__Basic idea__: 
+
+* Suppose you do $m$ tests
+* You want to control FWER at level $\alpha$ so $Pr(V \geq 1) < \alpha$
+* Calculate P-values normally
+* Set $\alpha_{fwer} = \alpha/m$
+* Call all $P$-values less than $\alpha_{fwer}$ significant
+
+__Pros__: Easy to calculate, conservative
+
+__Cons__: May be very conservative
+
+
+
+
+## Controlling false discovery rate (FDR)
+
+This is the most popular correction when performing _lots_ of tests say in genomics, imaging, astronomy, or other signal-processing disciplines. 
+
+__Basic idea__: 
+
+* Suppose you do $m$ tests
+* You want to control FDR at level $\alpha$ so $E\left[\frac{V}{R}\right]$
+* Calculate P-values normally
+* Order the P-values from smallest to largest $P_{(1)},...,P_{(m)}$
+* Call any $P_{(i)} \leq \alpha \times \frac{i}{m}$ significant
+
+__Pros__: Still pretty easy to calculate, less conservative (maybe much less)
+
+__Cons__: Allows for more false positives, may behave strangely under dependence
+
+
+
+## Example with 10 P-values
+
+```{r}
+par(mfrow=c (1,1))
+pvalues <- c(0.01, 0.02, 0.04, 0.1, 0.30, 0.31, 0.35,
+             0.36, 0.5, 0.8)
+plot(pvalues, pch=19, xlab="Rank", ylab="P-value")
+abline(h=.2, col="red", lwd=2)
+abline(0, .2/10, col="gray", lwd=2)
+abline(h = 0.2/10, col="blue", lwd=2)
+legend(x="topleft", legend=c("No Correction", "BH (FDR)", "Bonferroni (FWER)"), col=c("red", "gray", "blue"), lty=rep(1, 3), lwd=rep(2, 3))
+```
+Controlling all error rates at $\alpha = 0.20$
+
+## Adjusted P-values
+
+* One approach is to adjust the threshold $\alpha$
+* A different approach is to calculate "adjusted p-values"
+* They _are not p-values_ anymore
+* But they can be used directly without adjusting $\alpha$
+
+__Example__: 
+
+* Suppose P-values are $P_1,\ldots,P_m$
+* You could adjust them by taking $P_i^{fwer} = \max{m \times P_i,1}$ for each P-value.
+* Then if you call all $P_i^{fwer} < \alpha$ significant you will control the FWER. 
+
+
+
+## Case study I: no true positives
+
+```{r createPvals,cache=TRUE}
+set.seed(1010093)
+pValues <- rep(NA,1000)
+for(i in 1:1000){
+  y <- rnorm(20)
+  x <- rnorm(20)
+  pValues[i] <- summary(lm(y ~ x))$coeff[2,4]
+}
+
+# Controls false positive rate
+sum(pValues < 0.05)
+```
+
+This is about what we would expect, 5% of 10000
+
+## Case study I: no true positives
+
+```{r, dependson="createPvals"}
+# Controls FWER 
+sum(p.adjust(pValues,method="bonferroni") < 0.05)
+# Controls FDR 
+sum(p.adjust(pValues,method="BH") < 0.05)
+```
+
+
+
+
+## Case study II: 50% true positives
+
+```{r createPvals2,cache=TRUE}
+set.seed(1010093)
+pValues <- rep(NA,1000)
+for(i in 1:1000){
+  x <- rnorm(20)
+  # First 500 beta=0, last 500 beta=2
+  if(i <= 500){y <- rnorm(20)}else{ y <- rnorm(20,mean=2*x)}
+  pValues[i] <- summary(lm(y ~ x))$coeff[2,4]
+}
+trueStatus <- rep(c("zero","not zero"),each=500)
+table(pValues < 0.05, trueStatus)
+```
+
+
+
+
+## Case study II: 50% true positives
+
+```{r, dependson="createPvals2"}
+# Controls FWER 
+table(p.adjust(pValues,method="bonferroni") < 0.05,trueStatus)
+# Controls FDR 
+table(p.adjust(pValues,method="BH") < 0.05,trueStatus)
+```
+
+
+
+
+
+## Case study II: 50% true positives
+
+__P-values versus adjusted P-values__
+```{r, dependson="createPvals2",fig.height=4,fig.width=8}
+par(mfrow=c(1,2))
+plot(pValues,p.adjust(pValues,method="bonferroni"),pch=19)
+plot(pValues,p.adjust(pValues,method="BH"),pch=19)
+```
+
+
+
+
+
+## Notes and resources
+
+__Notes__:
+
+* Multiple testing is an entire subfield
+* A basic Bonferroni/BH correction is usually enough
+* If there is strong dependence between tests there may be problems
+  * Consider method="BY"
+
+__Further resources__:
+
+* [Multiple testing procedures with applications to genomics](http://www.amazon.com/Multiple-Procedures-Applications-Genomics-Statistics/dp/0387493166/ref=sr_1_2/102-3292576-129059?ie=UTF8&s=books&qid=1187394873&sr=1-2)
+* [Statistical significance for genome-wide studies](http://www.pnas.org/content/100/16/9440.full)
+* [Introduction to multiple testing](http://ies.ed.gov/ncee/pubs/20084018/app_b.asp)
+
+# Resampling
+
+## The bootstrap
+
+- The bootstrap is a tremendously useful tool for constructing confidence intervals and calculating standard errors for difficult statistics
+- For example, how would one derive a confidence interval for the median?
+- The bootstrap procedure follows from the so called bootstrap principle
+
+
+## Sample of 50 die rolls
+
+```{r, echo = FALSE, fig.width=12, fig.height = 6, fig.align='center'}
+library(ggplot2)
+library(gridExtra)
+nosim <- 1000
+
+cfunc <- function(x, n) mean(x)
+g1 = ggplot(data.frame(y = rep(1/6, 6), x = 1 : 6), aes(y = y, x = x))
+g1 = g1 + geom_bar(stat = "identity", fill = "lightblue", colour = "black")
+
+dat <- data.frame(x = apply(matrix(sample(1 : 6, nosim * 50, replace = TRUE), 
+                     nosim), 1, mean))
+g2 <- ggplot(dat, aes(x = x)) + geom_histogram(binwidth=.2, colour = "black", fill = "salmon", aes(y = ..density..)) 
+
+grid.arrange(g1, g2, ncol = 2)
+
+```
+
+
+
+## What if we only had one sample?
+```{r, echo = FALSE, fig.width=9, fig.height = 6, fig.align='center'}
+n = 50
+B = 1000
+## our data
+x = sample(1 : 6, n, replace = TRUE)
+## bootstrap resamples
+resamples = matrix(sample(x,
+                           n * B,
+                           replace = TRUE),
+                    B, n)
+resampledMeans = apply(resamples, 1, mean)
+g1 <- ggplot(as.data.frame(prop.table(table(x))), aes(x = x, y = Freq)) + geom_bar(colour = "black", fill = "lightblue", stat = "identity") 
+g2 <- ggplot(data.frame(x = resampledMeans), aes(x = x)) + geom_histogram(binwidth=.2, colour = "black", fill = "salmon", aes(y = ..density..)) 
+grid.arrange(g1, g2, ncol = 2)
+```
+
+
+
+## Consider a data set
+```{r}
+library(UsingR)
+data(father.son)
+x <- father.son$sheight
+n <- length(x)
+B <- 10000
+resamples <- matrix(sample(x,
+                           n * B,
+                           replace = TRUE),
+                    B, n)
+resampledMedians <- apply(resamples, 1, median)
+```
+
+
+## A plot of the histrogram of the resamples
+```{r, fig.align='center', fig.height=6, fig.width=6, echo=FALSE, warning=FALSE}
+g = ggplot(data.frame(x = resampledMedians), aes(x = x)) 
+g = g + geom_density(size = 2, fill = "red")
+#g = g + geom_histogram(alpha = .20, binwidth=.3, colour = "black", fill = "blue", aes(y = ..density..)) 
+g = g + geom_vline(xintercept = median(x), size = 2)
+g
+```
+
+
+
+
+## The bootstrap principle
+
+- Suppose that I have a statistic that estimates some population parameter, but I don't know its sampling distribution
+- The bootstrap principle suggests using the distribution defined by the data to approximate its sampling distribution
+
+
+
+## The bootstrap in practice
+
+- In practice, the bootstrap principle is always carried out using simulation
+- We will cover only a few aspects of bootstrap resampling
+- The general procedure follows by first simulating complete data sets from the observed data with replacement
+
+  - This is approximately drawing from the sampling distribution of that statistic, at least as far as the data is able to approximate the true population distribution
+
+- Calculate the statistic for each simulated data set
+- Use the simulated statistics to either define a confidence interval or take the standard deviation to calculate a standard error
+
+
+
+## Nonparametric bootstrap algorithm example
+
+- Bootstrap procedure for calculating confidence interval for the median from a data set of $n$ observations
+
+  i. Sample $n$ observations **with replacement** from the observed data resulting in one simulated complete data set
+  
+  ii. Take the median of the simulated data set
+  
+  iii. Repeat these two steps $B$ times, resulting in $B$ simulated medians
+  
+  iv. These medians are approximately drawn from the sampling distribution of the median of $n$ observations; therefore we can
+  
+    - Draw a histogram of them
+    - Calculate their standard deviation to estimate the standard error of the median
+    - Take the $2.5^{th}$ and $97.5^{th}$ percentiles as a confidence interval for the median
+
+
+
+## Example code
+
+```{r}
+B <- 10000
+resamples <- matrix(sample(x,
+                           n * B,
+                           replace = TRUE),
+                    B, n)
+medians <- apply(resamples, 1, median)
+sd(medians)
+quantile(medians, c(.025, .975))
+```
+
+
+## Histogram of bootstrap resamples
+
+```{r, fig.height=6, fig.width=6, echo=TRUE,fig.align='center', warning=FALSE}
+g = ggplot(data.frame(medians = medians), aes(x = medians))
+g = g + geom_histogram(color = "black", fill = "lightblue", binwidth = 0.05)
+g
+```
+
+
+
+## Notes on the bootstrap
+
+- The bootstrap is non-parametric
+- Better percentile bootstrap confidence intervals correct for bias
+- There are lots of variations on bootstrap procedures; the book "An Introduction to the Bootstrap"" by Efron and Tibshirani is a great place to start for both bootstrap and jackknife information
+
+
+
+## Group comparisons
+
+- Consider comparing two independent groups.
+- Example, comparing sprays B and C
+
+```{r, fig.height=6, fig.width=8, echo=FALSE, fig.align='center'}
+data(InsectSprays)
+g = ggplot(InsectSprays, aes(spray, count, fill = spray))
+g = g + geom_boxplot()
+g
+```
+
+
+## Permutation tests
+-  Consider the null hypothesis that the distribution of the observations from each group is the same
+-  Then, the group labels are irrelevant
+- Consider a data frome with count and spray
+- Permute the spray (group) labels 
+- Recalculate the statistic
+    - Mean difference in counts
+    - Geometric means
+    - T statistic
+- Calculate the percentage of simulations where
+the simulated statistic was more extreme (toward
+the alternative) than the observed
+
+
+## Variations on permutation testing
+Data type | Statistic | Test name 
+---|---|---|
+Ranks | rank sum | rank sum test
+Binary | hypergeometric prob | Fisher's exact test
+Raw data | | ordinary permutation test
+
+- Also, so-called *randomization tests* are exactly permutation tests, with a different motivation.
+- For matched data, one can randomize the signs
+    - For ranks, this results in the signed rank test
+- Permutation strategies work for regression as well
+    - Permuting a regressor of interest
+- Permutation tests work very well in multivariate settings
+
+
+## Permutation test B v C
+```{r}
+subdata <- InsectSprays[InsectSprays$spray %in% c("B", "C"),]
+y <- subdata$count
+group <- as.character(subdata$spray)
+testStat <- function(w, g) mean(w[g == "B"]) - mean(w[g == "C"])
+observedStat <- testStat(y, group)
+# Under the Null Hypothesis, the label doesn't matter
+# So we will not use it in our test
+permutations <- sapply(1 : 10000, function(i) testStat(y, sample(group)))
+observedStat
+mean(permutations > observedStat)
+```
+
+
+## Histogram of permutations B v C
+```{r, echo= FALSE, fig.width=6, fig.height=6, fig.align='center'}
+g = ggplot(data.frame(permutations = permutations),
+           aes(permutations))
+g = g + geom_histogram(fill = "lightblue", color = "black", binwidth = 1)
+g = g + geom_vline(xintercept = observedStat, size = 2)
+g
+```
+
+The black line is way over to the side, so it likely isn't the mean.
+
+It is important to do the histgrams to see your resampled distributions.
+
+# Final Score
+```{r}
+quiz1 <- 6/5 * 15
+quiz2 <- 8/8 * 15
+quiz3 <- 7/7 * 15
+quiz4 <- 8/9 * 0 * 15
+project <- 9/9 * 40
+swirl <- 9.5/14 * 5
+total <- quiz1 + quiz2 + quiz3 + quiz4 + project + swirl
+total
+# 91.4, so still with distinction, if low due to missing the deadline on homework 4
+# If I had handed that in, I would have had 104.7
+```

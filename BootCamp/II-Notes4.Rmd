@@ -1,0 +1,762 @@
+---
+title: "Notes 4 - Biostatistics Bootcamp II"
+author: "Linda Kukolich"
+date: "March 5, 2015"
+output: html_document
+---
+# Simpson's Paradox and Confounding
+
+```
+From Agresti, Categorical Data Analysis, second edition
+
+                  Death penalty
+                  --------------
+Victim  Defendant  yes  no   %yes
+---------------------------------
+White   White      53   414  11.3
+        Black      11    37  22.9
+Black   White       0    16   0.0
+        Black       4   139   2.8
+---------------------------------
+        White      53   430  11.0
+        Black      15   176   7.9
+---------------------------------
+White              64   451  12.4
+Black               4   155   2.5
+```
+- Marginally, white defendants received the death penalty a greater percentage of time than black defendants
+- Across white and black, black defendants received the death penalty a greater percentage of times than white defendants
+- Simpson's paradox refers to the fact that marginal and conditional associations can be opposing
+- The death penalty was enacted more often for the murder of a white victim than black victim. Whites tend to kill white, hence the larger marginal association.
+
+When you data Simpson's paradox in the following way, it does not seem paradoxical:
+> The relationship between two variables can change when you factor in a third variable.
+
+Larry Wasserman on his blog the normal deviant talks about this well and about the mistake people are making. In summary: people are mistaking the probabilistic statements for causal statements.
+
+- Wikipedia's entry on Simpson's paradox gives an example comparing two player's batting averages
+```
+          First       Second        Whole
+          Half        Half          Season
+Player 1  4/10 (.40)  25/100 (.25)  29/110 (.26)
+Player 2 35/100 (.35)  2/10 (.20)   37/110 (.34)
+```
+- Player 1 has a better batting average than Player 2 in both the first and second half of the season, yet has a worse batting average for the whole season
+- Consider the number of at-bats.
+    - Player 1 did better with fewer at bats
+    - Player 2 did worse with fewer at bats, but better on the longer "half" of his season
+
+- The Berkeley admissions data is a well known data set regarding Simpsons paradox
+
+```{r}
+?UCBAdmissions
+data(UCBAdmissions)
+totalAdmissions <- apply(UCBAdmissions, c(1, 2), sum)
+totalAdmissions
+round(totalAdmissions[1,] / apply(totalAdmissions, 2, sum), 3)
+```
+Acceptance rate by department
+```{r}
+round(apply(UCBAdmissions, 3,
+      function(x) c(x[1] / sum(x[1 : 2]),
+                    x[3] / sum(x[3 : 4]))), 2)
+```
+Why? The application rates by department
+```{r}
+apply(UCBAdmissions, c(2, 3), sum)
+```
+
+- Mathematically, Simpson's paradox is not paradoxical
+    - $a/b < c/d$
+    - $e/f < g/h$
+    - $(a + e)/(b + f) > (c + g)/(d + h)$
+- More statistically, it says that the apparent relationship between two variables can change in light or absence of a third
+- What should you condition on and what shoud you not condition on. Knowing how much conditioning to do is hard. It is studied in a discipline called causal inference.
+- Do not decouple the statistics from the scientific discussion
+    - Death penalty: have a discussion about hypotheses for the causal mechanisms between the various associations. It doesn't make sense to be conditioning on the race of the victim.
+    - Berkeley Admissions: Are there very different acceptance rates by department. Are there different application rates by department. Are there women applying to departments that are harder to get into. That would explain the marginal association quite well.
+
+## Confounding
+- Variables that are correlated with both the explanatory and response variables can distort the estimated effect
+    - Victim's race was correlated with defendant's race and death penalty
+- One strategy to adjust for confounding variables is to **stratify** by the confounder and then combine the strata-specific estimates
+    - Requires appropriately weighting the strata-specific estimates
+- Unnecessary statification reduces precision
+
+### Weighting
+- Suppose that you have two unbiased scales, one with variance 1 lb and one with variance 9 lbs
+- Confronted with weights from both scales, would you give both measurements equal creedance?
+- Suppose that $X_1 \sim N(\mu, \sigma_1^2)$ and $X_2 \sim N(\mu, \sigma_2^2)$ where $\sigma_1$ and $\sigma_2$ are both known
+- log-likelihood for $\mu$
+$$
+-(x_1 - \mu)^2/2\sigma_1^2 - (x_2 - \mu)^2/2\sigma_2^2
+$$
+- Derivative with respect to $\mu$ set equal to 0
+$$
+(x_1 - \mu)/\sigma^2_1 + (x_2 - \mu)/\sigma_2^2 = 0
+$$
+- Answer
+$$
+\frac{x_1 r_1 + x_2 r_2}{r_1 + r_2} = x_1p + x_2(1 - p)
+$$
+where $r_i = 1/\sigma_i^2$ and $p = r_1/(r_1 + r_2)$
+- Note, if $X_1$ has very low variance, its term dominates the estimate of $\mu$
+- General principle: instead of averaging over several unbiased estimates, take an average weighted according to inverse variances
+- For our example $\sigma_1^2 = 1, \sigma_2^2 = 9$ so $p = .9$
+
+### Mantel/Haenszel estimator
+- Let $n_{ijk}$ be entry i, j of table k
+    - k is victims race
+    - i and j be defendent's race and death penalty
+- The $k^{th}$ sample odds ratio is $\hat{\theta}_k = \frac{n_{11k}n_{22k}}{n_{12k}n_{21k}}$
+- The Mantel Haenszel estimator is of the form $\hat{\theta} = \frac{\sum_k r_k \hat{\theta}_k}{\sum_k r_k}$
+- The weights are $r_k = \frac{n_{12k}n_{21k}}{n_{++k}}$
+- The estimator simplifies to $\hat{\theta}_{MH} = \frac{\sum_k n_{11k}n_{22k}/n_{++k}}{\sum_k n_{12k}n_{21k}/n_{++k}}$
+- SE of the log is given in Agresti (page 235) or Rosner (page 656)
+- From: http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/mantel.htm
+
+For table i
+
+|        | Outcome | Variable |     | 
+| ------ | ------- | ------ | ----- |
+| Sample | Present | Absent | Total |
+| 1 | $X_i$ | $n_{i1} - X_i$ | n_{i1} |
+| 2 | $m_i - X_i$ | $X_i - l_i$ | $n_{i2}$ |
+| Total | $m_i$ | $n_i - m_i$ | $n_i$
+
+- $l_i = m_i + n_{i2} - n_{i}$
+- $R_i = \frac{X_i(X_i - l_i)}{n_i}$
+- $S_i = \frac{(m_i - X_i)(N_{i1} - X_i)}{n_i}$
+- $R = \sum_{i=1}^S R_i$
+- $S = \sum_{i=1}^S S_i$
+- $P_i = \frac{X_i + X_i - l_i}{n_i}$
+- $Q_i = 1 - P_i = \frac{m_i-X_i+n_{i1}-X_i}{n_i}$
+- g = number of groups
+- M-H Estimate of common odds ratio is $\hat\omega_{MH} = \frac{\sum_{i=1}^g \frac{n_{i1}n_{i2}}{n_{i}} p_{i1}(1-p_{i2})}{\sum_{i=1}^2 \frac{n_{i1}n_{i2}}{n_{i}} p_{i2}(1-p_{i1})} = \frac{\sum_{i=1}^g X_i(X_i-l_i)/n_i}{\sum_{i=1}^g (m_i - X_i)(n_{i1} - X_i)/n_i}$
+- Estimate of Variance is $\frac{1}{2}(\frac{\sum_g P_i R_i}{R^2} + \frac{\sum_g (P_i S_i + Q_i R_i)}{RS} + \frac{\sum_g Q_i S_i}{S^2}) = SE(log \hat{\theta})^2$
+
+### Example
+```
+Center (places where test was conducted)
+    1      2      3     4     5     6     7    8
+   S  F   S  F   S  F  S  F  S  F  S  F  S F  S F
+T 11 25  16  4  14  5  2 14  6 11  1 10  1 4  4 2
+C 10 27  22 10   7 12  1 16  0 12  0 10  1 8  6 1 
+n  73      52     38    33    29    21    14   13
+
+S - Success, F - failure
+T - Active Drug, C - placebo
+Agresti, Categorical Data Analysis, second edition
+```
+- $\hat\theta_{MH} = \frac{11\times 27/73 + 16\times 10/25 + ... + 4\times 1/13}{10\times 25/73 + 4 \times 22 / 25 + ... + (6 \times 2)/13} = 2.13$
+- $\text{log}\hat{\theta_{MH}} = .758$
+- $\hat{SE}_{\text{log}\hat\theta_{MH}} = .303$
+
+Worried that there may be policies of each center that would also contribute to success or failure, in addition to the drug itself.
+
+Assumes that centers are a random draw from possible centers
+
+### CMH test
+- $H_0: \theta_1 = ... \theta_k = 1$ versus $H_a: \theta_1 = ... = \theta_k \ne 1$
+- The CMH test applies to other alternatives, but is most powerful for the $H_a$ given above
+- Same as testing conditional independence of the response and exposure given the stratifying variable
+- CMH conditioned on the rows and columns for each of the k contingency tables resulting in k hypergeometric distributions and leaving on the $n_{11k}$ cells free
+- Under the conditionaing and under the null hypothesis
+    - $E(n_{11k}) = n_{1+k} n_{+1k}/n_{++k}$
+    - $Var(n_{11k}) = n_{1+k} n_{2+k} n_{+1k} n_{+2k} / n_{++k}^2(n_{++k} - 1)$
+- The CMH test statistic is
+$$
+\frac{[\sum_k\{n_{11k} - E(n_{11k})\}]^2}{\sum_k Var(n_{11k})}
+$$
+- For large sample sizes and under $H_0$, this test statistic is $\chi^2(1)$ (regardless of how many tables you are summing up)
+```{r}
+dat <- array(c(11, 10, 25, 27, 16, 22,  4, 10,
+               14,  7,  5, 12,  2,  1, 14, 16,
+                6,  0, 11, 12,  1,  0, 10, 10,
+                1,  1,  4,  8,  4,  6,  2,  1),
+             c(2, 2, 8))
+mantelhaen.test(dat, correct=FALSE)
+```
+Test presents evidence to suggest that the treatment and response are not conditionally independent given center.
+
+### Notes
+- It's possible to perform an analogous test in a random effects logit model tat benefits from a complete model specification
+- It's also prossible to test heterogeneity of the strata-specific odds ratios
+- Exact tests (guarantee the type I error rate) are also possible 'exact = TRUE' in R
+- You could do a monte carlo estimate by permuting the results from each center to get something like this exact result
+
+## Case Control Data
+
+```
+       Lung cancer
+       -----------
+Smoker  Cases  Controls  Total
+-------------------------------
+Yes     688    650       1338
+No       21     59         80
+-------------------------------
+        709    709        1418
+```
+- Method 1 - Find lots of people who do or do not smoke and then watch to see if they get cancer
+- Method 2 - Look at hospital records of folks who do or do not have cancer and see if they smoked
+- Case status obtained from records
+- Cannot estimate P(Case | Smoker)
+- Can estimate P(Smoker | Case)
+- Can estimate odds ratio b/c
+$$
+\frac{Odds(\text{case} \:|\: \text{smoker})}{Odds(\text{case} \:|\: \text{smoker}^c)} \\
+= \frac{Odds(\text{smoker} \:|\: \text{case})}{Odds(\text{smoker} \:|\: \text{case}^c)} \\
+= \frac{P(C \:|\: S)/P(\bar{C} \:|\: S)}{P(C \:|\: \bar{S})/P(\bar{C} \:|\: \bar{S})} \\
+= \frac{P(C, S)/P(\bar{C},S)}{P(C,\bar{S})/P(\bar{C},\bar{S})} \\
+= \frac{P(C, S)P(\bar{C},\bar{S})}{P(C,\bar{S})P(\bar{C},s)}
+$$
+
+Exchange C and S and the result is obtained
+
+- Sample Odds Ratio is $\frac{n_{11}n_{22}}{n_{12}n_{21}}$
+- Sample OR is unchanged if a row or column is multiplied by a constant
+- Invariant to transposing
+- Is related to Relative Risk (RR)
+$$
+\begin{align}
+OR &= \frac{P(S \:|\: C)/P(\bar{S} \:|\: C)}{P(S \:|\: \bar{C})/P(\bar{S} \:|\: \bar{C})} \\
+&= \frac{P(C \:|\: S)/P(\bar{C} \:|\: S)}{P(C \:|
+\: \bar{S})/P(\bar{C} \:|\: \bar{S})} \\
+&= \frac{P(C\:|\:S) P(\bar{C} \:|\: \bar{S})} {P(C\:|\: \bar{S}) P(\bar{C} \:|\: S)} \\
+&= RR \times \frac{1 - P( C \:|\: \bar{S})}{1 - P(C \:|\: S)}
+\end{align}
+$$
+- OR applimately RR if $P(C\:|\:\bar{S})$ and $P(C\,|\,S)$ are small (or if they are nearly equal)
+- This is often true if cases are really rare. Using the Odds ratio to approximate the relative risk with something called the rare disease assumption.
+
+```
+          Disease
+          --------
+Exposure  Yes  No  Total
+------------------------
+Yes       9    1    10
+No        1    99   1000
+------------------------
+          10   1000  1010
+```
+- Cross sectional data
+- $P(\hat{D}) = 10/1010 \approx .01$
+- $\hat{OR} = (9 \times 999)/(1 \times 1) = 8991$
+- $\hat{RR} = (9/10)/(1/1000) = 900$
+- D is rare in the sample
+- D is not rare among the exposed
+- Odds Ratio does not estimate the Relative Risk
+
+### Notes
+- OR = 1 implies no association
+- OR > 1 positive association
+- OR < 1 negative association
+- For retrospective CC studies, OR can be interpreted prospectively
+- For diseases that are rare among the cases AND controls, the OR approximates the RR
+- Delta method SE for log OR is sqrt of 1/cell counts added up
+```
+       Lung cancer
+       -----------
+Smoker  Cases  Controls  Total
+-------------------------------
+Yes     688    650       1338
+No       21     59         80
+-------------------------------
+        709    709        1418
+```
+- $\hat{OR} = \frac{688 \times 59}{21 \times 650} = 3.0$
+- $\hat{SE}_{log\hat{OR}} = \sqrt{\frac{1}{688} + \frac{1}{650} + \frac{1}{21} + \frac{1}{59}} = .26$
+- CI = log(3.0) &pm; 1.96 &times; .26 = [.59, 1.61]
+- The estimated odds of lung cancer for smokers are 3 times that of the odds for non-smokers with an interval of [exp(.59), exp(1.61)] = [1.80, 5.00]
+
+## Exact inference for the OR
+- X the number of smokers for the cases
+- Y the number of smokers for the controls
+- Calculate the exact CI for the odds ratio
+- Have to eliminate a nuisance parameter
+- logit(p) = log{p/(1-p)} is the **log-odds**
+- Differences in logits are log-odds ratios
+- logit{P(Smoker | Case)} = $\delta$
+    - P(Smoker | Case) = $e^\delta/(1 + e^\delta)$
+- logit{P(Smoker | Control)} = $\delta + \theta$
+    - P(Smoker | Control)} = $e^{\delta+\theta}/(1 + e^{\delta + \theta})$
+- $\theta$ is the log-odds ratio
+- $\delta$ is the nuisance parameter
+- X is binomial with $n_1$ trials and success probability of $e^\delta/(1 + e^\delta)$
+- Y is binomial with $n_2$ trials and success probability of $^{\delta+\theta}/(1 + e^{\delta + \theta})$
+$$
+P(X = x) = {n_1 \choose x} \{\frac{e^\delta}{1 + e^\delta}\}^x \{\frac{1}{1+e^\delta}\}^{n_1 - x} \\
+= {n_1 \choose x} e^{x\delta}\{\frac{1}{1+e^\delta}\}^{n_1} \\
+P(Y = z - x) = {n_2 \choose z - x} e^{(z - x)\delta + (z - x)\theta}\{\frac{1}{1 + e^{\delta+\theta}}\}^{n_2} \\
+P(X + Y = z) = \sum_u P(X = u)P(Y = z-u) \\
+P(X = x | X + Y = z) = \frac{P(X = x) P(Y=z - x)}{\sum_u P(X=u)P(Y = z-u)}
+$$
+We have to use the u trick because X and Y have different variances.
+
+### Non-central hypergeometric distribution
+$$
+P(X = x | Y + Y = z; \theta) = \frac{{n_1 \choose x}{n_2 \choose z - x}e^{x\theta}}{\sum_u {n_1 \choose u} {n_2 \choose z - u}e^{u\theta}}
+$$
+
+- $\theta$ is the log odds ratio
+- we got rid of $\delta$ with the u trick
+- This distribution is used to calculate exact hypothesis tests for $H_0: \theta = \theta_0$
+- Inverting exact tests yields exact confidence intervals for the odds ratio
+- Simplifies to the hypergeometric distribution for $\theta = 0$
+- Too hard to calculate for this class
+
+# Matched Two by Two tables
+
+## Matched pairs data
+```
+           Second Survey
+First      ------------------
+survey     Approve Disapprove Total
+------------------------------------
+Approve      794      150       944
+Disapprove    86      570       656
+Total        880      720      1600
+
+          Cases
+Controls  Exposed  Unexposed  Total
+-----------------------------------
+Exposed      27       29        56
+Unexposed     3        4         7
+Total        30        33        63
+------------------------------------
+
+From Agresti, Categorical Data Analysis, second edition
+```
+- In the first table, people were asked and then asked again whether they approved of or disapproved of the prime minister
+- In the second table, they looked at the case files of people with a disease. They then looked for people that matched as many demographics as possible but a difference in exposed/unexposed.
+
+### Dependence
+- Matched binary can arise from
+    - Measuring a response at two occasions
+    - Matching on case status in a retrospective study
+    - Matching on exposure status in a prospective or cross-sectional study
+- The pairs on binary observations are dependent, so our existing methods do not apply
+- We will discuss the process of making conclusions about the marginal probabilities and odds
+
+### Notation
+```
+      time 2    time 2
+time 1  Yes  No  Total    time 1  Yes   No    Total
+  Yes   n11  n12   n1+     Yes    pi11  pi12  pi1+
+  No    n21  n22   n2+      No    pi21  pi22  pi2+
+  Total n+1 n+2    n       Total  pi+1  pi+2  1
+```
+
+- We assume that the ($n_{11}, n_{12}, n_{21}, n_{22}$) are multinomial with n trials and probabilities ($\pi_{11}, \pi_{12} \pi_{21}, \pi_{22}$)
+- $\pi_{1+}$ and $\pi_{2+}$ are the marginal probabilities of a yes response at the two occations
+- $\pi_{1+}$ = P(Yes | Time 1)
+- $\pi_{2+}$ = P(Yes | Time 2)
+
+### Marginal homogeneity
+- Marginal homogeneity is the hypothesis $H_0: \pi_{1+} = \pi_{+1}$
+- Marginal homogeneity is equivalent to symmetry $H_0: \pi_{12} = \pi_{21}$
+- The obvious estimate of $\pi_{12} - \pi_{21}$ is $n_{12}/n - n_{21}/n$
+- Under $H_0$ a consistent estimate of the variance is $(n_{12} + n_{21})/n^2$
+- Therefore $\frac{(n_{12} - n_{21})^2}{n_{12} + n_{21}}$ follows an asymptotic $\chi^2$ distribution with 1 degree of freedom.
+- Reject Marginal Homogeneity if this test statistic is large
+
+### McNemar's test
+- The test from the previous page is called McNemar's test
+- Notice that only the discordant cells enter into the test
+    - $n_{12}$ and $n_{21}$ carry the relevant information about whether or not $\pi_{1+}$ and $\pi_{+1}$ differ
+    - $n_{11}$ and $n_{22}$ contribute information to estmating the magnitude of this difference
+
+### Example
+- Test statistic $\frac{(80 - 150)^2}{86+150} = 17.36$
+- P-value = $3 \times 10^{-5}$
+- Hence we reject the null hypothesis and conclude that there is evidence to suggest a change in opinion between the two polls
+- In R
+```{r}
+mcnemar.test(matrix(c(794, 86, 150, 570), 2), correct = FALSE)
+```
+The correct option applies a continuity correction, which we want
+```{r}
+mcnemar.test(matrix(c(794, 86, 150, 570), 2), correct = TRUE)
+```
+
+
+- Let $\hat{\pi}_{ij} = n_{ij}/n$ be sample proportions
+- $d = \hat{\pi}_{1+} - \hat\pi_{+1} = (n_{12} - n_{21})/n$ estimates the difference in the marginal proportions
+- The variance of d is
+$$
+\sigma^2_d = \{\pi_{1+}(1 - \pi_{1+}) + \pi_{+1}(1 - \pi_{+1}) - 2(\pi_{11}\pi_{22} - \pi_{12}\pi_{21})\}/n
+$$
+- If there is a lot of info in the off diagonal, we have a large variance.
+- $\frac{d-(\pi_{1+} - \pi_{+1})}{\hat\sigma_d}$ follows an asymptotic normal distribution
+- Compare $\sigma^2_d$ with what we would use if the proportions were independent
+    - the minus 2* part would go away.
+    - Failing to account for the fact that the same people were asked twice would lead to incorrect answers
+
+### Example
+- d = 944/1600 - 880/1600 = .59 - .55 = .04
+- $\hat\pi_{11}$ = .50, $\hat\pi_{12}$ = 0.09, $\hat\pi_{21}$ = .05, $\hat\pi_{22}$ = .36
+- $\sigma^2_d$ = {.59(1-.59) + .55(1-.55) -2(.5&times; .36 - - 0.09 &times; .05)}/1600$
+- $\hat\sigma_d = .0095$
+- 95% CI: $.04 \pm 1.96 \times .0095 = [.06, .02]$
+- Note ignoring the dependence yields $\hat\sigma_d = 0.0175$
+
+### Relationship with CMH test (Cochran Mantel Hansen)
+- Each subject's (or matched pair's) repsonses can be represented as one of four tables
+```
+        Response           Response
+Time    Yes  No   Time     Yes  No
+First   1    0    First    1    0
+Second  1    0    Second   0    1
+        Response           Response
+Time    Yes  No   Time     Yes  No
+First   0    1    First    0    1
+Second  1    0    Second   0    1
+```
+
+### Result
+- McNemar's test is equivalent to the CMH test where subject is the stratifying variable and each 2-by-2 table is the observed zero-one table for that subject
+- This representation is only useful for conceptual purposes
+
+### Exact version
+- Consider the cells $n_{12}$ and $n_{21}$
+- Under $H_0, \pi_{12} / ( \pi_{12} + \pi_{21}) = .5$
+- Therefore, under $H_0, n_{12} \;|\; n_{21} + n_{12}$ is binomial with success probability .5 and $n_{21} + n_{12}$ trials
+- We can use this result to come up with an exact P-value for matched pairs data
+- Consider the approval rating data
+- If the null hypothesis is true, there should be an equal number of people who switch Approve to Disapprove as switch Disapprove to Approve.
+- $H_0: \pi_{21} = \pi_{12}$ versus $H_a: \pi_{21} < \pi_{12} (\pi_{+1} < \pi_{1+})$
+- $P(X \le 86 | 86 + 150) = 0.000$ where X is binomial with 236 trials and success probability p = .5
+```{r}
+pbinom(86, 86+150, prob=.5)
+```
+
+- So reject the null hypothesis
+- For two sided tests, double the smaller of the two one-sided tests
+
+### Estimating the marginal odds ratio
+- The marginal odds ratio is
+$$
+\frac{\pi_{1+}/\pi_{2+}}{\pi_{+1}/\pi_{+2}} = \frac{\pi_{1+} \pi_{+2}}{\pi_{+1} \pi_{2+}} 
+$$
+- The maximum likelihood estimate of the marginal log odds ratio is
+$$
+\hat\theta = \text{log}\{\hat\pi_{1+} \hat\pi_{+2} / \hat\pi_{+1} \hat\pi_{2+}\}
+$$
+- The asymptotic variance of this estimator is
+$$
+\frac{1}{n} \times \big(\frac{1}{\hat\pi_{1+}\hat\pi_{2+}} + \frac{1}{\hat\pi_{+1}\hat\pi_{+2}} - 2\frac{\hat\pi_{11} \hat\pi_{22} - \hat\pi_{12} \hat\pi_{21}}{\hat\pi_{1+} \hat\pi_{2+} \hat\pi_{+1} \hat\pi_{+2}}\big)
+$$
+
+### Example
+- In the approval rating example the marginal OR compares the odds of approval at time 1 to that at time 2
+- $\hat\theta = \text{log}(944 \times 720/ 880 \times 656) = .16$
+- Estimated standard error = 0.039
+- CI for the log odds ratio = $.16 \pm 1.96 \times .039 = [.084, .236]$
+
+### Conditional versus marginal odds
+```
+           Second Survey
+First      ------------------------
+survey     Approve  Disapprove  Total
+-------------------------------------
+Approve     794     150          944
+Disapprove   86     570          656
+Total       880     720         1600
+```
+
+- $n_{ij}$ cell counts
+- n total sample size
+- $\pi_{ij}$ the multinomial probabilities
+- The ML estimate of the marginal log odds ratio is
+$$
+\hat\theta = \text{log}\{\hat\pi_{1+}\hat\pi_{+2}/\hat\pi_{+1}\hat\pi_{2+}\}
+$$
+- The asymptotic variance of this estimator is
+$$
+\frac{1}{n} \times \big(\frac{1}{\hat\pi_{1+}\hat\pi_{2+}} + \frac{1}{\hat\pi_{+1}\hat\pi_{+2}} - 2\frac{\hat\pi_{11} \hat\pi_{22} - \hat\pi_{12} \hat\pi_{21}}{\hat\pi_{1+} \hat\pi_{2+} \hat\pi_{+1} \hat\pi_{+2}}\big)
+$$
+
+### Conditional ML
+- Consider the following model
+$$
+\text{logit}\{P(\text{Person i says Yes at Time 1})\} = \alpha + U_i \\
+\text{logit}\{P(\text{Person i says Yes at Time 2})\} = \alpha + \gamma + U_i 
+$$
+- Each $U_i$ contains person-specific effects. A person with a large $U_i$ is likely to answer Yes at both occasions. You are conditioning on the person.
+- $\gamma$ is the **log odds ratio** comparing a response of Yes at Time 1 to a response of Yes at Time 2
+- $\gamma$ is **subject specific effect**. If you subtract the log odds of a yes response for two different people, the $U_i$ terms would not cancel
+- One way to eliminate the $U_i$ and get a good estimate of $\gamma$ is to condition on the total number of Yes responses for each person
+    - If they answered Yes or No on both occasions then you know both responses
+    - Therefore, only discordant pairs have any relevant information after conditioning
+- The conditional ML estimate for $\gamma$ and its SE turn out to be $log(n_{21}/n_{12}) \sqrt{1/n_{21} + 1/n_{12}}$
+
+### Distinctions in interpretations
+- The marginal ML has a marginal interpretations. The effect is averaged over all the values of $U_i$
+- The conditional ML estimate has a subject specific interpretation
+- Marginal interpretations are more useful for policy type statements. Policy makers tend to be interested in how factors influence populations.
+- Subject specific interpretations are more useful in clinical applications. Physicians are interested in how factors influence individuals
+
+# Nonparametric tests
+
+- “Distribution free” methods require fewer assumptions than parametric
+methods
+- Focus on testing rather than estimation
+- Not sensitive to outlying observations
+- Especially useful for cruder data (like ranks)
+- “Throws away” some of the information in the data
+- May be less powerful than parametric counterparts, when the parametric
+assumptions are true
+- For large samples, are equally efficient to parametric counterparts
+```
+Fish   SR    P  Diff Sgn rank   Fish   SR    P  Diff  Sng rank
+   1  .32  .39   .07    +15.5     13  .20  .22   .02      +6.5
+   2  .40  .47   .07    +15.5     14  .31  .30  -.01      -2.5
+   3  .11  .11   .00              15  .62  .60  -.02      -6.5
+   4  .47  .43  -.04    -11.0     16  .52  .53   .01      +2.5
+   5  .32  .42   .10    +20.0     17  .77  .85   .08     +17.5
+   6  .35  .30  -.05    -13.5     18  .23  .21  -.02      -6.5
+   7  .32  .43   .11    +20.0     19  .30  .33   .03      +9.0
+   8  .63  .98   .35    +23.0     20  .70  .57  -.13     -21.0
+   9  .50  .86   .36    +24.0     21  .41  .43   .02      +6.5
+  10  .60  .79   .19    +22.0     22  .53  .49  -.04     -11.0
+  11  .38  .33  -.05    -13.5     23  .19  .20   .01      +2.5
+  12  .46  .45  -.01     -2.5     24  .31  .35   .04     +11.0
+                                  25  .48  .40  -.08     -17.5
+```
+Measurements are mecury levels in fish (ppm), taken in two places (SR and P) and their difference (P - SR)
+
+Data from Rice Mathematical Statistics and Data Analysis; second edition
+
+### Alternatives to the paired t-test
+- Let $D_i$ = difference (P - SR)
+- Let $\theta$ be the population median of the $D_i$
+- $H_0 : \theta = 0$ versus $H_a : \theta \ne 0 (or > or <)$
+- Notice that $\theta = 0$ iff p = P(D > 0) = .5
+- Let X be the number of times D > 0
+    - X is then binomial(n, p)
+- The sign test tests whether $H_0 : p = .5$ using X
+
+### Example
+- $\theta$ = median difference p - sr
+- $H_0 : \theta = 0$ versus $H_a : \theta \ne 0$
+- Number of instances where the difference is bigger than 0 is 15 out of 25 trials
+```{r}
+binom.test(15, 25)
+#p-value = 0.4244
+```
+15 is not excessively large, so fail to reject the null hypothesis
+
+- Or we could have used large sample tests for a binomial proportion
+```{r}
+prop.test(15, 25, p = .5)
+# X-squared = 0.64, df = 1, p-value = 0.4237
+```
+
+### Discussion
+- Magnitude of the differences is discarded
+    - Perhaps too much information lost
+    - What if the positive ones were really big and the negative ones were really close to zero
+- Could easily have tested $H_0 : \theta = \theta_0$ by calculating the number of times
+$D > \theta_0$ and performing a binomial test (test for some specific value, zero is not special)
+    - Find the values of theta for which you fail to reject or to reject
+    - We can invert these tests to get a distribution free confidence interval for the median
+
+### Signed rank test
+- Wilcoxon’s statistic uses the information in the **signed ranks** of the differences
+- Saves some of the information regarding the magnitude of the differences
+- Still tests $H_0 : \theta = 0$ versus the three alternatives
+- Appropriately normalized, the test statistic follows a normal distribution
+- Also the exact small sample distribution of the signed rank statistic is known (if there are no ties)
+
+### Signed rank procedure
+1. Take the paired differences
+2. Take the absolute values of the differences
+3. Rank these absolute values, throwing out the 0s (set them to the average rank)
+4. Multiply the ranks by the sign of the difference (+1 for a positive difference and -1 for a negative difference)
+5. Cacluate the rank sum W+ of the positive ranks
+
+### Signed rank procedure
+- If $\theta > 0$ then W+ should be large
+- If $\theta < 0$ then W+ should be small
+- Properly normalized, W+ follows a large sample normal distribution
+- For small sample sizes, W+ has an exact distribution under the null hypothesis
+- Can get critical values from tables in the textbook
+
+### Monte Carlo
+- Assume no ties
+- Simulate n observations from any distribution that has $\theta = 0$ as its median
+- Rank the absolute value of the data, retain the signs, calculate the signed rank statistic
+- Apply this procedure over and over, the proportion of time that the observed test statistic is larger or smaller (depending on the hypothesis) is a Monte Carlo approximation to the P-value
+
+### Monte Carlo
+- Here’s a slightly more elegant way to simulate from the null distribution
+- Consider the ranks 1, . . . , n
+- Randomly assign the signs as binary with probability .5 of being positive and .5 of being negative
+- Calculate the signed rank statistic
+- Apply this procedure over and over, the proportion of time that the observed test statistic is larger or smaller (depending on the hypothesis) is a Monte Carlo approximation to the P-value
+
+### Large sample distribution of W+
+- Under H_0 and if there are no ties
+    - E(W+) = n(n + 1)/4
+    - Var(W+) = n(n + 1)(2n + 1)/24
+    - TS = {W+ − E(W+)}/Sd(W+) -> Normal(0, 1)
+- There is a correction term necessary for ties
+- Without ties, it’s possible to do an exact (small sample) test
+
+### Example
+```{r}
+mercury_diff <- c(.07, .07, .00, -.04, .10, -.05, .11, .35, .36, .19, -.05, -.01, .02, -.01, -.02, .01, .08, -.02, .03, -.13, .02, -.04, .01, .04, -.08)
+wilcox.test(mercury_diff, exact = FALSE)
+```
+- $H_0$ : Med diff = 0 vesus $H_a$ : Med diff $\ne$ 0
+- $W_+ = 194.5$
+- $E(W_+) = 24 \times 25/4 = 150$
+- $Var(W_+) = 24 \times 25 \times 49/24 = 1, 225$
+- $TS = (194.5 − 150)\sqrt{1224} = 1.27$
+- P-value = .20
+- R’s P-value (uses correction for ties) = 0.21
+- We can't rule out that the median is in fact zero.
+
+### Methods for unpaired samples
+- Comparing two measuring techniques A and B
+- Units are in deg C per gram
+
+| Method A | Method B |
+| --------:| -------- |
+| 79.98 80.05 | 80.02 |
+| 80.04 80.03 | 79.94 |
+| 80.02 80.02 | 79.98 |
+| 80.04 80.00 | 79.97 |
+| 80.03 80.02 | 79.97 |
+| 80.03 | 80.03 |
+| 80.04 | 79.95 |
+| 79.97 | 79.97 |
+
+Data from Rice Mathematical Statistics and Data Analysis; second edition
+
+### The Mann/Whitney test
+- Tests whether or not the two treatments have the same location (distributions are centered at the same place)
+- Assumes independent identically distributed errors, not necessarily normal
+- Null hypothesis can also be written more generally as a stochastic shift for two arbitrary distributions (They both have the same rough shape, but different centers)
+- Test uses the sum of the ranks obtained by discarding the treatment labels
+- Also called the Wilcoxon rank sum test
+
+### The Mann-Whitney test (Also called Wilcoxon)
+- Procedure
+1. Discard the treatment labels
+2. Rank the observations
+3. Calculate the sum of the ranks in the first treatment
+4. Either
+    - calculate the asymptotic normal distrubtion of this statistic
+    - compare with the exact distribution under the null hypothesis
+
+| Method A |  Method B |
+| --------:| --------- |
+| 7.5 21.0 | 11.5| 
+| 19.0 15.5 | 1.0| 
+| 11.5 11.5|  7.5| 
+| 19.0 9.0 | 4.5| 
+| 15.5 11.5|  4.5| 
+| 15.5 | 15.5| 
+| 19.0 | 2.0| 
+| 4.5|  4.5| 
+| 180 | 51| 
+
+Sum has to add up to $21 \times 22/2 = 231$
+
+### Aside
+Gauss supposedly came up with this in grade school
+```
+x = 1 + 2 + 3 + 4 + ... + n
+x = n + n-1 + n-2 + n-3 + ... + 1
+```
+Therefore
+```
+2x = n+1 + n+1 + n+1 + n+1 + ... + n+1
+So 2x = n (n + 1) / 2
+So x = n (n + 1) / 2
+```
+
+### Results
+- Let W be the sum of the ranks for the first treatment (A)
+- Let nA and nB be the sample sizes
+- Then
+    - E(W ) = nA(nA + nB + 1)/2
+    - Var(W ) = nAnB (nA + nB + 1)/12
+    - TS = {W − E(W )}/Sd(W ) -> N(0, 1)
+- Also the exact distribution of W can be calculated
+
+### Example
+- W = 51
+- E(W ) = 8(8 + 13 + 1)/2 = 88
+- Sd(W ) = $\sqrt{8 \times 13(8 + 13 + 1)/12}$ = 13.8
+- TS = (51 − 88)/13.8 = −2.68
+- Two-sided P-value= .007
+- R function wilcox.test will perform the test
+    - if you give it one vector it will give you the sign rank test 
+    - if you give it two vectors it will give you the rank sum test
+
+### Monte Carlo
+- Note that under $H_0$, the two groups are **exchangeable**
+- Therefore, any allocation of the ranks between the two groups is equally likely
+- Procedure: Take the ranks 1, . . . , NA + NB and permute them
+- Take the first NA ranks and allocate them to Group A; allocate the remainder
+to Group B
+- Calculate the test statistic
+- Repeat this process over and over; the proportion of times the test statistic is larger or smaller (depending on the alternative) than the observed value is an exact P-value
+
+### Notes about nonpar tests
+- Tend to be more robust to outliers than parametric counterparts
+- Do not require normality assumptions
+- Usually have exact small-sample versions
+- Are often based on ranks rather than the raw data
+- Loss in power over parametric counterparts is often not bad
+- Nonpar tests are not assumption free
+    - still assuming iid variables
+    - They are distribution free
+
+### Permutation tests
+- Permutation tests are similar to the rank-sum tests, though they use the actual data rather than the ranks
+- That is, consider the null hypothesis that the distribution of the observations from each group is the same
+- Then, the group labels are irrelevant
+    - this is a feature shared by rank sum test, fisher exact test, and permutation test
+- We then discard the group levels and permute the combined data
+- Split the permuted data into two groups with nA and nB observations (say by always treating the first nA observations as the first group)
+- Evaluate the probability of getting a statistic as large or large than the one observed
+- An example statistic would be the difference in the averages between the two groups; one could also use a t-statistic
+- This is an easy way to produce a null distribution for a test of equal distributions
+- Similar in flavor to the bootstrap
+- This procedure produces an exact test
+- Less robust, but more powerful than the rank sum tests
+- Very popular in genomic applications
+
+Histogram of simTheta
+
+This is a picture of what you aspire to get under a permutation test. The verticle line shows the actual T statitistic, the percentage of the simulated statistics that are greater than our T-statistic is our exact P-value.
+
+It shows a histogram, centered on zero, of simulated Theta calculations.
+
+## Maximum likelihood
+- The value of $\theta$ where the curve reaches its maximum has a special meaning
+- It is the value of $\theta$ that is most well supported by the data
+- THis point is called the maximum likelihood estimate (or MLE) or $\theta$
+$$
+MLE = \text{argmax}_\theta\script{L}(\theta, x).
+$$
+- Another interpretation of the MLE is that it is the value of $\theta$ that would make the data that we observed most probable
+
+### Some results
+- If $X_1,...,X_n \sim^{iid} N(\mu, \sigma^2)$ the MLE of $\mu$ is $\bar{X}$ and the MLE of $\sigma$ is the biased sample variance estimate
+- If $X_1,...,X_n \sim^{iid}$ Beroulli(p) then the MLE of p is $\bar{X}$ (the sample proportion of 1s).
+- If $X_i \sim^{iid} Binomial(n_i, p)$ then the MLE of p is $\frac{\sum X_i}{\sum n_i}$ (the sample proportion of 1s).
+- If $X_i \sim^{iid} Poisson(\lambda t)$ then the MLE of $\lambda$ is X/t.
+- If $X_i \sim^{iid} Poisson(\lambda t_i)$ then the MLE of $\lambda$ is $\frac{\sum x_i}{t_i}$
+
+```{r}
+lambda <- seq(0, .2, length=1000)
+likelihood <- dpois(5, 94*lambda)/dpois(5, 5)
+plot(lambda, likelihood, frame=FALSE, lwd=3, type="l", xlab=expression(lambda))
+lines(rep(5/94, 2), 0:1, col = "red", lwd=3)
+lines(range(lambda[likelihood > 1/16]), rep(1/16, 2), lwd = 2)
+lines(range(lambda[likelihood > 1/8]), rep(1/8, 2), lwd = 2)
+```

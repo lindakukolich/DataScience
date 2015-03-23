@@ -1,0 +1,178 @@
+---
+title: "The Effect of Vitamin C on Tooth Growth in Guinea Pigs"
+author: "Linda Kukolich"
+date: "February 11, 2015"
+output: html_document
+---
+- Question 1: Does Vitamin C change tooth growth in Guinea Pigs?
+- Question 2: Does the source of Vitamin C, Orange Juice or Acetic Acid, change tooth growth?
+
+To answer these two questions, I will use the ToothGrowth data set included with R.
+
+From the R help page about the ToothGrowth data:
+
+> The Effect of Vitamin C on Tooth Growth in Guinea Pigs. The response is the length of odontoblasts (teeth) in each of 10 guinea pigs at each of three dose levels of Vitamin c (0.5, 1, and 2 mg) with each of two delivery methods (orange juice or ascorbic acid).
+
+Since there are 10 guinea pigs and 60 data points, there seem to be 6 measurments per guinea pig. If I knew how these measurements were organized, I could possibly work with them in a paired fashion. However, there is no information about the ordering of the measurements in the dataset, so the data will have to be grouped to make comparisons.
+
+```{r, echo=FALSE}
+library(dplyr, warn.conflicts=FALSE)
+library(xtable)
+data(ToothGrowth)
+```
+
+## Summary of the data
+While we cannot group the data based on the original guinea pig that provided it, we can summarize the data grouped by the measurements taken.
+
+```{r, echo=FALSE, results="asis"}
+ms_supp_dose <- ToothGrowth %>%
+    group_by(supp, dose) %>%
+    summarise(mean_len=mean(len), st_dev_len=sd(len), n=n())
+print(xtable(ms_supp_dose, caption="**Mean and standard deviation of tooth growth length, grouped by dose and source of Vitamin C**"), include.rownames=FALSE, type="html")
+```
+
+This conditioning plot is taken from the R help page for the ToothGrowth data set. It seems to show an increase in tooth growth with an increase in Vitamin C for both delivery systems, and that when the doses are low, it may be more effective to give Orange Juice rather than Acetic Acid.
+
+```{r, echo=FALSE, fig.width=6, fig.height=6, fig.align='center'}
+coplot(len ~ dose | supp, data = ToothGrowth, panel = panel.smooth, xlab = "ToothGrowth data: length vs dose, given type of supplement")
+```
+
+## Does increasing Vitamin C change tooth growth in Guinea Pigs?
+
+For this, consider .5 vs 1, .5 vs 2, and 1 vs 2. $H_0$ is the "null hypothesis", the hypothesis that increasing Vitamin C does not change tooth growth. $H_a$ is the "alternative hypothesis", that increasing Vitamin C increases tooth growth.
+
+Because the number of readings is so low (20 for each dosage) I will use a T-test. Since I do not care for this test whether the dose came from OJ or straight Vitamin C, I will combine all the readings from each dosage.
+
+```{r, echo=FALSE, results="asis"}
+low <- ToothGrowth %>% filter(dose == .5)
+med <- ToothGrowth %>% filter(dose == 1)
+high <- ToothGrowth %>% filter(dose == 2)
+
+lows <- c()
+highs <- c()
+p.values <- c()
+rejects <- c()
+results <- c()
+row.names <- c()
+
+t_med_low <- t.test(med$len, low$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_med_low$conf.int[1])
+highs <- c(highs, t_med_low$conf.int[2])
+p.values <- c(p.values, t_med_low$p.value)
+rejects <- c(rejects, if (t_med_low$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_med_low$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "med - low")
+
+t_high_low <- t.test(high$len, low$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_high_low$conf.int[1])
+highs <- c(highs, t_high_low$conf.int[2])
+p.values <- c(p.values, t_high_low$p.value)
+rejects <- c(rejects, if (t_high_low$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_high_low$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "high - low")
+
+t_high_med <- t.test(high$len, med$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_high_med$conf.int[1])
+highs <- c(highs, t_high_med$conf.int[2])
+p.values <- c(p.values, t_high_med$p.value)
+rejects <- c(rejects, if (t_high_med$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_high_med$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "high - med")
+
+df_dose <- data.frame(low=round(lows, 2),
+                      high=round(highs, 2),
+                      p.value=signif(p.values, 2),
+                      reject=rejects,
+                      interpretation=results,
+                      row.names=row.names)
+print(xtable(df_dose, display=c("s", "f", "f", "g", "s", "s"), caption="**95% Confidence Interval and P-value for differences in mean tooth growth varying the dose of Vitamin C**"), type="html")
+```
+
+In all three cases, more Vitamin C is associated with greater tooth growth in guinea pigs. That is, all three of the 95% confidence intervals are positive and do not include zero. Looking at the p-values, all three are much smaller that $`r signif(5/200, 2)`$, so all three mean tooth growth values are different at a 95% confidence level. 
+
+## Question 2: Does the source of Vitamin C, Orange Juice or Acetic Acid, change tooth growth?
+
+The null hypothesis here is that mean tooth growth is the same for each source of Vitamin C. The alternative hypothesis is that mean tooth growth is not the same.
+
+```{r, echo=FALSE, results="asis"}
+oj <- ToothGrowth %>% filter(supp == "OJ")
+vc <- ToothGrowth %>% filter(supp == "VC")
+
+t_oj_vc <- t.test(oj$len, vc$len, paired=FALSE, var.equal=FALSE)
+reject_null_oj_vc <- if (t_oj_vc$p.value < 0.025) "yes" else "no"
+result_oj_vc <- if (reject_null_oj_vc == "yes") "means different" else "means same"
+df_oj_vc <- data.frame(low=round(t_oj_vc$conf.int[[1]], 2), high=round(t_oj_vc$conf.int[[2]], 2), p.value=t_oj_vc$p.value, reject=reject_null_oj_vc, interpretation=result_oj_vc, row.names="VC - OJ")
+print(xtable(df_oj_vc, display=c("s", "f", "f", "g", "s", "s"), caption="**Confidence Interval and Pvalue for mean(VC) - mean(OJ)**"), type="html")
+``` 
+
+When we look at all three doses of vitamin C, the source of the nutrient does not change the mean tooth growth length at a 95% significance.  We this is shown both by a confidence interval for the difference in means which includes 0 and by a P-value greater than 2.5%, which is the attained significance level we would require for 95% confidence that the means are different.
+
+## Conclusion
+
+It seems that guinea pigs grow their teeth faster with more vitamin C, but that the source of vitamin C, orange juice or acetic acid, is not significant. These conclusions assume that all the measurements are independent, which I know not to be true since the 60 data points were provided by only 10 animals. Since working with paired data ought to decrease the confidence intervals (make them smaller), mu conclusions should still hold with the assumption of independence. I have also assumed that the data have a roughly normal distribution. Again, in the absence of evidence to the contrary, that is the safest assumption.
+
+## Appendix
+The following R code was used to produce the results above.
+
+```{r}
+library(dplyr, warn.conflicts=FALSE)
+data(ToothGrowth)
+
+coplot(len ~ dose | supp, data = ToothGrowth, panel = panel.smooth, xlab = "ToothGrowth data: length vs dose, given type of supplement")
+
+low <- ToothGrowth %>% filter(dose == .5)
+med <- ToothGrowth %>% filter(dose == 1)
+high <- ToothGrowth %>% filter(dose == 2)
+
+lows <- c()
+highs <- c()
+p.values <- c()
+rejects <- c()
+results <- c()
+row.names <- c()
+
+t_med_low <- t.test(med$len, low$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_med_low$conf.int[1])
+highs <- c(highs, t_med_low$conf.int[2])
+p.values <- c(p.values, t_med_low$p.value)
+rejects <- c(rejects, if (t_med_low$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_med_low$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "med - low")
+
+t_high_low <- t.test(high$len, low$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_high_low$conf.int[1])
+highs <- c(highs, t_high_low$conf.int[2])
+p.values <- c(p.values, t_high_low$p.value)
+rejects <- c(rejects, if (t_high_low$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_high_low$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "high - low")
+
+t_high_med <- t.test(high$len, med$len, paired=FALSE, var.equal=FALSE)
+lows <- c(lows, t_high_med$conf.int[1])
+highs <- c(highs, t_high_med$conf.int[2])
+p.values <- c(p.values, t_high_med$p.value)
+rejects <- c(rejects, if (t_high_med$p.value < 0.025) "yes" else "no")
+results <- c(results, if (t_high_med$p.value < 0.025) "means different" else "means same")
+row.names <- c(row.names, "high - med")
+
+df_dose <- data.frame(low=round(lows, 2),
+                      high=round(highs, 2),
+                      p.value=signif(p.values, 2),
+                      reject=rejects,
+                      interpretation=results,
+                      row.names=row.names)
+df_dose
+
+oj <- ToothGrowth %>% filter(supp == "OJ")
+vc <- ToothGrowth %>% filter(supp == "VC")
+
+t_oj_vc <- t.test(oj$len, vc$len, paired=FALSE, var.equal=FALSE)
+reject_null_oj_vc <- if (t_oj_vc$p.value < 0.025) "yes" else "no"
+result_oj_vc <- if (reject_null_oj_vc == "yes") "means different" else "means same"
+
+df_oj_vc <- data.frame(low=round(t_oj_vc$conf.int[[1]], 2), high=round(t_oj_vc$conf.int[[2]], 2), p.value=t_oj_vc$p.value, reject=reject_null_oj_vc, interpretation=result_oj_vc, row.names="vc - oj")
+df_oj_vc
+```
+
+## Reviewer Remarks
+ToothGrowth (full marks) You have said "Acetic Acid", but it should be Ascorbic Acid. It is not easy to see whether you did one-sided or two-sided t-tests. You started by saying that your Alternative Hypothesis is that increasing vit C will "increase" tooth growth, but then you have said that the interpretation is that the means are "different". In your code I think you have used the default value of two-sided, but then you appear to have chosen a p-value significance cut-off of 0.025, instead of the usual 0.05. Under "assumptions", you could also have mentioned the condition of equal variance between groups.
