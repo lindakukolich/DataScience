@@ -1,0 +1,107 @@
+Data Examination App
+========================================================
+author: Linda Kukolich
+date: September 25, 2015
+
+Data Exploration
+========================================================
+This application allows users to explore two data sets through interactive plots.
+
+- Two sets of generated Gaussian data, with user specified means and variances
+- A classic classification data set using measurements of parts of the flower to distinguish between different species of Irises
+
+
+Generated Gaussians
+========================================================
+
+- Many data analysis algorithms are based on models assuming that the data have a Gaussian distribution.
+
+- Explore two Gaussians by setting their means and variances.
+
+Gaussian Plots
+===
+
+```{r gaussPlot, echo=FALSE}
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+generateGauss <- function(input) {
+    n <- 200
+    x1 = rnorm(n, input$x1, input$sd1)
+    y1 = rnorm(n, input$y1, input$sd1)
+    x2 = rnorm(n, input$x2, input$sd2)
+    y2 = rnorm(n, input$y2, input$sd2)
+    labels <- factor(c(rep(0, n), rep(1, n)))
+    df <- data.frame(lab=labels, x=c(x1, x2), y=c(y1, y2))
+    dfText <- data.frame(lab=c(0, 1), x=c(input$x1, input$x2), y=c(input$y1, input$y2))
+    list(df, dfText)
+}
+
+plotGauss <- function(dfList) {
+    df <- dfList[[1]]
+    dfText <- dfList[[2]]
+    g <- ggplot(df, aes(x, y, xmin=-6, xmax = 6, ymin = -6, ymax = 6))
+    g <- g + ggtitle("Generated Gaussian Data")
+    g <- g + geom_point(aes(colour = lab))
+    g <- g + stat_ellipse(data=subset(df,
+                                  df$lab==0))
+    g <- g + stat_ellipse(data=subset(df,
+                                  df$lab==1))
+    g <- g + geom_point(data=dfText)
+    g
+}
+
+input <- data.frame(x1=-1, y1=-1, sd1=1, x2=1, y2=1, sd2=1)
+
+p <- plotGauss(generateGauss(input))
+p <- p + annotate("text", x=-4, y= -5:-6, label=c("Center(-1, -1)", "Std Deviation 1"))
+p <- p + annotate("text", x=2, y=-5:-6, label=c("Center(1, 1)", "Std Deviation 1"))
+p
+```
+
+***
+
+```{r gauss2, echo=FALSE}
+input$sd2=2
+input$sd1=.5
+input$x1 = -2
+input$y1 = 2
+p <- plotGauss(generateGauss(input))
+p <- p + annotate("text", x=-4, y= -5:-6, label=c("Center(-2, 2)", "Std Deviation 0.5"))
+p <- p + annotate("text", x=2, y=-5:-6, label=c("Center(1, 1)", "Std Deviation 2"))
+p
+```
+
+Iris data
+========================================================
+<img src="blueflagiris_flower_lg.jpg", alt="labeled picture of an iris", height="400px", width="400px" style="float: left;" />
+
+This famous (Fisher's or Anderson's) iris data set gives the measurements in centimeters of the variables sepal length and width and petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris setosa, versicolor, and virginica. The sepals are the leaf-like outer parts of a flower that enclose the bud while it develops.
+
+Explore the Iris data by selecting which variables to plot.
+
+Iris Plots
+========================================================
+```{r iris, echo=FALSE}
+input <- list(dim1="Sepal.Length", dim2="Sepal.Width")
+g <- ggplot(iris, aes_string(input$dim1, input$dim2))
+g <- g + ggtitle("Measurements from Iris Species")
+g <- g + geom_point(aes(colour = Species))
+g
+```
+
+Sepal Length versus Sepal Width
+
+***
+
+```{r iris2, echo=FALSE}
+input <- list(dim1="Petal.Width", dim2="Sepal.Width")
+g <- ggplot(iris, aes_string(input$dim1, input$dim2))
+g <- g + ggtitle("Measurements from Iris Species")
+g <- g + geom_point(aes(colour = Species))
+g
+```
+
+Petal Width versus Sepal Width
+

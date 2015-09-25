@@ -1,0 +1,146 @@
+---
+title: "developing data products 2"
+author: "Linda Kukolich"
+date: "September 19, 2015"
+output: html_document
+---
+Presenting Data Analysis Writing a data Report
+
+* Prompt - describe analysis to be performed
+* data
+    * raw data
+    * data for analysis (cleaned)
+* code
+    * raw code - coming to understand the data, not the final report
+    * final code - the analysis that will be shared with others. Imperfect figures, but covers final report completely
+* figures
+    * final figure to be included in the analysis - pretty graphs
+* writing
+    * Title, intro, methods, results, conclusions, references
+    * final figure
+    * figure caption
+
+
+setwd("directory_for_your_thing")
+author("presentation")
+
+1. A directory with the name of your project is created inside of your current directory
+2. Inside this directory is an assets directory and a file called index.Rmd.
+3. The assets directory is populated with empty folders: css, img, js, and layouts
+4. index.Rmd will open up in Rstudio.
+
+YAML - Yet Another Markup Language
+The header is in YAML
+
+highlighter is a code syntax marker
+
+.class #id (on the --- line) are CSS attributes you can use to customize the slide.
+
+to build the slides, 'slidify("index.Rmd")'
+
+publish_github('user/repo')
+
+## HTML5 Deck Frameworks
+
+- io2012
+- html5slides
+- deck.js
+- dzslides
+- landslide
+- Slidy
+
+## HTML
+
+- just include html in the Rmd file and it will be kept as html in the slidify document
+- incorporate JS 
+
+## Adding interactive elements to slidify
+
+- You can add iteractivie elements
+    - Quiz questions
+    - interactive Rcharts plots
+    - Shiny apps
+- of course you could do this directly with html/js
+- more easily, the dev version of slidify has this built in
+- See http://slidify.github.io/dcmeetup/demos/interactive
+
+## RStudio Presentation
+
+- RStudio created a presentation authoring tool within their development environment
+- If you are familiar with slidify, you will also be familiar with this tool
+    - Code is authored in a generalized markdown format that allows for code chunks
+    - The output is an html5 presentation
+    - The file index for the presenter file si .Rpres, which gets converted to a .md file and then to an html file is desired
+    - There is a preview tool in RStudio and GUIs for publishing to Rpubs or viewing/creating an html file
+
+## Authoring content
+
+- A fairly complete guide
+    - http://www.rstudio.com/ide/docs/presentations/overview
+- Quick start is
+    - file then New File, then R Presentation
+    - Write as a slidify/knitr document
+
+## Compiling and tools
+
+- RStudio auto-formats and runs the code whenever you save the document
+- Mathjax JS library is loaded by default, so math works
+- Slide navigation button on the preview
+- Clicking on more yields options for
+    - cleaning the knitr cache
+    - viewing in a browser (from a temp file)
+    - create an html file to save where you want
+- a refresh button
+
+## Features
+
+- Transition options (slide left, slide up, cubify, fade)
+- section/subsection hierarchy (sets background to mark a new topic)
+- multi columns, easily, use '***', between two blank lines
+- font specification like in HTML. Be careful that the font is THERE or that you can find it on a live net link...
+
+## Customization
+
+- Basics are really easy
+- Customization is harder, and usually requires some knowledge of html5, CSS, and JS
+- include css with the css: file.css YAML command
+- create a class (class: classname) to use it
+- DO NOT EDIT the HTML. It makes the presentation not reproducible!
+
+## Slidify versus RStudio Presenter
+
+Slidify
+
+- Flexible control from the Rmd file
+- Under rapid ongoing development
+- Large user base
+- lots and lots of styles and options
+- steeper learning curve
+- more command-line oriented
+
+***
+
+RStudio Presenter
+
+- Embedded in RStudio
+- More GUI oriented
+- Very easy to get started
+- Smaller set of easy styles and options
+- Default styles look very nice
+- Ultimately as flexible as slidify with a little CSS and HTML knowledge
+
+## Hosting presentation to gh-pages (GitHub pages)
+
+remote add the presentation on GitHub and push it there
+
+```
+git branch gh-pages
+git branch
+git checkout gh-pages
+git push origin gh-pages
+```
+
+Needs a .nojekyll file (touch and add it. It can be empty)
+
+user.github.io/reproName/Presentation.html
+
